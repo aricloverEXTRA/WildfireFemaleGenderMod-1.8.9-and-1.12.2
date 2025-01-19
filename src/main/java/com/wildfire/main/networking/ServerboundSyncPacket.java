@@ -21,6 +21,7 @@ package com.wildfire.main.networking;
 import com.wildfire.main.Gender;
 import com.wildfire.main.WildfireGender;
 import com.wildfire.main.entitydata.Breasts;
+import com.wildfire.main.entitydata.Buttocks;
 import com.wildfire.main.entitydata.PlayerConfig;
 import io.netty.buffer.ByteBuf;
 import net.fabricmc.api.EnvType;
@@ -36,31 +37,31 @@ import java.util.UUID;
 
 public final class ServerboundSyncPacket extends AbstractSyncPacket implements CustomPayload {
 
-	public static final Id<ServerboundSyncPacket> ID = new CustomPayload.Id<>(Identifier.of(WildfireGender.MODID, "send_gender_info"));
-	public static final PacketCodec<ByteBuf, ServerboundSyncPacket> CODEC = codec(ServerboundSyncPacket::new);
+    public static final Id<ServerboundSyncPacket> ID = new CustomPayload.Id<>(Identifier.of(WildfireGender.MODID, "send_gender_info"));
+    public static final PacketCodec<ByteBuf, ServerboundSyncPacket> CODEC = codec(ServerboundSyncPacket::new);
 
-	public ServerboundSyncPacket(PlayerConfig plr) {
-		super(plr);
-	}
+    public ServerboundSyncPacket(PlayerConfig plr) {
+        super(plr);
+    }
 
-	private ServerboundSyncPacket(UUID uuid, Gender gender, float bustSize, boolean hurtSounds, float voicePitch, BreastPhysics physics, Breasts breasts) {
-		super(uuid, gender, bustSize, hurtSounds, voicePitch, physics, breasts);
-	}
+    private ServerboundSyncPacket(UUID uuid, Gender gender, float bustSize, float buttocksSize, boolean hurtSounds, float voicePitch, BreastPhysics physics, ButtocksPhysics buttocksPhysics, Breasts breasts, Buttocks buttocks) {
+        super(uuid, gender, bustSize, buttocksSize, hurtSounds, voicePitch, physics, buttocksPhysics, breasts, buttocks);
+    }
 
-	@Override
-	public Id<? extends CustomPayload> getId() {
-		return ID;
-	}
+    @Override
+    public Id<? extends CustomPayload> getId() {
+        return ID;
+    }
 
-	@Environment(EnvType.CLIENT)
-	public static boolean canSend() {
-		return ClientPlayNetworking.canSend(ID);
-	}
+    @Environment(EnvType.CLIENT)
+    public static boolean canSend() {
+        return ClientPlayNetworking.canSend(ID);
+    }
 
-	public void handle(ServerPlayNetworking.Context context) {
-		ServerPlayerEntity player = context.player();
-		PlayerConfig plr = WildfireGender.getOrAddPlayerById(player.getUuid());
-		updatePlayerFromPacket(plr);
-		WildfireSync.sendToAllClients(player, plr);
-	}
+    public void handle(ServerPlayNetworking.Context context) {
+        ServerPlayerEntity player = context.player();
+        PlayerConfig plr = WildfireGender.getOrAddPlayerById(player.getUuid());
+        updatePlayerFromPacket(plr);
+        WildfireSync.sendToAllClients(player, plr);
+    }
 }

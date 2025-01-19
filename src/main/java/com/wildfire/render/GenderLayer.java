@@ -21,6 +21,7 @@ package com.wildfire.render;
 import com.wildfire.api.IGenderArmor;
 import com.wildfire.main.config.GlobalConfig;
 import com.wildfire.main.entitydata.Breasts;
+import com.wildfire.main.entitydata.Buttocks;
 import com.wildfire.main.WildfireGender;
 import com.wildfire.main.WildfireHelper;
 import com.wildfire.main.entitydata.EntityConfig;
@@ -62,8 +63,8 @@ public class GenderLayer<S extends BipedEntityRenderState, M extends BipedEntity
 	private static final float DEG_TO_RAD = (float) (Math.PI / 180);
 
 	private BreastModelBox lBreast, rBreast;
-	private static final OverlayModelBox lBreastWear, rBreastWear;
 	private ButtocksModelBox lButtocks, rButtocks;
+	private static final OverlayModelBox lBreastWear, rBreastWear;
 	private static final OverlayModelBox lButtocksWear, rButtocksWear;
 
 	private final FeatureRendererContext<S, M> context;
@@ -83,7 +84,7 @@ public class GenderLayer<S extends BipedEntityRenderState, M extends BipedEntity
 	static {
 		lBreastWear = new OverlayModelBox(true, 64, 64, 17, 34, -4F, 0.0F, 0F, 4, 5, 3, 0.0F, false);
 		rBreastWear = new OverlayModelBox(false, 64, 64, 21, 34, 0, 0.0F, 0F, 4, 5, 3, 0.0F, false);
-	    	lButtocksWear = new OverlayModelBox(true, 64, 64, 17, 34, -4F, -1.0F, 4F, 4, 5, 3, 0.0F, false);
+	    lButtocksWear = new OverlayModelBox(true, 64, 64, 17, 34, -4F, -1.0F, 4F, 4, 5, 3, 0.0F, false);
  	   	rButtocksWear = new OverlayModelBox(false, 64, 64, 21, 34, 0, -1.0F, 4F, 4, 5, 3, 0.0F, false);
 	}
 
@@ -162,77 +163,40 @@ public class GenderLayer<S extends BipedEntityRenderState, M extends BipedEntity
 	 */
 	@SuppressWarnings("BooleanMethodIsAlwaysInverted")
 	protected boolean setupRender(S state, EntityConfig entityConfig) {
-		if(!GlobalConfig.RENDER_BREASTS) return false;
+		if (!GlobalConfig.RENDER_BREASTS) return false;
 
 		float partialTicks = MinecraftClient.getInstance().getRenderTickCounter().getTickDelta(true);
 		LivingEntity entity = Objects.requireNonNull(getEntity(state), "getEntity()");
 
 		armorStack = state.equippedChestStack;
-		//Note: When the stack is empty the helper will fall back to an implementation that returns the proper data
 		genderArmor = WildfireHelper.getArmorConfig(armorStack);
 		isChestplateOccupied = genderArmor.coversBreasts() && !entityConfig.getArmorPhysicsOverride();
-		if(genderArmor.alwaysHidesBreasts() || !entityConfig.showBreastsInArmor() && isChestplateOccupied) {
-			//If the armor always hides breasts or there is armor and the player configured breasts
-			// to be hidden when wearing armor, we can just exit early rather than doing any calculations
+
+		if (genderArmor.alwaysHidesBreasts() || (!entityConfig.showBreastsInArmor() && isChestplateOccupied)) {
 			return false;
 		}
 
-		if(!isLayerVisible(state)) {
+		if (!isLayerVisible(state)) {
 			return false;
 		}
 
+		// Set up breasts
 		breasts = entityConfig.getBreasts();
 		breastOffsetX = Math.round((Math.round(breasts.getXOffset() * 100f) / 100f) * 10) / 10f;
 		breastOffsetY = -Math.round((Math.round(breasts.getYOffset() * 100f) / 100f) * 10) / 10f;
 		breastOffsetZ = -Math.round((Math.round(breasts.getZOffset() * 100f) / 100f) * 10) / 10f;
 
-		buttocks = entityConfig.getButtocks();
-		buttocksOffsetX = Math.round((Math.round(buttocks.getXOffset() * 100f) / 100f) * 10) / 10f;
-		buttocksOffsetY = -Math.round((Math.round(buttocks.getYOffset() * 100f) / 100f) * 10) / 10f;
-		buttocksOffsetZ = -Math.round((Math.round(buttocks.getZOffset() * 100f) / 100f) * 10) / 10f;
-
-		ButtocksPhysics leftButtocksPhysics = entityConfig.getLeftButtocksPhysics();
-		final float buttSize = leftButtocksPhysics.getButtocksSize(partialTicks);
-		outwardAngle = (Math.round(buttocks.getCleavage() * 100f) / 100f) * 100f;
-		outwardAngle = Math.min(outwardAngle, 10);
-
-		resizeButtocksBox(buttSize);
-
-		lPhysButtocksPositionY = MathHelper.lerp(partialTicks, leftButtocksPhysics.getPrePositionY(), leftButtocksPhysics.getPositionY());
-		lPhysButtocksPositionX = MathHelper.lerp(partialTicks, leftButtocksPhysics.getPrePositionX(), leftButtocksPhysics.getPositionX());
-		lPhysButtocksBounceRotation = MathHelper.lerp(partialTicks, leftButtocksPhysics.getPreBounceRotation(), leftButtocksPhysics.getBounceRotation());
-		if(buttocks.isUnibutt()) {
-		    rPhysButtocksPositionY = lPhysButtocksPositionY;
-		    rPhysButtocksPositionX = lPhysButtocksPositionX;
-		    rPhysButtocksBounceRotation = lPhysButtocksBounceRotation;
-		} else {
- 		   ButtocksPhysics rightButtocksPhysics = entityConfig.getRightButtocksPhysics();
- 		   rPhysButtocksPositionY = MathHelper.lerp(partialTicks, rightButtocksPhysics.getPrePositionY(), rightButtocksPhysics.getPositionY());
- 		   rPhysButtocksPositionX = MathHelper.lerp(partialTicks, rightButtocksPhysics.getPrePositionX(), rightButtocksPhysics.getPositionX());
-		    rPhysButtocksBounceRotation = MathHelper.lerp(partialTicks, rightButtocksPhysics.getPreBounceRotation(), rightButtocksPhysics.getBounceRotation());
-		}
-
-		buttocksSize = Math.min(buttSize * 1.5f, 0.7f); // Limit the max size to 0.7f
-
-		if (buttSize > 0.7f) {
-		    buttocksSize = buttSize; // If buttSize exceeds 0.7f, use buttSize
-		}
-
-		if (buttocksSize < 0.02f) {
- 		   return false; // Return false if buttocksSize is too small
-		}
-
 		BreastPhysics leftBreastPhysics = entityConfig.getLeftBreastPhysics();
 		final float bSize = leftBreastPhysics.getBreastSize(partialTicks);
 		outwardAngle = (Math.round(breasts.getCleavage() * 100f) / 100f) * 100f;
 		outwardAngle = Math.min(outwardAngle, 10);
-
 		resizeBox(bSize);
 
 		lPhysPositionY = MathHelper.lerp(partialTicks, leftBreastPhysics.getPrePositionY(), leftBreastPhysics.getPositionY());
 		lPhysPositionX = MathHelper.lerp(partialTicks, leftBreastPhysics.getPrePositionX(), leftBreastPhysics.getPositionX());
 		lPhysBounceRotation = MathHelper.lerp(partialTicks, leftBreastPhysics.getPreBounceRotation(), leftBreastPhysics.getBounceRotation());
-		if(breasts.isUniboob()) {
+    
+		if (breasts.isUniboob()) {
 			rPhysPositionY = lPhysPositionY;
 			rPhysPositionX = lPhysPositionX;
 			rPhysBounceRotation = lPhysBounceRotation;
@@ -243,26 +207,55 @@ public class GenderLayer<S extends BipedEntityRenderState, M extends BipedEntity
 			rPhysBounceRotation = MathHelper.lerp(partialTicks, rightBreastPhysics.getPreBounceRotation(), rightBreastPhysics.getBounceRotation());
 		}
 
-		breastSize = Math.min(bSize * 1.5f, 0.7f); // Limit the max size to 0.7f
-
+		breastSize = Math.min(bSize * 1.5f, 0.7f);
 		if (bSize > 0.7f) {
-			breastSize = bSize; // If bSize exceeds 0.7f, use bSize
+        breastSize = bSize;
 		}
-
 		if (breastSize < 0.02f) {
-			return false; // Return false if breastSize is too small
+			return false;
 		}
 
-		zOffset = 0.0625f - (bSize * 0.0625f); // Calculate zOffset
-		breastSize += 0.5f * Math.abs(bSize - 0.7f) * 2f; // Adjust breastSize based on bSize
+		// Set up buttocks
+		buttocks = entityConfig.getButtocks();
+		buttocksOffsetX = Math.round((Math.round(buttocks.getXOffset() * 100f) / 100f) * 10) / 10f;
+		buttocksOffsetY = -Math.round((Math.round(buttocks.getYOffset() * 100f) / 100f) * 10) / 10f;
+		buttocksOffsetZ = -Math.round((Math.round(buttocks.getZOffset() * 100f) / 100f) * 10) / 10f;
+
+		ButtocksPhysics leftButtocksPhysics = entityConfig.getLeftButtocksPhysics();
+		final float buttSize = leftButtocksPhysics.getButtocksSize(partialTicks);
+		outwardAngle = (Math.round(buttocks.getCleavage() * 100f) / 100f) * 100f;
+		outwardAngle = Math.min(outwardAngle, 10);
+		resizeButtocksBox(buttSize);
+
+		lPhysButtocksPositionY = MathHelper.lerp(partialTicks, leftButtocksPhysics.getPrePositionY(), leftButtocksPhysics.getPositionY());
+		lPhysButtocksPositionX = MathHelper.lerp(partialTicks, leftButtocksPhysics.getPrePositionX(), leftButtocksPhysics.getPositionX());
+		lPhysButtocksBounceRotation = MathHelper.lerp(partialTicks, leftButtocksPhysics.getPreBounceRotation(), leftButtocksPhysics.getBounceRotation());
+
+		if (buttocks.isUnibutt()) {
+			rPhysButtocksPositionY = lPhysButtocksPositionY;
+			rPhysButtocksPositionX = lPhysButtocksPositionX;
+			rPhysButtocksBounceRotation = lPhysButtocksBounceRotation;
+		} else {
+			ButtocksPhysics rightButtocksPhysics = entityConfig.getRightButtocksPhysics();
+			rPhysButtocksPositionY = MathHelper.lerp(partialTicks, rightButtocksPhysics.getPrePositionY(), rightButtocksPhysics.getPositionY());
+			rPhysButtocksPositionX = MathHelper.lerp(partialTicks, rightButtocksPhysics.getPrePositionX(), rightButtocksPhysics.getPositionX());
+			rPhysButtocksBounceRotation = MathHelper.lerp(partialTicks, rightButtocksPhysics.getPreBounceRotation(), rightButtocksPhysics.getBounceRotation());
+		}
+
+		buttocksSize = Math.min(buttSize * 1.5f, 0.7f);
+		if (buttSize > 0.7f) {
+			buttocksSize = buttSize;
+		}
+		if (buttocksSize < 0.02f) {
+			return false;
+		}
 
 		float resistance = MathHelper.clamp(genderArmor.physicsResistance(), 0, 1);
-		//Note: We only check if the breathing animation should be enabled if the chestplate's physics resistance
-		// is less than or equal to 0.5 so that if we won't be rendering it we can avoid doing extra calculations
 		breathingAnimation = ((entityConfig.getArmorPhysicsOverride() || resistance <= 0.5F) &&
-				(!entity.isSubmergedInWater() || StatusEffectUtil.hasWaterBreathing(entity) ||
-						entity.getWorld().getBlockState(new BlockPos(entity.getBlockX(), entity.getBlockY(), entity.getBlockZ())).isOf(Blocks.BUBBLE_COLUMN)));
-		bounceEnabled = entityConfig.hasBreastPhysics() && (!isChestplateOccupied || resistance < 1); //oh, you found this?
+			(!entity.isSubmergedInWater() || StatusEffectUtil.hasWaterBreathing(entity) ||
+			entity.getWorld().getBlockState(new BlockPos(entity.getBlockX(), entity.getBlockY(), entity.getBlockZ())).isOf(Blocks.BUBBLE_COLUMN)));
+		bounceEnabled = entityConfig.hasBreastPhysics() && (!isChestplateOccupied || resistance < 1);
+
 		return true;
 	}
 
@@ -283,125 +276,179 @@ public class GenderLayer<S extends BipedEntityRenderState, M extends BipedEntity
 		}
 	}
 
-	protected void resizeBox(float buttocksSize) {
+	protected void resizeButtocksBox(float buttocksSize) {
 		float reducer = -1;
 		if(buttocksSize < 0.84f) reducer++;
 		if(buttocksSize < 0.72f) reducer++;
 
-		if(preBreastSize != breastSize || preButtocksOffsetZ != buttocksOffsetZ) {
-			lBreast = new ButtocksModelBox(64, 64, 16, 17, -4F, 0.0F, 0F, 4, 5, (int) (4 - buttocksOffsetZ - reducer), 0.0F, false);
-			rBreast = new ButtocksModelBox(64, 64, 20, 17, 0, 0.0F, 0F, 4, 5, (int) (4 - buttocksOffsetZ - reducer), 0.0F, false);
+		if(preButtocksSize != buttocksSize || preButtocksOffsetZ != buttocksOffsetZ) {
+			lButtocks = new ButtocksModelBox(64, 64, 16, 17, -4F, 0.0F, 0F, 4, 5, (int) (4 - buttocksOffsetZ - reducer), 0.0F, false);
+			rButtocks = new ButtocksModelBox(64, 64, 20, 17, 0, 0.0F, 0F, 4, 5, (int) (4 - buttocksOffsetZ - reducer), 0.0F, false);
 			preButtocksSize = buttocksSize;
 			preButtocksOffsetZ = buttocksOffsetZ;
 		}
 	}
 
-	protected void setupTransformations(S state, M model, MatrixStack matrixStack, BreastSide side) {
-		if(state.baby) {
-			matrixStack.scale(state.ageScale, state.ageScale, state.ageScale);
-			matrixStack.translate(0f, 0.75f, 0f);
-		}
+    protected void setupTransformations(S state, M model, MatrixStack matrixStack, BreastSide side) {
+        if(state.baby) {
+            matrixStack.scale(state.ageScale, state.ageScale, state.ageScale);
+            matrixStack.translate(0f, 0.75f, 0f);
+        }
 
-		ModelPart body = model.body;
-		matrixStack.translate(body.pivotX * 0.0625f, body.pivotY * 0.0625f, body.pivotZ * 0.0625f);
-		if(body.roll != 0.0F || body.yaw != 0.0F || body.pitch != 0.0F) {
-			matrixStack.multiply(new Quaternionf().rotationZYX(body.roll, body.yaw, body.pitch));
-		}
+        ModelPart body = model.body;
+        matrixStack.translate(body.pivotX * 0.0625f, body.pivotY * 0.0625f, body.pivotZ * 0.0625f);
+        if(body.roll != 0.0F || body.yaw != 0.0F || body.pitch != 0.0F) {
+            matrixStack.multiply(new Quaternionf().rotationZYX(body.roll, body.yaw, body.pitch));
+        }
 
-		if(bounceEnabled) {
-			matrixStack.translate((side.isLeft ? lPhysPositionX : rPhysPositionX) / 32f, 0, 0);
-			matrixStack.translate(0, (side.isLeft ? lPhysPositionY : rPhysPositionY) / 32f, 0);
-		}
+        if(bounceEnabled) {
+            matrixStack.translate((side.isLeft ? lPhysPositionX : rPhysPositionX) / 32f, 0, 0);
+            matrixStack.translate(0, (side.isLeft ? lPhysPositionY : rPhysPositionY) / 32f, 0);
+        }
 
-		matrixStack.translate((side.isLeft ? breastOffsetX : -breastOffsetX) * 0.0625f, 0.05625f + (breastOffsetY * 0.0625f), zOffset - 0.0625f * 2f + (breastOffsetZ * 0.0625f)); //shift down to correct position
+        matrixStack.translate((side.isLeft ? breastOffsetX : -breastOffsetX) * 0.0625f, 0.05625f + (breastOffsetY * 0.0625f), zOffset - 0.0625f * 2f + (breastOffsetZ * 0.0625f)); //shift down to correct position
 
-		if(!breasts.isUniboob()) {
-			matrixStack.translate(-0.0625f * 2 * (side.isLeft ? 1 : -1), 0, 0);
-		}
-		if(bounceEnabled) {
-			matrixStack.multiply(new Quaternionf().rotationXYZ(0, (float)((side.isLeft ? lPhysBounceRotation : rPhysBounceRotation) * (Math.PI / 180f)), 0));
-		}
-		if(!breasts.isUniboob()) {
-			matrixStack.translate(0.0625f * 2 * (side.isLeft ? 1 : -1), 0, 0);
-		}
+        if(!breasts.isUniboob()) {
+            matrixStack.translate(-0.0625f * 2 * (side.isLeft ? 1 : -1), 0, 0);
+        }
+        if(bounceEnabled) {
+            matrixStack.multiply(new Quaternionf().rotationXYZ(0, (float)((side.isLeft ? lPhysBounceRotation : rPhysBounceRotation) * (Math.PI / 180f)), 0));
+        }
+        if(!breasts.isUniboob()) {
+            matrixStack.translate(0.0625f * 2 * (side.isLeft ? 1 : -1), 0, 0);
+        }
 
-		float rotation = breastSize;
-		if(bounceEnabled) {
-			matrixStack.translate(0, -0.035f * breastSize, 0); //shift down to correct position
-			rotation -= (side.isLeft ? lPhysPositionY : rPhysPositionY) / 12f;
-		}
+        float rotation = breastSize;
+        if(bounceEnabled) {
+            matrixStack.translate(0, -0.035f * breastSize, 0); //shift down to correct position
+            rotation -= (side.isLeft ? lPhysPositionY : rPhysPositionY) / 12f;
+        }
 
-		rotation = Math.min(rotation, breastSize + 0.2f);
-		rotation = Math.min(rotation, 1); //hard limit for MAX
+        rotation = Math.min(rotation, breastSize + 0.2f);
+        rotation = Math.min(rotation, 1); //hard limit for MAX
 
-		if(isChestplateOccupied) {
-			matrixStack.translate(0, 0, 0.01f);
-		}
+        if(isChestplateOccupied) {
+            matrixStack.translate(0, 0, 0.01f);
+        }
 
-		Quaternionf rotationTransform = new Quaternionf()
-				.rotationY((side.isLeft ? outwardAngle : -outwardAngle) * DEG_TO_RAD)
-				.rotateX(-35f * rotation * DEG_TO_RAD);
+        Quaternionf rotationTransform = new Quaternionf()
+                .rotationY((side.isLeft ? outwardAngle : -outwardAngle) * DEG_TO_RAD)
+                .rotateX(-35f * rotation * DEG_TO_RAD);
 
-		if(breathingAnimation) {
-			float f5 = -MathHelper.cos(state.age * 0.09F) * 0.45F + 0.45F;
-			rotationTransform.rotateX(f5 * DEG_TO_RAD);
-		}
+        if(breathingAnimation) {
+            float f5 = -MathHelper.cos(state.age * 0.09F) * 0.45F + 0.45F;
+            rotationTransform.rotateX(f5 * DEG_TO_RAD);
+        }
 
-		matrixStack.multiply(rotationTransform);
-		matrixStack.scale(0.9995f, 1f, 1f); //z-fighting FIXXX
-	}
+        matrixStack.multiply(rotationTransform);
+        matrixStack.scale(0.9995f, 1f, 1f); //z-fighting FIXXX
+    }
 
-	private void renderBreast(S state, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int light,
-	                          int overlay, BreastSide side) {
-		RenderLayer breastRenderType = getRenderLayer(state);
-		if(breastRenderType == null) return; // only render if the player is visible in some capacity
-		int alpha = state.invisible ? ColorHelper.channelFromFloat(0.15f) : 255;
-		int color = ColorHelper.getArgb(alpha, 255, 255, 255);
-		VertexConsumer vertexConsumer = vertexConsumerProvider.getBuffer(breastRenderType);
-		renderBox(side.isLeft ? lBreast : rBreast, matrixStack, vertexConsumer, light, overlay, color);
-		if(state instanceof PlayerEntityRenderState playerState && playerState.jacketVisible) {
-			matrixStack.translate(0, 0, -0.015f);
-			matrixStack.scale(1.05f, 1.05f, 1.05f);
-			renderBox(side.isLeft ? lBreastWear : rBreastWear, matrixStack, vertexConsumer, light, overlay, color);
-		}
-	}
+    private void renderBreast(S state, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int light,
+                              int overlay, BreastSide side) {
+        RenderLayer breastRenderType = getRenderLayer(state);
+        if(breastRenderType == null) return; // only render if the player is visible in some capacity
+        int alpha = state.invisible ? ColorHelper.channelFromFloat(0.15f) : 255;
+        int color = ColorHelper.getArgb(alpha, 255, 255, 255);
+        VertexConsumer vertexConsumer = vertexConsumerProvider.getBuffer(breastRenderType);
+        renderBox(side.isLeft ? lBreast : rBreast, matrixStack, vertexConsumer, light, overlay, color);
+        if(state instanceof PlayerEntityRenderState playerState && playerState.jacketVisible) {
+            matrixStack.translate(0, 0, -0.015f);
+            matrixStack.scale(1.05f, 1.05f, 1.05f);
+            renderBox(side.isLeft ? lBreastWear : rBreastWear, matrixStack, vertexConsumer, light, overlay, color);
+        }
+    }
 
-	protected void renderSides(S state, M model, MatrixStack matrixStack, Consumer<BreastSide> renderer) {
-		matrixStack.push();
-		try {
-			setupTransformations(state, model, matrixStack, BreastSide.LEFT);
-			renderer.accept(BreastSide.LEFT);
-		} finally {
-			matrixStack.pop();
-		}
+    protected void renderSides(S state, M model, MatrixStack matrixStack, Consumer<BreastSide> renderer) {
+        matrixStack.push();
+        try {
+            setupTransformations(state, model, matrixStack, BreastSide.LEFT);
+            renderer.accept(BreastSide.LEFT);
+        } finally {
+            matrixStack.pop();
+        }
 
-		matrixStack.push();
-		try {
-			setupTransformations(state, model, matrixStack, BreastSide.RIGHT);
-			renderer.accept(BreastSide.RIGHT);
-		} finally {
-			matrixStack.pop();
-		}
-	}
+        matrixStack.push();
+        try {
+            setupTransformations(state, model, matrixStack, BreastSide.RIGHT);
+            renderer.accept(BreastSide.RIGHT);
+        } finally {
+            matrixStack.pop();
+        }
+    }
 
-	protected void renderButtocksSides(S state, M model, MatrixStack matrixStack, Consumer<ButtocksSide> renderer) {
-	    	matrixStack.push();
- 	  	try {
-    	   		setupTransformations(state, model, matrixStack, ButtocksSide.LEFT);
-    	   		renderer.accept(ButtocksSide.LEFT);
-  		} finally {
-  	  		matrixStack.pop();
-  		}
+    protected void renderButtocksSides(S state, M model, MatrixStack matrixStack, Consumer<ButtocksSide> renderer) {
+            matrixStack.push();
+        try {
+                setupTransformationsButtocks(state, model, matrixStack, ButtocksSide.LEFT);
+                renderer.accept(ButtocksSide.LEFT);
+        } finally {
+            matrixStack.pop();
+        }
 
- 	   	matrixStack.push();
- 	   	try {
-  	  	     	setupTransformations(state, model, matrixStack, ButtocksSide.RIGHT);
-   		     	renderer.accept(ButtocksSide.RIGHT);
-  		} finally {
-  	 	   	matrixStack.pop();
-  		}
-	}
+        matrixStack.push();
+        try {
+                setupTransformationsButtocks(state, model, matrixStack, ButtocksSide.RIGHT);
+                renderer.accept(ButtocksSide.RIGHT);
+        } finally {
+            matrixStack.pop();
+        }
+    }
 
+    protected void setupTransformationsButtocks(S state, M model, MatrixStack matrixStack, ButtocksSide side) {
+        if(state.baby) {
+            matrixStack.scale(state.ageScale, state.ageScale, state.ageScale);
+            matrixStack.translate(0f, 0.75f, 0f);
+        }
+
+        ModelPart body = model.body;
+        matrixStack.translate(body.pivotX * 0.0625f, body.pivotY * 0.0625f, body.pivotZ * 0.0625f);
+        if(body.roll != 0.0F || body.yaw != 0.0F || body.pitch != 0.0F) {
+            matrixStack.multiply(new Quaternionf().rotationZYX(body.roll, body.yaw, body.pitch));
+        }
+
+        if(bounceEnabled) {
+            matrixStack.translate((side.isLeft ? lPhysButtocksPositionX : rPhysButtocksPositionX) / 32f, 0, 0);
+            matrixStack.translate(0, (side.isLeft ? lPhysButtocksPositionY : rPhysButtocksPositionY) / 32f, 0);
+        }
+
+        matrixStack.translate((side.isLeft ? buttocksOffsetX : -buttocksOffsetX) * 0.0625f, 0.05625f + (buttocksOffsetY * 0.0625f), zOffset - 0.0625f * 2f + (buttocksOffsetZ * 0.0625f)); //shift down to correct position
+
+        if(!buttocks.isUnibutt()) {
+            matrixStack.translate(-0.0625f * 2 * (side.isLeft ? 1 : -1), 0, 0);
+        }
+        if(bounceEnabled) {
+            matrixStack.multiply(new Quaternionf().rotationXYZ(0, (float)((side.isLeft ? lPhysButtocksBounceRotation : rPhysButtocksBounceRotation) * (Math.PI / 180f)), 0));
+        }
+        if(!buttocks.isUnibutt()) {
+            matrixStack.translate(0.0625f * 2 * (side.isLeft ? 1 : -1), 0, 0);
+        }
+
+        float rotation = buttocksSize;
+        if(bounceEnabled) {
+            matrixStack.translate(0, -0.035f * buttocksSize, 0); //shift down to correct position
+            rotation -= (side.isLeft ? lPhysButtocksPositionY : rPhysButtocksPositionY) / 12f;
+        }
+
+        rotation = Math.min(rotation, buttocksSize + 0.2f);
+        rotation = Math.min(rotation, 1); //hard limit for MAX
+
+        if(isChestplateOccupied) {
+            matrixStack.translate(0, 0, 0.01f);
+        }
+
+        Quaternionf rotationTransform = new Quaternionf()
+                .rotationY((side.isLeft ? outwardAngle : -outwardAngle) * DEG_TO_RAD)
+                .rotateX(-35f * rotation * DEG_TO_RAD);
+
+        if(breathingAnimation) {
+            float f5 = -MathHelper.cos(state.age * 0.09F) * 0.45F + 0.45F;
+            rotationTransform.rotateX(f5 * DEG_TO_RAD);
+        }
+
+        matrixStack.multiply(rotationTransform);
+        matrixStack.scale(0.9995f, 1f, 1f); //z-fighting FIXXX
+    }
 
 	protected static void renderBox(WildfireModelRenderer.ModelBox model, MatrixStack matrixStack, VertexConsumer vertexConsumer,
 									int light, int overlay, int color) {

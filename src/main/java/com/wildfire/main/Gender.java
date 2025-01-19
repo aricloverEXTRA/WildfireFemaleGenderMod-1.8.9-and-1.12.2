@@ -31,33 +31,39 @@ import java.util.function.IntFunction;
 
 public enum Gender {
 
-	// NOTE: The order of these should remain unchanged! Changing these WILL modify player configs!
-	FEMALE(Text.translatable("wildfire_gender.label.female").formatted(Formatting.LIGHT_PURPLE), true, WildfireSounds.FEMALE_HURT),
-	MALE(Text.translatable("wildfire_gender.label.male").formatted(Formatting.BLUE), false, null),
-	OTHER(Text.translatable("wildfire_gender.label.other").formatted(Formatting.GREEN), true, WildfireSounds.FEMALE_HURT);
+    // NOTE: The order of these should remain unchanged! Changing these WILL modify player configs!
+    FEMALE(Text.translatable("wildfire_gender.label.female").formatted(Formatting.LIGHT_PURPLE), true, true, WildfireSounds.FEMALE_HURT),
+    MALE(Text.translatable("wildfire_gender.label.male").formatted(Formatting.BLUE), false, false, null),
+    OTHER(Text.translatable("wildfire_gender.label.other").formatted(Formatting.GREEN), true, true, WildfireSounds.FEMALE_HURT);
 
-	public static final IntFunction<Gender> BY_ID = ValueLists.createIdToValueFunction(Gender::ordinal, values(), ValueLists.OutOfBoundsHandling.WRAP);
-	public static final PacketCodec<ByteBuf, Gender> CODEC = PacketCodecs.indexed(BY_ID, Gender::ordinal);
+    public static final IntFunction<Gender> BY_ID = ValueLists.createIdToValueFunction(Gender::ordinal, values(), ValueLists.OutOfBoundsHandling.WRAP);
+    public static final PacketCodec<ByteBuf, Gender> CODEC = PacketCodecs.indexed(BY_ID, Gender::ordinal);
 
-	private final Text name;
-	private final boolean canHaveBreasts;
-	private final @Nullable SoundEvent hurtSound;
+    private final Text name;
+    private final boolean canHaveBreasts;
+    private final boolean canHaveButtocks;
+    private final @Nullable SoundEvent hurtSound;
 
-	Gender(Text name, boolean canHaveBreasts, @Nullable SoundEvent hurtSound) {
-		this.name = name;
-		this.canHaveBreasts = canHaveBreasts;
-		this.hurtSound = hurtSound;
-	}
+    Gender(Text name, boolean canHaveBreasts, boolean canHaveButtocks, @Nullable SoundEvent hurtSound) {
+        this.name = name;
+        this.canHaveBreasts = canHaveBreasts;
+        this.canHaveButtocks = canHaveButtocks;
+        this.hurtSound = hurtSound;
+    }
 
-	public Text getDisplayName() {
-		return name;
-	}
+    public Text getDisplayName() {
+        return name;
+    }
 
-	public @Nullable SoundEvent getHurtSound() {
-		return hurtSound;
-	}
+    public @Nullable SoundEvent getHurtSound() {
+        return hurtSound;
+    }
 
-	public boolean canHaveBreasts() {
-		return canHaveBreasts;
-	}
+    public boolean canHaveBreasts() {
+        return canHaveBreasts;
+    }
+
+    public boolean canHaveButtocks() {
+        return canHaveButtocks;
+    }
 }

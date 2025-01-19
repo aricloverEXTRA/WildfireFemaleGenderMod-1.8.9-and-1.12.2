@@ -51,6 +51,7 @@ public class PlayerConfig extends EntityConfig {
 	protected boolean holidayThemes = Configuration.HOLIDAY_THEMES.getDefault();
 	protected boolean armorPhysOverride = Configuration.ARMOR_PHYSICS_OVERRIDE.getDefault();
 	protected boolean showBreastsInArmor = Configuration.SHOW_IN_ARMOR.getDefault();
+	protected boolean showButtocksInArmor = Configuration.SHOW_BUTTOCKS_IN_ARMOR.getDefault();
 
 	/**
 	 * @deprecated Use {@link #updateGender(Gender)} instead
@@ -67,6 +68,7 @@ public class PlayerConfig extends EntityConfig {
 		this.cfg.set(Configuration.USERNAME, this.uuid);
 		this.cfg.setDefault(Configuration.GENDER);
 		this.cfg.setDefault(Configuration.BUST_SIZE);
+		this.cfg.setDefault(Configuration.BUTTOCKS_SIZE);
 		this.cfg.setDefault(Configuration.HURT_SOUNDS);
 
 		this.cfg.setDefault(Configuration.BREASTS_OFFSET_X);
@@ -75,9 +77,17 @@ public class PlayerConfig extends EntityConfig {
 		this.cfg.setDefault(Configuration.BREASTS_UNIBOOB);
 		this.cfg.setDefault(Configuration.BREASTS_CLEAVAGE);
 
+		this.cfg.setDefault(Configuration.BUTTOCKS_OFFSET_X);
+		this.cfg.setDefault(Configuration.BUTTOCKS_OFFSET_Y);
+		this.cfg.setDefault(Configuration.BUTTOCKS_OFFSET_Z);
+		this.cfg.setDefault(Configuration.BUTTOCKS_UNIBUTT);
+		this.cfg.setDefault(Configuration.BUTTOCKS_CLEAVAGE);
+
 		this.cfg.setDefault(Configuration.BREAST_PHYSICS);
+		this.cfg.setDefault(Configuration.BUTTOCKS_PHYSICS);
 		this.cfg.setDefault(Configuration.ARMOR_PHYSICS_OVERRIDE);
 		this.cfg.setDefault(Configuration.SHOW_IN_ARMOR);
+		this.cfg.setDefault(Configuration.SHOW_BUTTOCKS_IN_ARMOR);
 		this.cfg.setDefault(Configuration.BOUNCE_MULTIPLIER);
 		this.cfg.setDefault(Configuration.FLOPPY_MULTIPLIER);
 		this.cfg.setDefault(Configuration.VOICE_PITCH);
@@ -86,7 +96,7 @@ public class PlayerConfig extends EntityConfig {
 
 		// Real players always have a UUID of version 4; if this isn't the case, then this is undeniably
 		// an NPC player entity.
-		if(uuid.version() != 4) this.holidayThemes = false;
+		if (uuid.version() != 4) this.holidayThemes = false;
 	}
 
 	// this shouldn't ever be called on players, but just to be safe, override with a noop.
@@ -113,6 +123,9 @@ public class PlayerConfig extends EntityConfig {
 		return updateValue(Configuration.BUST_SIZE, value, v -> this.pBustSize = v);
 	}
 
+	public boolean updateButtocksSize(float value) {
+		return updateValue(Configuration.BUTTOCKS_SIZE, value, v -> this.pButtocksSize = v);
+	}
 
 	public boolean hasHolidayThemes() {
 		return holidayThemes;
@@ -121,7 +134,6 @@ public class PlayerConfig extends EntityConfig {
 	public boolean updateHolidayThemes(boolean value) {
 		return updateValue(Configuration.HOLIDAY_THEMES, value, v -> this.holidayThemes = v);
 	}
-
 
 	public boolean hasHurtSounds() {
 		return hurtSounds;
@@ -138,6 +150,10 @@ public class PlayerConfig extends EntityConfig {
 	public boolean updateBreastPhysics(boolean value) {
 		return updateValue(Configuration.BREAST_PHYSICS, value, v -> this.breastPhysics = v);
 	}
+	
+	public boolean updateButtocksPhysics(boolean value) {
+		return updateValue(Configuration.BUTTOCKS_PHYSICS, value, v -> this.buttocksPhysics = v);
+	}
 
 	public boolean getArmorPhysicsOverride() {
 		return armorPhysOverride;
@@ -153,6 +169,14 @@ public class PlayerConfig extends EntityConfig {
 
 	public boolean updateShowBreastsInArmor(boolean value) {
 		return updateValue(Configuration.SHOW_IN_ARMOR, value, v -> this.showBreastsInArmor = v);
+	}
+	
+	public boolean showButtocksInArmor() {
+		return showButtocksInArmor;
+	}
+	
+	public boolean updateShowButtocksInArmor(boolean value) {
+		return updateValue(Configuration.SHOW_BUTTOCKS_IN_ARMOR, value, v -> this.showButtocksInArmor = v);
 	}
 
 	public boolean updateBounceMultiplier(float value) {
@@ -212,13 +236,16 @@ public class PlayerConfig extends EntityConfig {
 	public void loadFromConfig(boolean markForSync) {
 		updateGender(cfg.get(Configuration.GENDER));
 		updateBustSize(cfg.get(Configuration.BUST_SIZE));
+		updateButtocksSize(cfg.get(Configuration.BUTTOCKS_SIZE));
 		updateHurtSounds(cfg.get(Configuration.HURT_SOUNDS));
 		updateVoicePitch(cfg.get(Configuration.VOICE_PITCH));
 		updateHolidayThemes(cfg.get(Configuration.HOLIDAY_THEMES));
 
 		//physics
 		updateBreastPhysics(cfg.get(Configuration.BREAST_PHYSICS));
+		updateButtocksPhysics(cfg.get(Configuration.BUTTOCKS_PHYSICS));
 		updateShowBreastsInArmor(cfg.get(Configuration.SHOW_IN_ARMOR));
+		updateShowButtocksInArmor(cfg.get(Configuration.SHOW_IN_ARMOR));
 		updateArmorPhysicsOverride(cfg.get(Configuration.ARMOR_PHYSICS_OVERRIDE));
 		updateBounceMultiplier(cfg.get(Configuration.BOUNCE_MULTIPLIER));
 		updateFloppiness(cfg.get(Configuration.FLOPPY_MULTIPLIER));
@@ -228,6 +255,12 @@ public class PlayerConfig extends EntityConfig {
 		breasts.updateZOffset(cfg.get(Configuration.BREASTS_OFFSET_Z));
 		breasts.updateUniboob(cfg.get(Configuration.BREASTS_UNIBOOB));
 		breasts.updateCleavage(cfg.get(Configuration.BREASTS_CLEAVAGE));
+
+		buttocks.updateXOffset(cfg.get(Configuration.BUTTOCKS_OFFSET_X));
+		buttocks.updateYOffset(cfg.get(Configuration.BUTTOCKS_OFFSET_Y));
+		buttocks.updateZOffset(cfg.get(Configuration.BUTTOCKS_OFFSET_Z));
+		buttocks.updateUnibutt(cfg.get(Configuration.BUTTOCKS_UNIBUTT));
+		buttocks.updateCleavage(cfg.get(Configuration.BUTTOCKS_CLEAVAGE));
 
 		if(markForSync) {
 			this.needsSync = true;
@@ -257,13 +290,16 @@ public class PlayerConfig extends EntityConfig {
 		config.set(Configuration.USERNAME, plr.uuid);
 		config.set(Configuration.GENDER, plr.getGender());
 		config.set(Configuration.BUST_SIZE, plr.getBustSize());
+		config.set(Configuration.BUTTOCKS_SIZE, plr.getButtocksSize());
 		config.set(Configuration.HURT_SOUNDS, plr.hasHurtSounds());
 		config.set(Configuration.VOICE_PITCH, plr.getVoicePitch());
 		config.set(Configuration.HOLIDAY_THEMES, plr.hasHolidayThemes());
 
 		//physics
 		config.set(Configuration.BREAST_PHYSICS, plr.hasBreastPhysics());
+		config.set(Configuration.BUTTOCKS_PHYSICS, plr.hasButtocksPhysics());
 		config.set(Configuration.SHOW_IN_ARMOR, plr.showBreastsInArmor());
+		config.set(Configuration.SHOW_IN_ARMOR, plr.showButtocksInArmor());
 		config.set(Configuration.ARMOR_PHYSICS_OVERRIDE, plr.getArmorPhysicsOverride());
 		config.set(Configuration.BOUNCE_MULTIPLIER, plr.getBounceMultiplier());
 		config.set(Configuration.FLOPPY_MULTIPLIER, plr.getFloppiness());
@@ -273,6 +309,12 @@ public class PlayerConfig extends EntityConfig {
 		config.set(Configuration.BREASTS_OFFSET_Z, plr.getBreasts().getZOffset());
 		config.set(Configuration.BREASTS_UNIBOOB, plr.getBreasts().isUniboob());
 		config.set(Configuration.BREASTS_CLEAVAGE, plr.getBreasts().getCleavage());
+
+		config.set(Configuration.BUTTOCKS_OFFSET_X, plr.getButtocks().getXOffset());
+		config.set(Configuration.BUTTOCKS_OFFSET_Y, plr.getButtocks().getYOffset());
+		config.set(Configuration.BUTTOCKS_OFFSET_Z, plr.getButtocks().getZOffset());
+		config.set(Configuration.BUTTOCKS_UNIBUTT, plr.getButtocks().isUnibutt());
+		config.set(Configuration.BUTTOCKS_CLEAVAGE, plr.getButtocks().getCleavage());
 
 		config.save();
 		plr.needsSync = true;

@@ -19,13 +19,16 @@
 package com.wildfire.render;
 
 import com.wildfire.api.IBreastArmorTexture;
+import com.wildfire.api.IButtocksArmorTexture;
 import com.wildfire.api.impl.BreastArmorTexture;
+import com.wildfire.api.impl.ButtocksArmorTexture;
 import com.wildfire.main.WildfireGender;
 import com.wildfire.main.entitydata.EntityConfig;
 import com.wildfire.mixins.accessors.EquipmentRendererAccessor;
 import com.wildfire.mixins.accessors.TextureManagerAccessor;
 import com.wildfire.mixins.accessors.TrimSpriteKeyConstructorAccessor;
 import com.wildfire.render.WildfireModelRenderer.BreastModelBox;
+import com.wildfire.render.WildfireModelRenderer.ButtocksModelBox;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
@@ -62,147 +65,186 @@ import java.util.function.Function;
 @Environment(EnvType.CLIENT)
 public class GenderArmorLayer<S extends BipedEntityRenderState, M extends BipedEntityModel<S>> extends GenderLayer<S, M> {
 
-	private final EquipmentRenderer equipmentRenderer;
-	private final EquipmentModelLoader equipmentModelLoader;
-	protected BreastModelBox lBoobArmor, rBoobArmor;
-	protected static final BreastModelBox lTrim, rTrim;
-	private EntityConfig entityConfig;
-	private @NotNull IBreastArmorTexture textureData = BreastArmorTexture.DEFAULT;
+    private final EquipmentRenderer equipmentRenderer;
+    private final EquipmentModelLoader equipmentModelLoader;
+    protected BreastModelBox lBoobArmor, rBoobArmor;
+    protected static final BreastModelBox lTrim, rTrim;
+    protected ButtocksModelBox lButtocksArmor, rButtocksArmor;
+    private EntityConfig entityConfig;
+    private @NotNull IBreastArmorTexture breastTextureData = BreastArmorTexture.DEFAULT;
+    private @NotNull IButtocksArmorTexture buttocksTextureData = ButtocksArmorTexture.DEFAULT;
 
-	private static final Function<Identifier, Boolean> TEXTURE_EXISTS = Util.memoize(id -> {
-		var texManager = MinecraftClient.getInstance().getTextureManager();
-		var resourceManager = ((TextureManagerAccessor) texManager).getResourceContainer();
-		return resourceManager.getResource(id).isPresent();
-	});
+    private static final Function<Identifier, Boolean> TEXTURE_EXISTS = Util.memoize(id -> {
+        var texManager = MinecraftClient.getInstance().getTextureManager();
+        var resourceManager = ((TextureManagerAccessor) texManager).getResourceContainer();
+        return resourceManager.getResource(id).isPresent();
+    });
 
-	static {
-		// apply a very slight delta to fix z-fighting with the armor
-		lTrim = new BreastModelBox(64, 32, 16, 17, -4F, 0.0F, 0F, 4, 5, 4, 0.001F, false);
-		rTrim = new BreastModelBox(64, 32, 20, 17, 0, 0.0F, 0F, 4, 5, 4, 0.001F, false);
-	}
+    static {
+        // Apply a very slight delta to fix z-fighting with the armor
+        lTrim = new BreastModelBox(64, 32, 16, 17, -4F, 0.0F, 0F, 4, 5, 4, 0.001F, false);
+        rTrim = new BreastModelBox(64, 32, 20, 17, 0, 0.0F, 0F, 4, 5, 4, 0.001F, false);
+    }
 
-	public GenderArmorLayer(FeatureRendererContext<S, M> render, EquipmentModelLoader equipmentModelLoader, EquipmentRenderer equipmentRenderer) {
-		super(render);
-		this.equipmentRenderer = equipmentRenderer;
-		this.equipmentModelLoader = equipmentModelLoader;
-		lBoobArmor = new BreastModelBox(64, 32, 16, 17, -4F, 0.0F, 0F, 4, 5, 3, 0.0F, false);
-		rBoobArmor = new BreastModelBox(64, 32, 20, 17, 0, 0.0F, 0F, 4, 5, 3, 0.0F, false);
-	}
+    public GenderArmorLayer(FeatureRendererContext<S, M> render, EquipmentModelLoader equipmentModelLoader, EquipmentRenderer equipmentRenderer) {
+        super(render);
+        this.equipmentRenderer = equipmentRenderer;
+        this.equipmentModelLoader = equipmentModelLoader;
+        lBoobArmor = new BreastModelBox(64, 32, 16, 17, -4F, 0.0F, 0F, 4, 5, 3, 0.0F, false);
+        rBoobArmor = new BreastModelBox(64, 32, 20, 17, 0, 0.0F, 0F, 4, 5, 3, 0.0F, false);
+        lButtocksArmor = new ButtocksModelBox(64, 32, 16, 17, -4F, 0.0F, 0F, 4, 5, 3, 0.0F, false);
+        rButtocksArmor = new ButtocksModelBox(64, 32, 20, 17, 0, 0.0F, 0F, 4, 5, 3, 0.0F, false);
+    }
 
-	@Override
-	public void render(MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int light, S state, float limbAngle, float limbDistance) {
-		MinecraftClient client = MinecraftClient.getInstance();
-		if(client.player == null) {
-			// we're currently in a menu, give up rendering before we crash the game
-			return;
-		}
+    @Override
+    public void render(MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int light, S state, float limbAngle, float limbDistance) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client.player == null) {
+            // We're currently in a menu, give up rendering before we crash the game
+            return;
+        }
 
-		LivingEntity ent = getEntity(state);
-		if(ent == null) return;
+        LivingEntity ent = getEntity(state);
+        if (ent == null) return;
 
-		final ItemStack chestplate = state.equippedChestStack;
-		// Check if the worn item in the chest slot is actually equippable in the chest slot, and has a model to render
-		var component = chestplate.get(DataComponentTypes.EQUIPPABLE);
-		if(component == null || component.slot() != EquipmentSlot.CHEST || component.assetId().isEmpty()) return;
+        final ItemStack chestplate = state.equippedChestStack;
+        var component = chestplate.get(DataComponentTypes.EQUIPPABLE);
+        if (component == null || component.slot() != EquipmentSlot.CHEST || component.assetId().isEmpty()) return;
 
-		try {
-			entityConfig = EntityConfig.getEntity(ent);
+        try {
+            entityConfig = EntityConfig.getEntity(ent);
 
-			if(!setupRender(state, entityConfig)) return;
-			if(ent instanceof ArmorStandEntity && !genderArmor.armorStandsCopySettings()) return;
+            if (!setupRender(state, entityConfig)) return;
+            if (ent instanceof ArmorStandEntity && !genderArmor.armorStandsCopySettings()) return;
 
-			int color = chestplate.isIn(ItemTags.DYEABLE) ? DyedColorComponent.getColor(chestplate, -1) : -1;
-			boolean glint = chestplate.hasGlint();
+            int color = chestplate.isIn(ItemTags.DYEABLE) ? DyedColorComponent.getColor(chestplate, -1) : -1;
+            boolean glint = chestplate.hasGlint();
 
-			renderSides(state, getContextModel(), matrixStack, side -> {
-				var asset = component.assetId().orElseThrow();
-				// TODO is there still a need to allow for overriding the armor texture identifier?
-				equipmentModelLoader.get(asset).getLayers(EquipmentModel.LayerType.HUMANOID).forEach(layer -> {
-					// mojang what the Optional hell is this
-					int layerColor = layer.dyeable().map(dye -> {
-						int defaultColor = dye.colorWhenUndyed().map(ColorHelper::fullAlpha).orElse(-1);
-						return color != -1 ? color : defaultColor;
-					}).orElse(-1);
-					var texture = layer.getFullTextureId(EquipmentModel.LayerType.HUMANOID);
-					renderBreastArmor(texture, matrixStack, vertexConsumerProvider, light, side, layerColor, glint);
-				});
+            renderSides(state, getContextModel(), matrixStack, side -> {
+                var asset = component.assetId().orElseThrow();
+                equipmentModelLoader.get(asset).getLayers(EquipmentModel.LayerType.HUMANOID).forEach(layer -> {
+                    int layerColor = layer.dyeable().map(dye -> {
+                        int defaultColor = dye.colorWhenUndyed().map(ColorHelper::fullAlpha).orElse(-1);
+                        return color != -1 ? color : defaultColor;
+                    }).orElse(-1);
+                    var texture = layer.getFullTextureId(EquipmentModel.LayerType.HUMANOID);
+                    renderBreastArmor(texture, matrixStack, vertexConsumerProvider, light, side, layerColor, glint);
+                    renderButtocksArmor(texture, matrixStack, vertexConsumerProvider, light, side, layerColor, glint);
+                });
 
-				var trim = armorStack.get(DataComponentTypes.TRIM);
-				if(trim != null) {
-					renderArmorTrim(asset, matrixStack, vertexConsumerProvider, light, trim, glint, side);
-				}
-			});
-		} catch(Exception e) {
-			WildfireGender.LOGGER.error("Failed to render breast armor", e);
-		}
-	}
+                var trim = armorStack.get(DataComponentTypes.TRIM);
+                if (trim != null) {
+                    renderArmorTrim(asset, matrixStack, vertexConsumerProvider, light, trim, glint, side);
+                }
+            });
+        } catch (Exception e) {
+            WildfireGender.LOGGER.error("Failed to render armor", e);
+        }
+    }
 
-	@Override
-	protected boolean isLayerVisible(S state) {
-		return genderArmor.coversBreasts();
-	}
+    @Override
+    protected boolean isLayerVisible(S state) {
+        return genderArmor.coversBreasts() || genderArmor.coversButtocks();
+    }
 
-	@Override
-	protected void resizeBox(float breastSize) {
-		if(genderArmor == null || Objects.equals(textureData, genderArmor.texture())) {
-			return;
-		}
+    @Override
+    protected void resizeBox(float breastSize) {
+        if (genderArmor == null || Objects.equals(breastTextureData, genderArmor.texture())) {
+            return;
+        }
 
-		textureData = genderArmor.texture();
-		var texSize = textureData.textureSize();
-		var lUV = textureData.leftUv();
-		var dim = textureData.dimensions();
-		lBoobArmor = new BreastModelBox(texSize.x(), texSize.y(), lUV.x(), lUV.y(), -4F, 0.0F, 0F, dim.x(), dim.y(), 3, 0.0F, false);
-		var rUV = textureData.rightUv();
-		rBoobArmor = new BreastModelBox(texSize.x(), texSize.y(), rUV.x(), rUV.y(), 0, 0.0F, 0F, dim.x(), dim.y(), 3, 0.0F, false);
-	}
+        breastTextureData = genderArmor.texture();
+        var texSize = breastTextureData.textureSize();
+        var lUV = breastTextureData.leftUv();
+        var dim = breastTextureData.dimensions();
+        lBoobArmor = new BreastModelBox(texSize.x(), texSize.y(), lUV.x(), lUV.y(), -4F, 0.0F, 0F, dim.x(), dim.y(), 3, 0.0F, false);
+        var rUV = breastTextureData.rightUv();
+        rBoobArmor = new BreastModelBox(texSize.x(), texSize.y(), rUV.x(), rUV.y(), 0, 0.0F, 0F, dim.x(), dim.y(), 3, 0.0F, false);
+    }
 
-	@Override
-	protected void setupTransformations(S state, M model, MatrixStack matrixStack, BreastSide side) {
-		super.setupTransformations(state, model, matrixStack, side);
-		if((state instanceof PlayerEntityRenderState playerState && playerState.jacketVisible) ||
-				(state instanceof ArmorStandEntityRenderState && entityConfig.hasJacketLayer())) {
-			matrixStack.translate(0, 0, -0.015f);
-			matrixStack.scale(1.05f, 1.05f, 1.05f);
-		}
-		matrixStack.translate(side.isLeft ? 0.001f : -0.001f, 0.015f, -0.015f);
-		matrixStack.scale(1.05f, 1, 1);
-	}
+    protected void resizeButtocksBox(float buttocksSize) {
+        if (genderArmor == null || Objects.equals(buttocksTextureData, genderArmor.texture())) {
+            return;
+        }
 
-	// TODO eventually expose some way for mods to override this, maybe through a default impl in IGenderArmor or similar
-	protected void renderBreastArmor(Identifier texture, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider,
-	                                 int light, BreastSide side, int color, boolean glint) {
-		if(!TEXTURE_EXISTS.apply(texture)) {
-			return;
-		}
+        buttocksTextureData = genderArmor.texture();
+        var texSize = buttocksTextureData.textureSize();
+        var lUV = buttocksTextureData.leftUv();
+        var dim = buttocksTextureData.dimensions();
+        lButtocksArmor = new ButtocksModelBox(texSize.x(), texSize.y(), lUV.x(), lUV.y(), -4F, 0.0F, 0F, dim.x(), dim.y(), 3, 0.0F, false);
+        var rUV = buttocksTextureData.rightUv();
+        rButtocksArmor = new ButtocksModelBox(texSize.x(), texSize.y(), rUV.x(), rUV.y(), 0, 0.0F, 0F, dim.x(), dim.y(), 3, 0.0F, false);
+    }
 
-		BreastModelBox armor = side.isLeft ? lBoobArmor : rBoobArmor;
-		RenderLayer armorType = RenderLayer.getArmorCutoutNoCull(texture);
-		VertexConsumer armorVertexConsumer = ItemRenderer.getArmorGlintConsumer(vertexConsumerProvider, armorType, glint);
-		renderBox(armor, matrixStack, armorVertexConsumer, light, OverlayTexture.DEFAULT_UV, ColorHelper.fullAlpha(color));
-	}
+    // TODO eventually expose some way for mods to override this, maybe through a default impl in IGenderArmor or similar
+    protected void renderButtocksArmor(Identifier texture, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider,
+                                       int light, BreastSide side, int color, boolean glint) {
+        if(!TEXTURE_EXISTS.apply(texture)) {
+            return;
+        }
 
-	protected void renderArmorTrim(RegistryKey<EquipmentAsset> armorModel, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider,
-								   int light, ArmorTrim trim, boolean hasGlint, BreastSide side) {
-		BreastModelBox trimModelBox = side.isLeft ? lTrim : rTrim;
+        ButtocksModelBox armor = side.isLeft ? lButtocksArmor : rButtocksArmor;
+        RenderLayer armorType = RenderLayer.getArmorCutoutNoCull(texture);
+        VertexConsumer armorVertexConsumer = ItemRenderer.getArmorGlintConsumer(vertexConsumerProvider, armorType, glint);
+        renderBox(armor, matrixStack, armorVertexConsumer, light, OverlayTexture.DEFAULT_UV, ColorHelper.fullAlpha(color));
+    }
 
-		// this sucks, but it sucks less than simply copy/pasting the entire relevant block of code, and is
-		// (at least theoretically) more compatible with other mods, assuming they simply mixin to TrimSpriteKey
-		// to modify the armor trim sprite location.
+	protected void renderButtocksTrim(RegistryKey<EquipmentAsset> armorModel, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider,
+                                  int light, ArmorTrim trim, boolean hasGlint, BreastSide side) {
+		ButtocksModelBox trimModelBox = side.isLeft ? lButtocksArmor : rButtocksArmor; // Corrected type
+
 		var key = TrimSpriteKeyConstructorAccessor.newKey(trim, EquipmentModel.LayerType.HUMANOID, armorModel);
 		Sprite sprite = ((EquipmentRendererAccessor)equipmentRenderer).getTrimSprites().apply(key);
 
 		var buffer = vertexConsumerProvider.getBuffer(TexturedRenderLayers.getArmorTrims(trim.pattern().value().decal()));
 		var vertexConsumer = sprite.getTextureSpecificVertexConsumer(buffer);
-		// Render the armor trim itself
 		renderBox(trimModelBox, matrixStack, vertexConsumer, light, OverlayTexture.DEFAULT_UV, -1);
-		// The enchantment glint however requires special handling; due to how Minecraft's enchant glint rendering works, rendering
-		// it at the same time as the trim itself results in the glint not rendering in sync with the rest of the armor.
-		// We *also* can't simply render the glint for both the trim and armor at the same time, due to the slight delta we apply
-		// to fix z-fighting between the trim and armor - and as such - a glint has to be rendered for each respective layer.
+
 		if(hasGlint) {
 			var glintBuffer = vertexConsumerProvider.getBuffer(RenderLayer.getArmorEntityGlint());
 			renderBox(trimModelBox, matrixStack, glintBuffer, light, OverlayTexture.DEFAULT_UV, -1);
 		}
 	}
+
+    @Override
+    protected void setupTransformations(S state, M model, MatrixStack matrixStack, BreastSide side) {
+        super.setupTransformations(state, model, matrixStack, side);
+        if((state instanceof PlayerEntityRenderState playerState && playerState.jacketVisible) ||
+                (state instanceof ArmorStandEntityRenderState && entityConfig.hasJacketLayer())) {
+            matrixStack.translate(0, 0, -0.015f);
+            matrixStack.scale(1.05f, 1.05f, 1.05f);
+        }
+        matrixStack.translate(side.isLeft ? 0.001f : -0.001f, 0.015f, -0.015f);
+        matrixStack.scale(1.05f, 1, 1);
+    }
+
+    // TODO eventually expose some way for mods to override this, maybe through a default impl in IGenderArmor or similar
+    protected void renderBreastArmor(Identifier texture, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider,
+                                     int light, BreastSide side, int color, boolean glint) {
+        if(!TEXTURE_EXISTS.apply(texture)) {
+            return;
+        }
+
+        BreastModelBox armor = side.isLeft ? lBoobArmor : rBoobArmor;
+        RenderLayer armorType = RenderLayer.getArmorCutoutNoCull(texture);
+        VertexConsumer armorVertexConsumer = ItemRenderer.getArmorGlintConsumer(vertexConsumerProvider, armorType, glint);
+        renderBox(armor, matrixStack, armorVertexConsumer, light, OverlayTexture.DEFAULT_UV, ColorHelper.fullAlpha(color));
+    }
+
+    protected void renderArmorTrim(RegistryKey<EquipmentAsset> armorModel, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider,
+                                   int light, ArmorTrim trim, boolean hasGlint, BreastSide side) {
+        BreastModelBox trimModelBox = side.isLeft ? lTrim : rTrim;
+
+        var key = TrimSpriteKeyConstructorAccessor.newKey(trim, EquipmentModel.LayerType.HUMANOID, armorModel);
+        Sprite sprite = ((EquipmentRendererAccessor)equipmentRenderer).getTrimSprites().apply(key);
+
+        var buffer = vertexConsumerProvider.getBuffer(TexturedRenderLayers.getArmorTrims(trim.pattern().value().decal()));
+        var vertexConsumer = sprite.getTextureSpecificVertexConsumer(buffer);
+        renderBox(trimModelBox, matrixStack, vertexConsumer, light, OverlayTexture.DEFAULT_UV, -1);
+
+        if(hasGlint) {
+            var glintBuffer = vertexConsumerProvider.getBuffer(RenderLayer.getArmorEntityGlint());
+            renderBox(trimModelBox, matrixStack, glintBuffer, light, OverlayTexture.DEFAULT_UV, -1);
+        }
+    }
 }

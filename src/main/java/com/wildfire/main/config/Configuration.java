@@ -23,31 +23,40 @@ import java.util.UUID;
 
 public class Configuration extends AbstractConfiguration {
 
-	private static final String CONFIG_DIR = "WildfireGender";
+    private static final String CONFIG_DIR = "WildfireGender";
 
-	public static final UUIDConfigKey USERNAME = new UUIDConfigKey("username", UUID.nameUUIDFromBytes("UNKNOWN".getBytes(StandardCharsets.UTF_8)));
-	public static final GenderConfigKey GENDER = new GenderConfigKey("gender");
-	public static final FloatConfigKey BUST_SIZE = new FloatConfigKey("bust_size", 0.6F, 0, 0.8f);
-	public static final BooleanConfigKey HURT_SOUNDS = new BooleanConfigKey("hurt_sounds", true);
+    public static final UUIDConfigKey USERNAME = new UUIDConfigKey("username", UUID.nameUUIDFromBytes("UNKNOWN".getBytes(StandardCharsets.UTF_8)));
+    public static final GenderConfigKey GENDER = new GenderConfigKey("gender");
+    public static final FloatConfigKey BUST_SIZE = new FloatConfigKey("bust_size", 0.6F, 0, 0.8f);
+	public static final FloatConfigKey BUTTOCKS_SIZE = new FloatConfigKey("buttocks_size", 0.6F, 0, 0.8f);
+    public static final BooleanConfigKey HURT_SOUNDS = new BooleanConfigKey("hurt_sounds", true);
 
-	public static final FloatConfigKey BREASTS_OFFSET_X = new FloatConfigKey("breasts_xOffset", 0.0F, -1, 1);
-	public static final FloatConfigKey BREASTS_OFFSET_Y = new FloatConfigKey("breasts_yOffset", 0.0F, -1, 1);
-	public static final FloatConfigKey BREASTS_OFFSET_Z = new FloatConfigKey("breasts_zOffset", 0.0F, -1, 0);
-	public static final BooleanConfigKey BREASTS_UNIBOOB = new BooleanConfigKey("breasts_uniboob", true);
-	public static final FloatConfigKey BREASTS_CLEAVAGE = new FloatConfigKey("breasts_cleavage", 0, 0, 0.1F);
+    public static final FloatConfigKey BREASTS_OFFSET_X = new FloatConfigKey("breasts_xOffset", 0.0F, -1, 1);
+    public static final FloatConfigKey BREASTS_OFFSET_Y = new FloatConfigKey("breasts_yOffset", 0.0F, -1, 1);
+    public static final FloatConfigKey BREASTS_OFFSET_Z = new FloatConfigKey("breasts_zOffset", 0.0F, -1, 0);
+    public static final BooleanConfigKey BREASTS_UNIBOOB = new BooleanConfigKey("breasts_uniboob", true);
+    public static final FloatConfigKey BREASTS_CLEAVAGE = new FloatConfigKey("breasts_cleavage", 0, 0, 0.1F);
 
-	public static final BooleanConfigKey BREAST_PHYSICS = new BooleanConfigKey("breast_physics", true);
-	public static final BooleanConfigKey ARMOR_PHYSICS_OVERRIDE = new BooleanConfigKey("armor_physics_override", false);
-	public static final BooleanConfigKey SHOW_IN_ARMOR = new BooleanConfigKey("show_in_armor", true);
-	public static final FloatConfigKey BOUNCE_MULTIPLIER = new FloatConfigKey("bounce_multiplier", 0.333F, 0, 0.5f);
-	public static final FloatConfigKey FLOPPY_MULTIPLIER = new FloatConfigKey("floppy_multiplier", 0.75F, 0.25f, 1);
+    public static final FloatConfigKey BUTTOCKS_OFFSET_X = new FloatConfigKey("buttocks_xOffset", 0.0F, -1, 1);
+    public static final FloatConfigKey BUTTOCKS_OFFSET_Y = new FloatConfigKey("buttocks_yOffset", 0.0F, -1, 1);
+    public static final FloatConfigKey BUTTOCKS_OFFSET_Z = new FloatConfigKey("buttocks_zOffset", 0.0F, -1, 0);
+    public static final BooleanConfigKey BUTTOCKS_UNIBUTT = new BooleanConfigKey("buttocks_unibutt", true);
+    public static final FloatConfigKey BUTTOCKS_CLEAVAGE = new FloatConfigKey("buttocks_cleavage", 0, 0, 0.1F);
 
-	public static final FloatConfigKey VOICE_PITCH = new FloatConfigKey("voice_pitch", 1F, 0.8f, 1.2f);
+    public static final BooleanConfigKey BREAST_PHYSICS = new BooleanConfigKey("breast_physics", true);
+    public static final BooleanConfigKey BUTTOCKS_PHYSICS = new BooleanConfigKey("buttocks_physics", true);
+    public static final BooleanConfigKey ARMOR_PHYSICS_OVERRIDE = new BooleanConfigKey("armor_physics_override", false);
+    public static final BooleanConfigKey SHOW_IN_ARMOR = new BooleanConfigKey("show_in_armor", true);
+	public static final BooleanConfigKey SHOW_BUTTOCKS_IN_ARMOR = new BooleanConfigKey("show__buttocks_in_armor", true);
+    public static final FloatConfigKey BOUNCE_MULTIPLIER = new FloatConfigKey("bounce_multiplier", 0.333F, 0, 0.5f);
+    public static final FloatConfigKey FLOPPY_MULTIPLIER = new FloatConfigKey("floppy_multiplier", 0.75F, 0.25f, 1);
 
-	//Render holiday themes on the player.
-	public static final BooleanConfigKey HOLIDAY_THEMES = new BooleanConfigKey("holiday_themes", true);
+    public static final FloatConfigKey VOICE_PITCH = new FloatConfigKey("voice_pitch", 1F, 0.8f, 1.2f);
 
-	public Configuration(String cfgName) {
-		super(CONFIG_DIR, cfgName);
-	}
+    //Render holiday themes on the player.
+    public static final BooleanConfigKey HOLIDAY_THEMES = new BooleanConfigKey("holiday_themes", true);
+
+    public Configuration(String cfgName) {
+        super(CONFIG_DIR, cfgName);
+    }
 }

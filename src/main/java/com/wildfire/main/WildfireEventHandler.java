@@ -25,6 +25,7 @@ import com.wildfire.gui.screen.WildfireFirstTimeSetupScreen;
 import com.wildfire.main.cloud.CloudSync;
 import com.wildfire.main.config.GlobalConfig;
 import com.wildfire.main.entitydata.BreastDataComponent;
+import com.wildfire.main.entitydata.ButtocksDataComponent;
 import com.wildfire.main.entitydata.EntityConfig;
 import com.wildfire.main.entitydata.PlayerConfig;
 import com.wildfire.main.networking.ServerboundSyncPacket;
@@ -336,6 +337,7 @@ public final class WildfireEventHandler {
 				cfg.readFromStack(entity.getEquippedStack(EquipmentSlot.CHEST));
 			}
 			cfg.tickBreastPhysics(entity);
+			cfg.tickButtocksPhysics(entity);
 		}
 	}
 
@@ -350,6 +352,7 @@ public final class WildfireEventHandler {
 			// which allow for removing items from armor stands without calling the vanilla
 			// #equip and/or #onBreak methods
 			BreastDataComponent.removeFromStack(item);
+			ButtocksDataComponent.removeFromStack(item);
 			return;
 		}
 
@@ -358,6 +361,10 @@ public final class WildfireEventHandler {
 		BreastDataComponent component = BreastDataComponent.fromPlayer(player, playerConfig);
 		if(component != null) {
 			component.write(player.getWorld().getRegistryManager(), item);
+		}
+		ButtocksDataComponent component2 = ButtocksDataComponent.fromPlayer(player, playerConfig);
+		if (component2 != null) {
+			 component2.write(player.getWorld().getRegistryManager(), item);
 		}
 	}
 

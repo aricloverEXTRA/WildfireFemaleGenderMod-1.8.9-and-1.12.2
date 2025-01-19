@@ -21,6 +21,7 @@ package com.wildfire.main.networking;
 import com.wildfire.main.Gender;
 import com.wildfire.main.WildfireGender;
 import com.wildfire.main.entitydata.Breasts;
+import com.wildfire.main.entitydata.Buttocks;
 import com.wildfire.main.entitydata.PlayerConfig;
 import io.netty.buffer.ByteBuf;
 import net.fabricmc.api.EnvType;
@@ -36,35 +37,35 @@ import java.util.UUID;
 
 public final class ClientboundSyncPacket extends AbstractSyncPacket implements CustomPayload {
 
-	public static final Id<ClientboundSyncPacket> ID = new CustomPayload.Id<>(Identifier.of(WildfireGender.MODID, "sync"));
-	public static final PacketCodec<ByteBuf, ClientboundSyncPacket> CODEC = codec(ClientboundSyncPacket::new);
+    public static final Id<ClientboundSyncPacket> ID = new CustomPayload.Id<>(Identifier.of(WildfireGender.MODID, "sync"));
+    public static final PacketCodec<ByteBuf, ClientboundSyncPacket> CODEC = codec(ClientboundSyncPacket::new);
 
-	public ClientboundSyncPacket(PlayerConfig plr) {
-		super(plr);
-	}
+    public ClientboundSyncPacket(PlayerConfig plr) {
+        super(plr);
+    }
 
-	private ClientboundSyncPacket(UUID uuid, Gender gender, float bustSize, boolean hurtSounds, float voicePitch, BreastPhysics physics, Breasts breasts) {
-		super(uuid, gender, bustSize, hurtSounds, voicePitch, physics,  breasts);
-	}
+    private ClientboundSyncPacket(UUID uuid, Gender gender, float bustSize, float buttocksSize, boolean hurtSounds, float voicePitch, BreastPhysics physics, ButtocksPhysics buttocksPhysics, Breasts breasts, Buttocks buttocks) {
+        super(uuid, gender, bustSize, buttocksSize, hurtSounds, voicePitch, physics, buttocksPhysics, breasts, buttocks);
+    }
 
-	@Override
-	public Id<? extends CustomPayload> getId() {
-		return ID;
-	}
+    @Override
+    public Id<? extends CustomPayload> getId() {
+        return ID;
+    }
 
-	public static boolean canSend(ServerPlayerEntity player) {
-		return ServerPlayNetworking.canSend(player, ID);
-	}
+    public static boolean canSend(ServerPlayerEntity player) {
+        return ServerPlayNetworking.canSend(player, ID);
+    }
 
-	@Environment(EnvType.CLIENT)
-	public void handle(ClientPlayNetworking.Context context) {
-		if(context.player().getUuid().equals(uuid)) {
-			WildfireGender.LOGGER.warn("Ignoring sync packet referring to the client player");
-			return;
-		}
+    @Environment(EnvType.CLIENT)
+    public void handle(ClientPlayNetworking.Context context) {
+        if (context.player().getUuid().equals(uuid)) {
+            WildfireGender.LOGGER.warn("Ignoring sync packet referring to the client player");
+            return;
+        }
 
-		PlayerConfig plr = WildfireGender.getOrAddPlayerById(uuid);
-		updatePlayerFromPacket(plr);
-		plr.syncStatus = PlayerConfig.SyncStatus.SYNCED;
-	}
+        PlayerConfig plr = WildfireGender.getOrAddPlayerById(uuid);
+        updatePlayerFromPacket(plr);
+        plr.syncStatus = PlayerConfig.SyncStatus.SYNCED;
+    }
 }
