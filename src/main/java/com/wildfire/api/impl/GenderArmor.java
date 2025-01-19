@@ -19,7 +19,6 @@
 package com.wildfire.api.impl;
 
 import com.wildfire.api.IBreastArmorTexture;
-import com.wildfire.api.IButtocksArmorTexture;
 import com.wildfire.api.IGenderArmor;
 
 /**
@@ -28,31 +27,28 @@ import com.wildfire.api.IGenderArmor;
  * @see IGenderArmor
  */
 public record GenderArmor(
-        float physicsResistance,
-        float tightness,
-        boolean coversBreasts,
-        boolean alwaysHidesBreasts,
-        boolean coversButtocks,
-        boolean alwaysHidesButtocks,
-        boolean armorStandsCopySettings,
-        IBreastArmorTexture breastTexture,
-        IButtocksArmorTexture buttocksTexture
+		float physicsResistance,
+		float tightness,
+		boolean coversBreasts,
+		boolean alwaysHidesBreasts,
+		boolean armorStandsCopySettings,
+		IBreastArmorTexture texture
 ) implements IGenderArmor {
-    /**
-     * Default implementation used to represent armor types that lack any configuration
-     */
-    public static final IGenderArmor DEFAULT = new Default();
+	/**
+	 * Default implementation used to represent armor types that lack any configuration
+	 */
+	public static final IGenderArmor DEFAULT = new Default();
 
-    /**
-     * Default implementation used when the player {@link net.minecraft.item.ItemStack#isEmpty() isn't wearing a chestplate},
-     * or if the worn chestplate specifies that it doesn't cover the breasts or buttocks.
-     */
-    public static final IGenderArmor EMPTY = new GenderArmor(0f, 0f, false, false, false, false, false, BreastArmorTexture.DEFAULT, ButtocksArmorTexture.DEFAULT);
+	/**
+	 * Default implementation used when the player {@link net.minecraft.item.ItemStack#isEmpty() isn't wearing a chestplate},
+	 * or if the worn chestplate specifies that it doesn't cover the breasts.
+	 */
+	public static final IGenderArmor EMPTY = new GenderArmor(0f, 0f, false, false, false, BreastArmorTexture.DEFAULT);
 
-    /**
-     * Dummy implementation of {@link IGenderArmor}; simply defers to the default interface implementations for all methods.
-     */
-    public static final class Default implements IGenderArmor {
-        private Default() {}
-    }
+	/**
+	 * Dummy implementation of {@link IGenderArmor}; simply defers to the default interface implementations for all methods.
+	 */
+	public static final class Default implements IGenderArmor {
+		private Default() {}
+	}
 }

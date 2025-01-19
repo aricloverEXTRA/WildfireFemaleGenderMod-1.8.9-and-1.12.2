@@ -377,25 +377,40 @@ public class GenderLayer<S extends BipedEntityRenderState, M extends BipedEntity
         }
     }
 
-    protected void renderButtocksSides(S state, M model, MatrixStack matrixStack, Consumer<ButtocksSide> renderer) {
+    private void renderButtocks(S state, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int light,
+                              int overlay, BreastSide side) {
+        RenderLayer buttocksRenderType = getRenderLayer(state);
+        if(buttocksRenderType == null) return; // only render if the player is visible in some capacity
+        int alpha = state.invisible ? ColorHelper.channelFromFloat(0.15f) : 255;
+        int color = ColorHelper.getArgb(alpha, 255, 255, 255);
+        VertexConsumer vertexConsumer = vertexConsumerProvider.getBuffer(buttocksRenderType);
+        renderBox(side.isLeft ? lButtocks : rButtocks, matrixStack, vertexConsumer, light, overlay, color);
+        if(state instanceof PlayerEntityRenderState playerState && playerState.jacketVisible) {
+            matrixStack.translate(0, 0, -0.015f);
+            matrixStack.scale(1.05f, 1.05f, 1.05f);
+            renderBox(side.isLeft ? lButtocksWear : rButtocksWear, matrixStack, vertexConsumer, light, overlay, color);
+        }
+    }
+
+    protected void renderButtocksSides(S state, M model, MatrixStack matrixStack, Consumer<BreastSide> renderer) {
             matrixStack.push();
         try {
-                setupTransformationsButtocks(state, model, matrixStack, ButtocksSide.LEFT);
-                renderer.accept(ButtocksSide.LEFT);
+                setupTransformationsButtocks(state, model, matrixStack, BreastSide.LEFT);
+                renderer.accept(BreastSide.LEFT);
         } finally {
             matrixStack.pop();
         }
 
         matrixStack.push();
         try {
-                setupTransformationsButtocks(state, model, matrixStack, ButtocksSide.RIGHT);
-                renderer.accept(ButtocksSide.RIGHT);
+                setupTransformationsButtocks(state, model, matrixStack, BreastSide.RIGHT);
+                renderer.accept(BreastSide.RIGHT);
         } finally {
             matrixStack.pop();
         }
     }
 
-    protected void setupTransformationsButtocks(S state, M model, MatrixStack matrixStack, ButtocksSide side) {
+    protected void setupTransformationsButtocks(S state, M model, MatrixStack matrixStack, BreastSide side) {
         if(state.baby) {
             matrixStack.scale(state.ageScale, state.ageScale, state.ageScale);
             matrixStack.translate(0f, 0.75f, 0f);
