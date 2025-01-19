@@ -174,6 +174,58 @@ public final class WildfireModelRenderer {
 		}
 	}
 
+	public static class ButtocksModelBox extends ModelBox {
+
+       	public ButtocksModelBox(int tW, int tH, int texU, int texV, float x, float y, float z, int dx, int dy, int dz, float delta, boolean mirror) {
+          	  super(tW, tH, texU, texV, x, y, z, dx, dy, dz, delta, mirror);
+        }
+
+        @Override
+        protected void initQuads(int tW, int tH, int texU, int texV, int dx, int dy, int dz, boolean mirror, boolean extra, PositionTextureVertex vertex,
+                                 PositionTextureVertex vertex1, PositionTextureVertex vertex2, PositionTextureVertex vertex3, PositionTextureVertex vertex4, PositionTextureVertex vertex5,
+                                 PositionTextureVertex vertex6, PositionTextureVertex vertex7) {
+            this.quads[0] = new TexturedQuad(
+                texU + 4 + dx, texV + 4,
+                texU + 4 + dx + 4, texV + 4 + dy,
+                tW, tH,
+                mirror, Direction.EAST,
+                vertex4, vertex, vertex1, vertex5
+            );
+
+            this.quads[1] = new TexturedQuad(
+                texU, texV + 4,
+                texU + 4, texV + 4 + dy,
+                tW, tH,
+                mirror, Direction.WEST,
+                vertex7, vertex3, vertex6, vertex2
+            );
+
+            this.quads[2] = new TexturedQuad(
+                texU + 4, texV,
+                texU + 4 + dx, texV + 4,
+                tW, tH,
+                mirror, Direction.DOWN,
+                vertex4, vertex3, vertex7, vertex
+            );
+
+            this.quads[3] = new TexturedQuad(
+                texU + 4, texV + 4 + 4,
+                texU + 4 + dx, texV + 1 + 4 + dy,
+                tW, tH - 1,
+                mirror, Direction.UP,
+                vertex1, vertex2, vertex6, vertex5
+            );
+
+            this.quads[4] = new TexturedQuad(
+                texU + 4, texV + 4,
+                texU + 4 + dx, texV + 4 + dy,
+                tW, tH,
+                mirror, Direction.NORTH,
+                vertex, vertex7, vertex2, vertex1
+            );
+        }
+    }
+
    public record PositionTextureVertex(float x, float y, float z, float u, float v) {
       public PositionTextureVertex withTexturePosition(float texU, float texV) {
          return new PositionTextureVertex(x, y, z, texU, texV);
