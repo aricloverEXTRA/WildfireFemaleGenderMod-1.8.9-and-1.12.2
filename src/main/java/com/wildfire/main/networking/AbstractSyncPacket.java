@@ -16,9 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-ppackage com.wildfire.main.networking;
+package com.wildfire.main.networking;
 
-import com.mojang.datafixers.util.Function10;
 import com.wildfire.main.entitydata.Breasts;
 import com.wildfire.main.entitydata.Buttocks;
 import com.wildfire.main.entitydata.PlayerConfig;
@@ -34,16 +33,16 @@ abstract class AbstractSyncPacket {
 
     protected static <T extends AbstractSyncPacket> PacketCodec<ByteBuf, T> codec(SyncPacketConstructor<T> constructor) {
         return PacketCodec.tuple(
-            Uuids.PACKET_CODEC, p -> p.uuid, (p, uuid) -> p.uuid = uuid,
-            Gender.CODEC, p -> p.gender, (p, gender) -> p.gender = gender,
-            PacketCodecs.FLOAT, p -> p.bustSize, (p, bustSize) -> p.bustSize = bustSize,
-            PacketCodecs.FLOAT, p -> p.buttocksSize, (p, buttocksSize) -> p.buttocksSize = buttocksSize,
-            PacketCodecs.BOOLEAN, p -> p.hurtSounds, (p, hurtSounds) -> p.hurtSounds = hurtSounds,
-            PacketCodecs.FLOAT, p -> p.voicePitch, (p, voicePitch) -> p.voicePitch = voicePitch,
-            BreastPhysics.CODEC, p -> p.physics, (p, physics) -> p.physics = physics,
-            ButtocksPhysics.CODEC, p -> p.buttocksPhysics, (p, buttocksPhysics) -> p.buttocksPhysics = buttocksPhysics,
-            Breasts.CODEC, p -> p.breasts, (p, breasts) -> p.breasts = breasts,
-            Buttocks.CODEC, p -> p.buttocks, (p, buttocks) -> p.buttocks = buttocks,
+            Uuids.PACKET_CODEC, p -> p.uuid,
+            Gender.CODEC, p -> p.gender,
+            PacketCodecs.FLOAT, p -> p.bustSize,
+            PacketCodecs.FLOAT, p -> p.buttocksSize,
+            PacketCodecs.BOOLEAN, p -> p.hurtSounds,
+            PacketCodecs.FLOAT, p -> p.voicePitch,
+            BreastPhysics.CODEC, p -> p.physics,
+            ButtocksPhysics.CODEC, p -> p.buttocksPhysics,
+            Breasts.CODEC, p -> p.breasts,
+            Buttocks.CODEC, p -> p.buttocks,
             constructor
         );
     }
@@ -91,10 +90,10 @@ abstract class AbstractSyncPacket {
     protected record BreastPhysics(boolean physics, boolean showInArmor, float bounceMultiplier, float floppyMultiplier) {
 
         public static final PacketCodec<ByteBuf, BreastPhysics> CODEC = PacketCodec.tuple(
-            PacketCodecs.BOOLEAN, BreastPhysics::physics, (bp, physics) -> bp.physics = physics,
-            PacketCodecs.BOOLEAN, BreastPhysics::showInArmor, (bp, showInArmor) -> bp.showInArmor = showInArmor,
-            PacketCodecs.FLOAT, BreastPhysics::bounceMultiplier, (bp, bounceMultiplier) -> bp.bounceMultiplier = bounceMultiplier,
-            PacketCodecs.FLOAT, BreastPhysics::floppyMultiplier, (bp, floppyMultiplier) -> bp.floppyMultiplier = floppyMultiplier,
+            PacketCodecs.BOOLEAN, BreastPhysics::physics,
+            PacketCodecs.BOOLEAN, BreastPhysics::showInArmor,
+            PacketCodecs.FLOAT, BreastPhysics::bounceMultiplier,
+            PacketCodecs.FLOAT, BreastPhysics::floppyMultiplier,
             BreastPhysics::new
         );
 
@@ -113,10 +112,10 @@ abstract class AbstractSyncPacket {
     protected record ButtocksPhysics(boolean physics, boolean showInArmor, float bounceMultiplier, float floppyMultiplier) {
 
         public static final PacketCodec<ByteBuf, ButtocksPhysics> CODEC = PacketCodec.tuple(
-            PacketCodecs.BOOLEAN, ButtocksPhysics::physics, (bp, physics) -> bp.physics = physics,
-            PacketCodecs.BOOLEAN, ButtocksPhysics::showInArmor, (bp, showInArmor) -> bp.showInArmor = showInArmor,
-            PacketCodecs.FLOAT, ButtocksPhysics::bounceMultiplier, (bp, bounceMultiplier) -> bp.bounceMultiplier = bounceMultiplier,
-            PacketCodecs.FLOAT, ButtocksPhysics::floppyMultiplier, (bp, floppyMultiplier) -> bp.floppyMultiplier = floppyMultiplier,
+            PacketCodecs.BOOLEAN, ButtocksPhysics::physics,
+            PacketCodecs.BOOLEAN, ButtocksPhysics::showInArmor,
+            PacketCodecs.FLOAT, ButtocksPhysics::bounceMultiplier,
+            PacketCodecs.FLOAT, ButtocksPhysics::floppyMultiplier,
             ButtocksPhysics::new
         );
 
@@ -132,7 +131,8 @@ abstract class AbstractSyncPacket {
         }
     }
 
-    @FunctionalInterface
-    protected interface SyncPacketConstructor<T extends AbstractSyncPacket> extends Function10<UUID, Gender, Float, Float, Boolean, Float, BreastPhysics, ButtocksPhysics, Breasts, Buttocks, T> {
+    protected interface SyncPacketConstructor<T extends AbstractSyncPacket> {
+        T construct(UUID uuid, Gender gender, float bustSize, float buttocksSize, boolean hurtSounds, float voicePitch, BreastPhysics physics, ButtocksPhysics buttocksPhysics, Breasts breasts, Buttocks buttocks);
     }
 }
+
