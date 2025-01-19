@@ -25,7 +25,9 @@ import com.wildfire.main.WildfireGender;
 import com.wildfire.main.WildfireHelper;
 import com.wildfire.main.entitydata.EntityConfig;
 import com.wildfire.physics.BreastPhysics;
+import com.wildfire.physics.ButtocksPhysics;
 import com.wildfire.render.WildfireModelRenderer.BreastModelBox;
+import com.wildfire.render.WildfireModelRenderer.ButtocksModelBox;
 import com.wildfire.render.WildfireModelRenderer.OverlayModelBox;
 import com.wildfire.render.WildfireModelRenderer.PositionTextureVertex;
 
@@ -61,20 +63,28 @@ public class GenderLayer<S extends BipedEntityRenderState, M extends BipedEntity
 
 	private BreastModelBox lBreast, rBreast;
 	private static final OverlayModelBox lBreastWear, rBreastWear;
+	private ButtocksModelBox lButtocks, rButtocks;
+	private static final OverlayModelBox lButtocksWear, rButtocksWear;
 
 	private final FeatureRendererContext<S, M> context;
 
 	private float preBreastSize, preBreastOffsetZ;
+	private float preButtocksSize, preButtocksOffsetZ;
 	private Breasts breasts;
+	private Buttocks buttocks;
 	protected ItemStack armorStack;
 	protected IGenderArmor genderArmor;
 	protected boolean isChestplateOccupied, bounceEnabled, breathingAnimation;
 	protected float breastOffsetX, breastOffsetY, breastOffsetZ, lPhysPositionY, lPhysPositionX, rPhysPositionY, rPhysPositionX,
 			lPhysBounceRotation, rPhysBounceRotation, breastSize, zOffset, outwardAngle;
+	private float lPhysButtocksPositionY, lPhysButtocksPositionX, rPhysButtocksPositionY, rPhysButtocksPositionX,
+  	            lPhysButtocksBounceRotation, rPhysButtocksBounceRotation, buttocksSize, buttocksOffsetX, buttocksOffsetY, buttocksOffsetZ;
 
 	static {
 		lBreastWear = new OverlayModelBox(true, 64, 64, 17, 34, -4F, 0.0F, 0F, 4, 5, 3, 0.0F, false);
 		rBreastWear = new OverlayModelBox(false, 64, 64, 21, 34, 0, 0.0F, 0F, 4, 5, 3, 0.0F, false);
+	    	lButtocksWear = new OverlayModelBox(true, 64, 64, 17, 34, -4F, -1.0F, 4F, 4, 5, 3, 0.0F, false);
+ 	   	rButtocksWear = new OverlayModelBox(false, 64, 64, 21, 34, 0, -1.0F, 4F, 4, 5, 3, 0.0F, false);
 	}
 
 	public GenderLayer(FeatureRendererContext<S, M> render) {
@@ -83,6 +93,8 @@ public class GenderLayer<S extends BipedEntityRenderState, M extends BipedEntity
 		// this can't be static or final as we need the ability to resize this during render time
 		lBreast = new BreastModelBox(64, 64, 16, 17, -4F, 0.0F, 0F, 4, 5, 4, 0.0F, false);
 		rBreast = new BreastModelBox(64, 64, 20, 17, 0, 0.0F, 0F, 4, 5, 4, 0.0F, false);
+		lButtocks = new ButtocksModelBox(64, 64, 16, 17, -4F, -1.0F, 4F, 4, 5, 4, 0.0F, false);
+		rButtocks = new ButtocksModelBox(64, 64, 20, 17, 0, -1.0F, 4F, 4, 5, 4, 0.0F, false);
 	}
 
 	/**
@@ -136,9 +148,10 @@ public class GenderLayer<S extends BipedEntityRenderState, M extends BipedEntity
 			//noinspection CodeBlock2Expr
 			renderSides(state, getContextModel(), matrixStack, side -> {
 				renderBreast(state, matrixStack, vertexConsumerProvider, light, overlay, side);
+				renderButtocks(state, matrixStack, vertexConsumerProvider, light, overlay, side);
 			});
 		} catch(Exception e) {
-			WildfireGender.LOGGER.error("Failed to render breast layer", e);
+			WildfireGender.LOGGER.error("Failed to render breast and buttocks layer", e);
 		}
 	}
 
@@ -172,6 +185,42 @@ public class GenderLayer<S extends BipedEntityRenderState, M extends BipedEntity
 		breastOffsetX = Math.round((Math.round(breasts.getXOffset() * 100f) / 100f) * 10) / 10f;
 		breastOffsetY = -Math.round((Math.round(breasts.getYOffset() * 100f) / 100f) * 10) / 10f;
 		breastOffsetZ = -Math.round((Math.round(breasts.getZOffset() * 100f) / 100f) * 10) / 10f;
+
+		buttocks = entityConfig.getButtocks();
+		buttocksOffsetX = Math.round((Math.round(buttocks.getXOffset() * 100f) / 100f) * 10) / 10f;
+		buttocksOffsetY = -Math.round((Math.round(buttocks.getYOffset() * 100f) / 100f) * 10) / 10f;
+		buttocksOffsetZ = -Math.round((Math.round(buttocks.getZOffset() * 100f) / 100f) * 10) / 10f;
+
+		ButtocksPhysics leftButtocksPhysics = entityConfig.getLeftButtocksPhysics();
+		final float buttSize = leftButtocksPhysics.getButtocksSize(partialTicks);
+		outwardAngle = (Math.round(buttocks.getCleavage() * 100f) / 100f) * 100f;
+		outwardAngle = Math.min(outwardAngle, 10);
+
+		resizeButtocksBox(buttSize);
+
+		lPhysButtocksPositionY = MathHelper.lerp(partialTicks, leftButtocksPhysics.getPrePositionY(), leftButtocksPhysics.getPositionY());
+		lPhysButtocksPositionX = MathHelper.lerp(partialTicks, leftButtocksPhysics.getPrePositionX(), leftButtocksPhysics.getPositionX());
+		lPhysButtocksBounceRotation = MathHelper.lerp(partialTicks, leftButtocksPhysics.getPreBounceRotation(), leftButtocksPhysics.getBounceRotation());
+		if(buttocks.isUnibutt()) {
+		    rPhysButtocksPositionY = lPhysButtocksPositionY;
+		    rPhysButtocksPositionX = lPhysButtocksPositionX;
+		    rPhysButtocksBounceRotation = lPhysButtocksBounceRotation;
+		} else {
+ 		   ButtocksPhysics rightButtocksPhysics = entityConfig.getRightButtocksPhysics();
+ 		   rPhysButtocksPositionY = MathHelper.lerp(partialTicks, rightButtocksPhysics.getPrePositionY(), rightButtocksPhysics.getPositionY());
+ 		   rPhysButtocksPositionX = MathHelper.lerp(partialTicks, rightButtocksPhysics.getPrePositionX(), rightButtocksPhysics.getPositionX());
+		    rPhysButtocksBounceRotation = MathHelper.lerp(partialTicks, rightButtocksPhysics.getPreBounceRotation(), rightButtocksPhysics.getBounceRotation());
+		}
+
+		buttocksSize = Math.min(buttSize * 1.5f, 0.7f); // Limit the max size to 0.7f
+
+		if (buttSize > 0.7f) {
+		    buttocksSize = buttSize; // If buttSize exceeds 0.7f, use buttSize
+		}
+
+		if (buttocksSize < 0.02f) {
+ 		   return false; // Return false if buttocksSize is too small
+		}
 
 		BreastPhysics leftBreastPhysics = entityConfig.getLeftBreastPhysics();
 		final float bSize = leftBreastPhysics.getBreastSize(partialTicks);
@@ -231,6 +280,19 @@ public class GenderLayer<S extends BipedEntityRenderState, M extends BipedEntity
 			rBreast = new BreastModelBox(64, 64, 20, 17, 0, 0.0F, 0F, 4, 5, (int) (4 - breastOffsetZ - reducer), 0.0F, false);
 			preBreastSize = breastSize;
 			preBreastOffsetZ = breastOffsetZ;
+		}
+	}
+
+	protected void resizeBox(float buttocksSize) {
+		float reducer = -1;
+		if(buttocksSize < 0.84f) reducer++;
+		if(buttocksSize < 0.72f) reducer++;
+
+		if(preBreastSize != breastSize || preButtocksOffsetZ != buttocksOffsetZ) {
+			lBreast = new ButtocksModelBox(64, 64, 16, 17, -4F, 0.0F, 0F, 4, 5, (int) (4 - buttocksOffsetZ - reducer), 0.0F, false);
+			rBreast = new ButtocksModelBox(64, 64, 20, 17, 0, 0.0F, 0F, 4, 5, (int) (4 - buttocksOffsetZ - reducer), 0.0F, false);
+			preButtocksSize = buttocksSize;
+			preButtocksOffsetZ = buttocksOffsetZ;
 		}
 	}
 
@@ -321,6 +383,25 @@ public class GenderLayer<S extends BipedEntityRenderState, M extends BipedEntity
 			matrixStack.pop();
 		}
 	}
+
+	protected void renderButtocksSides(S state, M model, MatrixStack matrixStack, Consumer<BreastSide> renderer) {
+	    	matrixStack.push();
+ 	  	try {
+    	   		setupTransformations(state, model, matrixStack, BreastSide.LEFT);
+    	   		renderer.accept(BreastSide.LEFT);
+  		} finally {
+  	  		matrixStack.pop();
+  		}
+
+ 	   	matrixStack.push();
+ 	   	try {
+  	  	     	setupTransformations(state, model, matrixStack, BreastSide.RIGHT);
+   		     	renderer.accept(BreastSide.RIGHT);
+  		} finally {
+  	 	   	matrixStack.pop();
+  		}
+	}
+
 
 	protected static void renderBox(WildfireModelRenderer.ModelBox model, MatrixStack matrixStack, VertexConsumer vertexConsumer,
 									int light, int overlay, int color) {
