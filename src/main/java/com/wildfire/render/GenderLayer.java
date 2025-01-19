@@ -384,19 +384,19 @@ public class GenderLayer<S extends BipedEntityRenderState, M extends BipedEntity
 		}
 	}
 
-	protected void renderButtocksSides(S state, M model, MatrixStack matrixStack, Consumer<BreastSide> renderer) {
+	protected void renderButtocksSides(S state, M model, MatrixStack matrixStack, Consumer<ButtocksSide> renderer) {
 	    	matrixStack.push();
  	  	try {
-    	   		setupTransformations(state, model, matrixStack, BreastSide.LEFT);
-    	   		renderer.accept(BreastSide.LEFT);
+    	   		setupTransformations(state, model, matrixStack, ButtocksSide.LEFT);
+    	   		renderer.accept(ButtocksSide.LEFT);
   		} finally {
   	  		matrixStack.pop();
   		}
 
  	   	matrixStack.push();
  	   	try {
-  	  	     	setupTransformations(state, model, matrixStack, BreastSide.RIGHT);
-   		     	renderer.accept(BreastSide.RIGHT);
+  	  	     	setupTransformations(state, model, matrixStack, ButtocksSide.RIGHT);
+   		     	renderer.accept(ButtocksSide.RIGHT);
   		} finally {
   	 	   	matrixStack.pop();
   		}
