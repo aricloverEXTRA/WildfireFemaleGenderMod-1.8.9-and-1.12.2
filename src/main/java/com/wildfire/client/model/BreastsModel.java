@@ -21,16 +21,19 @@ public class BreastsModel extends ModelBase {
         this.rightBreast = new ModelRenderer(this, 0, 0);
         this.rightBreast.addBox(-1.0F, 0.0F, -1.0F, 2, 2, 2);
         this.rightBreast.setRotationPoint(-2.0F, 1.0F, -2.0F);
+    }
 
-        this.leftBreastVelocity = 0.0F;
-        this.rightBreastVelocity = 0.0F;
+    public void setLeftBreastVelocity(float velocity) {
+        this.leftBreastVelocity = velocity;
+    }
+
+    public void setRightBreastVelocity(float velocity) {
+        this.rightBreastVelocity = velocity;
     }
 
     @Override
     public void render(Entity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
-        this.leftBreastVelocity += 0.1F;
-        this.rightBreastVelocity += 0.1F;
-
+        // Apply physics calculations
         this.leftBreast.rotateAngleX += this.leftBreastVelocity;
         this.rightBreast.rotateAngleX += this.rightBreastVelocity;
 
