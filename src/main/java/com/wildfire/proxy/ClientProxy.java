@@ -8,7 +8,7 @@ import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraft.client.Minecraft;
 import com.wildfire.client.gui.screen.GuiWardrobe;
 import com.wildfire.client.renderer.RenderBreasts;
-import com.wildfire.client.renderer.layer.LayerBreasts;
+import com.wildfire.client.renderer.LayerBreasts;
 import net.minecraftforge.common.MinecraftForge;
 
 public class ClientProxy extends CommonProxy {

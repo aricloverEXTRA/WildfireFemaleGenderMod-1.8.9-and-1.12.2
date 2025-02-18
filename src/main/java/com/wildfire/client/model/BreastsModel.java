@@ -7,6 +7,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.renderer.GlStateManager;
 import com.wildfire.config.ConfigSettings;
 
 public class BreastsModel extends ModelBase {
@@ -14,17 +15,20 @@ public class BreastsModel extends ModelBase {
     private ModelRenderer rightBreast;
     private BreastPhysics breastPhysics;
     private Breasts breasts;
+    private float preBreastSize = 0f;
 
     public BreastsModel() {
         this.breasts = new Breasts();
         this.breastPhysics = new BreastPhysics();
 
-        // Initialize with the correct texture offsets for the main layer
-        this.leftBreast = new ModelRenderer(this, 34, 16);
+        // Initialize the breast model renderers with original texture settings
+        this.leftBreast = new ModelRenderer(this, 16, 16);
         this.leftBreast.addBox(-2.0F, -2.0F, -1.0F, 4, 4, 2);
+        this.leftBreast.setRotationPoint(-1.5F, 8.0F, -2.0F);
 
-        this.rightBreast = new ModelRenderer(this, 34, 16);
+        this.rightBreast = new ModelRenderer(this, 16, 16);
         this.rightBreast.addBox(-2.0F, -2.0F, -1.0F, 4, 4, 2);
+        this.rightBreast.setRotationPoint(1.5F, 8.0F, -2.0F);
     }
 
     @Override
@@ -34,27 +38,35 @@ public class BreastsModel extends ModelBase {
             Minecraft.getMinecraft().getTextureManager().bindTexture(skin);
 
             float breastSize = ConfigSettings.breastSize / 50.0F; // Scale to 0.0 to 2.0 range
-            float separation = ConfigSettings.separation;
-            float depth = ConfigSettings.depth;
-            float height = ConfigSettings.height;
-            float rotation = ConfigSettings.rotation;
+            float separation = ConfigSettings.separation / 10.0F; // Normalize separation
+            float depth = ConfigSettings.depth / 10.0F; // Normalize depth
+            float height = ConfigSettings.height / 20.0F; // Subtle height adjustment
+            float rotation = ConfigSettings.rotation * (float) Math.PI / 180.0F; // Convert to radians
 
             this.breastPhysics.update((EntityPlayer) entity, ConfigSettings.breastSize, ConfigSettings.bounceMultiplier);
             setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scaleFactor, entity);
 
-            // Create new ModelRenderers with adjusted sizes and correct texture offsets
-            this.leftBreast = new ModelRenderer(this, 16, 16);
-            this.leftBreast.addBox(-2.0F * breastSize, -2.0F * breastSize, -1.0F * breastSize, (int) (4 * breastSize), (int) (4 * breastSize), (int) (2 * breastSize));
-            this.leftBreast.setRotationPoint(breasts.getXOffset() - 2.5F - separation, breasts.getYOffset() + 8.0F + height, breasts.getZOffset() - 2.0F + depth);
+            // Adjust the position and scaling of the breasts
+            this.leftBreast.setRotationPoint(-1.5F - separation, 18.0F + height, -2.0F + depth); // Raised 18px
+            this.rightBreast.setRotationPoint(1.5F + separation, 18.0F + height, -2.0F + depth); // Raised 18px
+
+            GlStateManager.pushMatrix();
+            GlStateManager.translate(this.leftBreast.rotationPointX * scaleFactor, this.leftBreast.rotationPointY * scaleFactor, this.leftBreast.rotationPointZ * scaleFactor);
+            GlStateManager.scale(breastSize, breastSize, breastSize);
+            GlStateManager.translate(-this.leftBreast.rotationPointX * scaleFactor, -this.leftBreast.rotationPointY * scaleFactor, -this.leftBreast.rotationPointZ * scaleFactor);
             this.leftBreast.rotateAngleZ = rotation;
-
-            this.rightBreast = new ModelRenderer(this, 16, 16);
-            this.rightBreast.addBox(-2.0F * breastSize, -2.0F * breastSize, -1.0F * breastSize, (int) (4 * breastSize), (int) (4 * breastSize), (int) (2 * breastSize));
-            this.rightBreast.setRotationPoint(breasts.getXOffset() + 2.5F + separation, breasts.getYOffset() + 8.0F + height, breasts.getZOffset() - 2.0F + depth);
-            this.rightBreast.rotateAngleZ = -rotation;
-
+            this.leftBreast.rotateAngleX = -0.2F; // Tilt forward
             this.leftBreast.render(scaleFactor);
+            GlStateManager.popMatrix();
+
+            GlStateManager.pushMatrix();
+            GlStateManager.translate(this.rightBreast.rotationPointX * scaleFactor, this.rightBreast.rotationPointY * scaleFactor, this.rightBreast.rotationPointZ * scaleFactor);
+            GlStateManager.scale(breastSize, breastSize, breastSize);
+            GlStateManager.translate(-this.rightBreast.rotationPointX * scaleFactor, -this.rightBreast.rotationPointY * scaleFactor, -this.rightBreast.rotationPointZ * scaleFactor);
+            this.rightBreast.rotateAngleZ = -rotation;
+            this.rightBreast.rotateAngleX = -0.2F; // Tilt forward
             this.rightBreast.render(scaleFactor);
+            GlStateManager.popMatrix();
         }
     }
 
@@ -67,9 +79,9 @@ public class BreastsModel extends ModelBase {
         float bounceY = breastPhysics.getPositionY();
 
         this.leftBreast.rotateAngleY = bounceX;
-        this.leftBreast.rotationPointY = breasts.getYOffset() + 8.0F + bounceY;
+        this.leftBreast.rotationPointY = 18.0F + bounceY;
 
         this.rightBreast.rotateAngleY = bounceX;
-        this.rightBreast.rotationPointY = breasts.getYOffset() + 8.0F + bounceY;
+        this.rightBreast.rotationPointY = 18.0F + bounceY;
     }
 }
