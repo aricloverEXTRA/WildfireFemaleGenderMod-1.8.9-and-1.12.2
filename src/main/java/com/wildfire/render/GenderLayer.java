@@ -35,16 +35,14 @@ import net.minecraft.util.Mth;
 import com.wildfire.main.WildfireGender;
 import net.minecraft.world.effect.MobEffectUtil;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.player.PlayerModelPart;
-import net.minecraft.world.item.*;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.*;
 
 import net.minecraft.world.item.ArmorMaterial.Layer;
 import net.minecraft.world.item.armortrim.ArmorTrim;
 import net.minecraft.world.item.component.DyedItemColor;
-import net.minecraft.world.level.block.Blocks;
-import net.neoforged.neoforge.client.ClientHooks;
+import net.minecraft.init.Blocks;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3f;
@@ -156,10 +154,15 @@ public class GenderLayer<ENTITY extends LivingEntity, MODEL extends HumanoidMode
                                           entity.level().getBlockState(BlockPos.containing(entity.getX(), entity.getEyeY(), entity.getZ())).is(Blocks.BUBBLE_COLUMN));
 
             boolean bounceEnabled = entityConfig.hasBreastPhysics() && (!isChestplateOccupied || resistance < 1);
-
             int overlay = LivingEntityRenderer.getOverlayCoords(entity, 0);
             HumanoidModel<ENTITY> model = getParentModel();
-            boolean hasJacketLayer = entity instanceof Player player ? player.isModelPartShown(PlayerModelPart.JACKET) : entityConfig.hasJacketLayer();
+            boolean hasJacketLayer;
+			if (entity instanceof Player) {
+				Player player = (Player) entity;
+				hasJacketLayer = player.isModelPartShown(PlayerModelPart.JACKET);
+			} else {
+				hasJacketLayer = entityConfig.hasJacketLayer();
+			}
 
             renderBreastWithTransforms(entity, model, armorStack, matrixStack, bufferSource, breastRenderType, light, overlay, overlayAlpha, bounceEnabled,
                 lPhysPositionX, lPhysPositionY, leftBounceRotation, breastSize, breastOffsetX, breastOffsetY, breastOffsetZ, zOff, outwardAngle, breasts.isUniboob(),
