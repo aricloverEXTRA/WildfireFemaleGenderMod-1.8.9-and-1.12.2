@@ -19,7 +19,6 @@ public class GuiWardrobe extends GuiScreen {
     private static final ResourceLocation FEMALE_BG = new ResourceLocation("wildfire_gender:textures/gui/wardrobe_bg_female.png");
     private static final ResourceLocation OTHER_BG = new ResourceLocation("wildfire_gender:textures/gui/wardrobe_bg_other.png");
     private static final ResourceLocation RIBBON_TEXTURE = new ResourceLocation("wildfire_gender:textures/bc_ribbon.png");
-    private static final ResourceLocation CLOUD_ICON = new ResourceLocation("wildfire_gender:textures/cloud.png");
 
     private String selectedGender;
     private boolean isBreastCancerAwarenessMonth;
@@ -34,22 +33,17 @@ public class GuiWardrobe extends GuiScreen {
         Calendar calendar = Calendar.getInstance();
         isBreastCancerAwarenessMonth = (calendar.get(Calendar.MONTH) == Calendar.OCTOBER);
 
-        int guiWidth = 512;
-        int guiHeight = 512;
-        int contentWidth = 263;
-        int contentHeight = 123;
+        int guiWidth = 263;
+        int guiHeight = 123;
         int guiLeft = (this.width - guiWidth) / 2;
         int guiTop = (this.height - guiHeight) / 2;
-        int contentLeft = guiLeft + (guiWidth - contentWidth) / 2;
-        int contentTop = guiTop + (guiHeight - contentHeight) / 2;
 
-        this.buttonList.add(new WildfireButton(0, contentLeft + 6, contentTop + 102, 80, 15, getColoredGenderText(selectedGender)));
-        WildfireButton customizeButton = new WildfireButton(1, contentLeft + 100, contentTop + 6, 157, 20, "Character Personalization...");
+        this.buttonList.add(new WildfireButton(0, guiLeft + 6, guiTop + 102, 80, 15, getColoredGenderText(selectedGender)));
+        WildfireButton customizeButton = new WildfireButton(1, guiLeft + 100, guiTop + 6, 157, 20, "Character Personalization...");
         customizeButton.enabled = !"Male".equals(this.selectedGender);
         this.buttonList.add(customizeButton);
-        this.buttonList.add(new WildfireButton(2, contentLeft + 100, contentTop + 80, 157, 20, "Save and Close"));
-        this.buttonList.add(new WildfireButton(3, contentLeft + 100, contentTop + 99, 24, 18, ""));
-        this.buttonList.add(new WildfireButton(4, contentLeft + 6, contentTop + 80, 80, 15, "Show Intro Again"));
+        this.buttonList.add(new WildfireButton(2, guiLeft + 100, guiTop + 80, 157, 20, "Save and Close"));
+        this.buttonList.add(new WildfireButton(4, guiLeft + 6, guiTop + 80, 80, 15, "Show Intro Again"));
     }
 
     @Override
@@ -82,8 +76,6 @@ public class GuiWardrobe extends GuiScreen {
                 GenderConfig.saveConfig();
                 this.mc.displayGuiScreen(null);
                 break;
-            case 3:
-                break;
             case 4:
                 settings.showFirstTimeGui = true;
                 GenderConfig.saveConfig();
@@ -102,53 +94,49 @@ public class GuiWardrobe extends GuiScreen {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        GlStateManager.disableLighting();
-        GlStateManager.disableDepth();
-        GlStateManager.enableBlend();
-        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        this.drawDefaultBackground();
 
         ResourceLocation background = "Male".equals(selectedGender) ? MALE_BG : "Female".equals(selectedGender) ? FEMALE_BG : OTHER_BG;
         this.mc.getTextureManager().bindTexture(background);
 
-        int guiWidth = 512;
-        int guiHeight = 512;
+        int guiWidth = 263;
+        int guiHeight = 123;
         int guiLeft = (this.width - guiWidth) / 2;
         int guiTop = (this.height - guiHeight) / 2;
-        this.drawModalRectWithCustomSizedTexture(guiLeft, guiTop, 0, 0, guiWidth, guiHeight, 512, 512);
 
-        int contentWidth = 263;
-        int contentHeight = 123;
-        int contentLeft = guiLeft + (guiWidth - contentWidth) / 2;
-        int contentTop = guiTop + (guiHeight - contentHeight) / 2;
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+        this.drawModalRectWithCustomSizedTexture(guiLeft, guiTop, 0, 0, guiWidth, guiHeight, 263, 123);
 
-        drawPlayerModel(contentLeft + 50, contentTop + 120, 60, mouseX - contentLeft - 35, mouseY - contentTop - 65, this.mc.thePlayer);
+        this.drawCenteredString(this.fontRendererObj, "Female Gender Mod", this.width / 2, guiTop - 15, 0xFFFFFF);
 
-        this.mc.getTextureManager().bindTexture(CLOUD_ICON);
-        int cloudButtonX = contentLeft + 100;
-        int cloudButtonY = contentTop + 99;
-        this.drawTexturedModalRect(cloudButtonX, cloudButtonY, 0, 0, 24, 18);
+        drawPlayerModel(guiLeft + 50, guiTop + 120, 60, mouseX - guiLeft - 35, mouseY - guiTop - 65, this.mc.thePlayer);
 
         if (isBreastCancerAwarenessMonth) {
             int rectLeft = guiLeft + (guiWidth - 300) / 2;
-            int rectTop = contentTop + contentHeight + 10 - 8;
+            int rectTop = guiTop + guiHeight + 10 - 8;
             drawRect(rectLeft, rectTop, rectLeft + 300, rectTop + 20, 0x55000000);
-            this.drawCenteredString(this.fontRendererObj, "§lHey, it's Breast Cancer Awareness Month!", this.width / 2 - 10, contentTop + contentHeight + 10, 0xFFFFFF);
+
+            this.drawCenteredString(this.fontRendererObj, "§lHey, it's Breast Cancer Awareness Month!", this.width / 2 - 10, guiTop + guiHeight + 10, 0xFFFFFF);
             this.mc.getTextureManager().bindTexture(RIBBON_TEXTURE);
-            this.drawTexturedModalRect(rectLeft + 305, rectTop + 2, 0, 0, 20, 20);
+
+            int ribbonX = rectLeft + 305;
+            int ribbonY = rectTop + 2;
+            GlStateManager.pushMatrix();
+            GlStateManager.enableBlend();
+            GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+            GlStateManager.translate(ribbonX, ribbonY, 0);
+            this.drawTexturedModalRect(0, 0, 0, 0, 20, 20);
+            GlStateManager.disableBlend();
+            GlStateManager.popMatrix();
         }
 
-        this.drawCenteredString(this.fontRendererObj, "Female Gender Mod", this.width / 2, guiTop + 10, 0xFFFFFF);
-
         super.drawScreen(mouseX, mouseY, partialTicks);
-
-        GlStateManager.enableLighting();
-        GlStateManager.enableDepth();
-        GlStateManager.disableBlend();
     }
 
     private void drawPlayerModel(int posX, int posY, int scale, float mouseX, float mouseY, EntityLivingBase entity) {
         GlStateManager.enableColorMaterial();
         GlStateManager.pushMatrix();
+
         int scissorX = (posX - 38) * this.mc.displayWidth / this.width;
         int scissorY = this.mc.displayHeight - (posY + 24 - 48) * this.mc.displayHeight / this.height;
         int scissorWidth = 76 * this.mc.displayWidth / this.width;
