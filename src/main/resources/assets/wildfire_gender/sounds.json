@@ -1,0 +1,14 @@
+{
+  "female_damage": {
+    "category": "player",
+    "sounds": [
+      "wildfire_gender:female_damage"
+    ]
+  },
+  "female_damage2": {
+    "category": "player",
+    "sounds": [
+      "wildfire_gender:female_damage2"
+    ]
+  }
+}
