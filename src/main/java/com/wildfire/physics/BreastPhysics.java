@@ -1,102 +1,145 @@
 package com.wildfire.physics;
 
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.MathHelper;
 import com.wildfire.main.config.GenderConfig;
 
+/**
+ * BreastPhysics (visual curve variant for 1.8.9)
+ *
+ * - Preserves original API: update(...), applyAttackImpulse(...), getters, resetPhysics()
+ * - Internally uses smoothed offsets (visual-only), not true springs.
+ * - Maps to the existing GenderLayer usage: getLeft/RightPositionY() and getBounceRotation().
+ *
+ * Note: This class is intended to drive small rotations/translations applied in GenderLayer.
+ */
 public class BreastPhysics {
-    private float leftPositionX, leftPositionY, rightPositionX, rightPositionY;
-    private float leftVelocityX, leftVelocityY, rightVelocityX, rightVelocityY;
+
+    private float leftOffsetX, leftOffsetY;
+    private float rightOffsetX, rightOffsetY;
+
+    private float smoothedAccelX, smoothedAccelZ;
+    private float phase;
+    private float attackT;
+    private float attackDir;
+    private float lastMotionX, lastMotionZ;
+    private float lastRidingMotionX, lastRidingMotionZ;
+
     private float bounceRotation;
-    private float lastMotionX, lastMotionZ, lastRidingMotionX, lastRidingMotionZ;
-    private boolean isAttackTriggered;
 
     public void update(EntityLivingBase entity, float bustSize, float intensity, float momentum) {
-        GenderConfig.PlayerGenderSettings settings = GenderConfig.getPlayerSettings((net.minecraft.entity.player.EntityPlayer) entity);
-        if (!settings.physicsEnabled) {
+        GenderConfig.PlayerGenderSettings settings = GenderConfig.getPlayerSettings((EntityPlayer) entity);
+        if (settings == null || !settings.physicsEnabled) {
             resetPhysics();
             return;
         }
 
-        float mass = 0.8f + (bustSize / 200.0f) * 0.5f;
-        float adjustedIntensity = intensity / 100.0f;
-        float adjustedMomentum = momentum / 100.0f;
-        float adjustedStiffness = settings.stiffness * (1.0f - bustSize / 400.0f);
-        float adjustedDamping = settings.damping * (1.0f - bustSize / 400.0f);
+        float sizeN = clamp01(bustSize / 200.0f);
+        float intensityN = clamp01(intensity / 100.0f);
+        float momentumN = clamp01(momentum / 100.0f);
+
+        float softness = lerp(0.7f, 1.0f, sizeN);
+        float response = lerp(0.35f, 0.15f, sizeN);
+
+        float limbSwing = entity.limbSwing;
+        float limbSwingAmt = entity.limbSwingAmount;
+        float speedFactor = clamp01(limbSwingAmt * (entity.isSprinting() ? 1.6f : entity.isSneaking() ? 0.6f : 1.0f));
 
         float accelX = (float) (entity.motionX - lastMotionX);
         float accelZ = (float) (entity.motionZ - lastMotionZ);
         lastMotionX = (float) entity.motionX;
         lastMotionZ = (float) entity.motionZ;
 
-        float ridingAccelX = 0.0f;
-        float ridingAccelZ = 0.0f;
-        if (entity.isRiding()) {
+        if (entity.isRiding() && entity.ridingEntity instanceof EntityLivingBase) {
             EntityLivingBase riding = (EntityLivingBase) entity.ridingEntity;
-            ridingAccelX = (float) (riding.motionX - lastRidingMotionX);
-            ridingAccelZ = (float) (riding.motionZ - lastRidingMotionZ);
+            accelX += (float) (riding.motionX - lastRidingMotionX);
+            accelZ += (float) (riding.motionZ - lastRidingMotionZ);
             lastRidingMotionX = (float) riding.motionX;
             lastRidingMotionZ = (float) riding.motionZ;
         }
 
-        float totalAccelX = accelX + (entity.isRiding() ? ridingAccelX : 0.0f);
-        float totalAccelZ = accelZ + (entity.isRiding() ? ridingAccelZ : 0.0f);
-        float springForceLeftY = -adjustedStiffness * leftPositionY;
-        float dampingForceLeftY = -adjustedDamping * leftVelocityY;
-        leftVelocityY += (springForceLeftY + dampingForceLeftY) / mass + totalAccelZ * adjustedIntensity * adjustedMomentum;
-        leftPositionY += leftVelocityY;
-        leftVelocityX += (totalAccelX * adjustedIntensity * adjustedMomentum - leftPositionX * 0.1f) / mass;
-        leftPositionX += leftVelocityX;
-        leftVelocityX *= adjustedDamping;
+        float filter = 0.85f;
+        smoothedAccelX = smoothedAccelX * filter + accelX * (1.0f - filter);
+        smoothedAccelZ = smoothedAccelZ * filter + accelZ * (1.0f - filter);
 
-        float springForceRightY = -adjustedStiffness * rightPositionY;
-        float dampingForceRightY = -adjustedDamping * rightVelocityY;
-        rightVelocityY += (springForceRightY + dampingForceRightY) / mass + totalAccelZ * adjustedIntensity * adjustedMomentum;
-        rightPositionY += rightVelocityY;
-        rightVelocityX += (totalAccelX * adjustedIntensity * adjustedMomentum - rightPositionX * 0.1f) / mass;
-        rightPositionX += rightVelocityX;
-        rightVelocityX *= adjustedDamping;
+        phase += 0.06f + speedFactor * 0.02f;
 
-        if (isAttackTriggered) {
-            leftVelocityX += 0.2f * adjustedIntensity * adjustedMomentum;
-            rightVelocityX -= 0.2f * adjustedIntensity * adjustedMomentum;
-            isAttackTriggered = false;
+        float walkX = MathHelper.sin(limbSwing * 0.6f) * 0.06f * intensityN;
+        float walkY = MathHelper.cos(limbSwing * 0.6f) * 0.05f * intensityN;
+
+        float ambientX = MathHelper.sin(phase * 0.9f) * 0.03f * softness * intensityN;
+        float ambientY = MathHelper.cos(phase * 1.1f) * 0.025f * softness * intensityN;
+
+        float inertiaX = smoothedAccelX * 0.8f * momentumN;
+        float inertiaY = smoothedAccelZ * 0.7f * momentumN;
+
+        float rideMul = entity.isRiding() ? 0.6f : 1.0f;
+
+        float attackNX = 0.0f;
+        if (attackT > 0.0f) {
+            float ease = cubicOut(attackT);
+            attackNX = 0.18f * ease * intensityN * momentumN * attackDir;
+            attackT = Math.max(0.0f, attackT - 0.10f);
         }
 
-        float yawChange = Math.abs(entity.rotationYaw - entity.prevRotationYaw);
-        float accel = (float) Math.sqrt(totalAccelX * totalAccelX + totalAccelZ * totalAccelZ);
-        bounceRotation = (MathHelper.cos(entity.limbSwing * 0.8f) * 0.15f + (float) Math.random() * 0.02f) * adjustedIntensity;
+        float targetX = (walkX + ambientX + inertiaX + attackNX) * rideMul;
+        float targetY = (walkY + ambientY + inertiaY) * rideMul;
 
-        float movementFactor = entity.isSprinting() ? 1.5f : entity.isSneaking() ? 0.5f : 1.0f;
-        if (entity.isRiding()) {
-            leftPositionX *= 0.7f;
-            leftPositionY *= 0.7f;
-            rightPositionX *= 0.7f;
-            rightPositionY *= 0.7f;
-            bounceRotation *= 0.7f;
-        }
+        float desync = MathHelper.sin(phase * 0.35f) * 0.012f;
 
-        leftPositionX = MathHelper.clamp_float(leftPositionX, -0.5f, 0.5f);
-        leftPositionY = MathHelper.clamp_float(leftPositionY, -0.3f, 0.3f);
-        rightPositionX = MathHelper.clamp_float(rightPositionX, -0.5f, 0.5f);
-        rightPositionY = MathHelper.clamp_float(rightPositionY, -0.3f, 0.3f);
+        float leftTargetX  = targetX + desync;
+        float rightTargetX = -targetX + desync * 0.7f;
+        float leftTargetY  = targetY + desync * 0.5f;
+        float rightTargetY = targetY - desync * 0.5f;
+
+        leftOffsetX  = smoothApproach(leftOffsetX,  leftTargetX,  response);
+        rightOffsetX = smoothApproach(rightOffsetX, rightTargetX, response);
+        leftOffsetY  = smoothApproach(leftOffsetY,  leftTargetY,  response);
+        rightOffsetY = smoothApproach(rightOffsetY, rightTargetY, response);
+
+        // NEW: spring-back to neutral when idle
+        leftOffsetX  = smoothApproach(leftOffsetX,  0f, 0.05f);
+        rightOffsetX = smoothApproach(rightOffsetX, 0f, 0.05f);
+        leftOffsetY  = smoothApproach(leftOffsetY,  0f, 0.05f);
+        rightOffsetY = smoothApproach(rightOffsetY, 0f, 0.05f);
+
+        bounceRotation = (MathHelper.cos(limbSwing * 0.8f) * 0.15f
+                        + MathHelper.sin(phase * 0.5f) * 0.03f) * intensityN;
     }
 
     public void applyAttackImpulse(EntityLivingBase entity, float bustSize, float intensity, float momentum) {
-        isAttackTriggered = true;
+        attackT = 1.0f;
+        attackDir = 1.0f;
     }
 
-    public float getLeftPositionX() { return leftPositionX; }
-    public float getLeftPositionY() { return leftPositionY; }
-    public float getRightPositionX() { return rightPositionX; }
-    public float getRightPositionY() { return rightPositionY; }
+    // Getters mapped to visual offsets
+    public float getLeftPositionX() { return leftOffsetX; }
+    public float getLeftPositionY() { return leftOffsetY; }
+    public float getRightPositionX() { return rightOffsetX; }
+    public float getRightPositionY() { return rightOffsetY; }
     public float getBounceRotation() { return bounceRotation; }
 
     public void resetPhysics() {
-        leftPositionX = leftPositionY = rightPositionX = rightPositionY = 0.0f;
-        leftVelocityX = leftVelocityY = rightVelocityX = rightVelocityY = 0.0f;
-        bounceRotation = 0.0f;
+        leftOffsetX = leftOffsetY = rightOffsetX = rightOffsetY = 0.0f;
+        smoothedAccelX = smoothedAccelZ = 0.0f;
+        phase = 0.0f;
+        attackT = 0.0f;
+        attackDir = 0.0f;
         lastMotionX = lastMotionZ = lastRidingMotionX = lastRidingMotionZ = 0.0f;
-        isAttackTriggered = false;
+        bounceRotation = 0.0f;
+    }
+
+    // Helpers
+    private static float clamp(float v, float lo, float hi) { return v < lo ? lo : (v > hi ? hi : v); }
+    private static float clamp01(float v) { return clamp(v, 0f, 1f); }
+    private static float lerp(float a, float b, float t) { return a + (b - a) * t; }
+
+    private static float smoothApproach(float current, float target, float rate) {
+        return current + (target - current) * clamp(rate, 0.05f, 0.35f);
+    }
+    private static float cubicOut(float t) {
+        float inv = 1.0f - t;
+        return 1.0f - inv * inv * inv;
     }
 }

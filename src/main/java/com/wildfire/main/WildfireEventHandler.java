@@ -14,7 +14,6 @@ import org.lwjgl.input.Keyboard;
 
 public class WildfireEventHandler {
     private static final int GENDER_MENU_KEY = Keyboard.KEY_G;
-    private int timer = 0;
 
     public WildfireEventHandler() {
         MinecraftForge.EVENT_BUS.register(this);
@@ -41,19 +40,20 @@ public class WildfireEventHandler {
         if (player != Minecraft.getMinecraft().thePlayer) return;
 
         GenderConfig.PlayerGenderSettings settings = GenderConfig.getPlayerSettings(player);
-        if (settings == null) return;
+        if (settings == null || !settings.physicsEnabled) return;
 
-        BreastPhysics leftBreastPhysics = new BreastPhysics();
-        BreastPhysics rightBreastPhysics = new BreastPhysics();
-        leftBreastPhysics.update(player, settings.breastSize, settings.bounceMultiplier * settings.intensity / 100.0F, settings.momentum / 100.0F);
-        rightBreastPhysics.update(player, settings.breastSize, settings.bounceMultiplier * settings.intensity / 100.0F, settings.momentum / 100.0F);
+        BreastPhysics[] phys = GenderLayer.getPhysics((net.minecraft.client.entity.AbstractClientPlayer) player);
+        if (phys != null) {
+            phys[0].update(player, settings.breastSize, settings.intensity, settings.momentum);
+            phys[1].update(player, settings.breastSize, settings.intensity, settings.momentum);
+        }
     }
 
     @SubscribeEvent
     public void onPlayerHurt(LivingHurtEvent event) {
         if (!event.entity.worldObj.isRemote) return;
-
         if (!(event.entity instanceof EntityPlayer)) return;
+
         EntityPlayer player = (EntityPlayer) event.entity;
         if (player != Minecraft.getMinecraft().thePlayer) return;
 
@@ -71,7 +71,10 @@ public class WildfireEventHandler {
         GenderConfig.PlayerGenderSettings settings = GenderConfig.getPlayerSettings(player);
         if (settings == null || !settings.physicsEnabled) return;
 
-        BreastPhysics leftBreastPhysics = new BreastPhysics();
-        BreastPhysics rightBreastPhysics = new BreastPhysics();
+        BreastPhysics[] phys = GenderLayer.getPhysics((net.minecraft.client.entity.AbstractClientPlayer) player);
+        if (phys != null) {
+            phys[0].applyAttackImpulse(player, settings.breastSize, settings.intensity, settings.momentum);
+            phys[1].applyAttackImpulse(player, settings.breastSize, settings.intensity, settings.momentum);
+        }
     }
 }
