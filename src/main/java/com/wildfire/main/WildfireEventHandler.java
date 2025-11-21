@@ -3,16 +3,21 @@ package com.wildfire.main;
 import com.wildfire.gui.screen.GuiWardrobe;
 import com.wildfire.main.config.GenderConfig;
 import com.wildfire.physics.BreastPhysics;
+import com.wildfire.render.armor.EmptyGenderArmor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
 import org.lwjgl.input.Keyboard;
 
 public class WildfireEventHandler {
+
     private static final int GENDER_MENU_KEY = Keyboard.KEY_G;
 
     public WildfireEventHandler() {
@@ -23,7 +28,6 @@ public class WildfireEventHandler {
     @SubscribeEvent
     public void onKeyInput(TickEvent.ClientTickEvent evt) {
         if (evt.phase != TickEvent.Phase.END) return;
-
         if (Keyboard.isKeyDown(GENDER_MENU_KEY) && Minecraft.getMinecraft().currentScreen == null) {
             EntityPlayer player = Minecraft.getMinecraft().thePlayer;
             if (player != null) {
@@ -35,46 +39,60 @@ public class WildfireEventHandler {
     @SubscribeEvent
     public void onPlayerTick(TickEvent.PlayerTickEvent evt) {
         if (evt.phase != TickEvent.Phase.END) return;
-
         EntityPlayer player = evt.player;
         if (player != Minecraft.getMinecraft().thePlayer) return;
 
         GenderConfig.PlayerGenderSettings settings = GenderConfig.getPlayerSettings(player);
-        if (settings == null || !settings.physicsEnabled) return;
+        if (settings == null) return;
+        if (!(player instanceof net.minecraft.client.entity.AbstractClientPlayer)) return;
 
-        BreastPhysics[] phys = GenderLayer.getPhysics((net.minecraft.client.entity.AbstractClientPlayer) player);
-        if (phys != null) {
-            phys[0].update(player, settings.breastSize, settings.intensity, settings.momentum);
-            phys[1].update(player, settings.breastSize, settings.intensity, settings.momentum);
+        net.minecraft.client.entity.AbstractClientPlayer acp = (net.minecraft.client.entity.AbstractClientPlayer) player;
+
+        GenderLayer.ensureRegisteredForPlayer(acp);
+        BreastPhysics[] phys = GenderLayer.getPhysicsForPlayer(acp);
+        if (phys == null) return;
+
+        final com.wildfire.api.IGenderArmor armor = EmptyGenderArmor.INSTANCE;
+
+        // === PHYSICS OFF? RESET AND SKIP ===
+        if (!settings.physicsEnabled) {
+            phys[0].resetPhysics();
+            if (!settings.breastsUniboob) phys[1].resetPhysics();
+            return;
+        }
+
+        // === DUAL-PHYSICS: NO = synced, YES = independent ===
+        if (settings.breastsUniboob) {
+            phys[0].update((EntityLivingBase) player, armor);
+            phys[1].syncFrom(phys[0]);  // ← PERFECT MIRROR
+        } else {
+            phys[0].update((EntityLivingBase) player, armor);
+            phys[1].update((EntityLivingBase) player, armor);
         }
     }
 
     @SubscribeEvent
-    public void onPlayerHurt(LivingHurtEvent event) {
-        if (!event.entity.worldObj.isRemote) return;
-        if (!(event.entity instanceof EntityPlayer)) return;
-
-        EntityPlayer player = (EntityPlayer) event.entity;
-        if (player != Minecraft.getMinecraft().thePlayer) return;
-
-        GenderConfig.PlayerGenderSettings settings = GenderConfig.getPlayerSettings(player);
-        if (settings != null && settings.hurtSoundsEnabled && "Female".equals(settings.gender)) {
-            WildfireSounds.playSound(player);
-        }
+    public void onLivingJump(LivingEvent.LivingJumpEvent event) {
+        // No-op: physics.update() handles motion
     }
 
     @SubscribeEvent
     public void onPlayerAttack(AttackEntityEvent event) {
-        EntityPlayer player = event.entityPlayer;
-        if (player != Minecraft.getMinecraft().thePlayer) return;
+        // No-op: physics.update() reads swing state
+    }
 
-        GenderConfig.PlayerGenderSettings settings = GenderConfig.getPlayerSettings(player);
-        if (settings == null || !settings.physicsEnabled) return;
+    @SubscribeEvent
+    public void onLivingHurt(LivingHurtEvent event) {
+        // WildfireSounds handles
+    }
 
-        BreastPhysics[] phys = GenderLayer.getPhysics((net.minecraft.client.entity.AbstractClientPlayer) player);
-        if (phys != null) {
-            phys[0].applyAttackImpulse(player, settings.breastSize, settings.intensity, settings.momentum);
-            phys[1].applyAttackImpulse(player, settings.breastSize, settings.intensity, settings.momentum);
+    @SubscribeEvent
+    public void onPlayerLoggedOut(PlayerLoggedOutEvent event) {
+        if (event.player == Minecraft.getMinecraft().thePlayer) {
+            if (event.player instanceof net.minecraft.client.entity.AbstractClientPlayer) {
+                net.minecraft.client.entity.AbstractClientPlayer acp = (net.minecraft.client.entity.AbstractClientPlayer) event.player;
+                GenderLayer.unregister(acp.getUniqueID());
+            }
         }
     }
 }

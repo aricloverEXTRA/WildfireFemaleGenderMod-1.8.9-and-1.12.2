@@ -11,13 +11,14 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 public class WildfireSounds {
-    private static final ResourceLocation FEMALE_DAMAGE = new ResourceLocation("wildfire_gender", "female_damage");
-    private static final ResourceLocation FEMALE_DAMAGE2 = new ResourceLocation("wildfire_gender", "female_damage2");
+    // Use your mod id constant so assets are looked up under the correct domain
+    private static final ResourceLocation FEMALE_DAMAGE = new ResourceLocation(WildfireGenderMod.MODID, "female_damage");
+    private static final ResourceLocation FEMALE_DAMAGE2 = new ResourceLocation(WildfireGenderMod.MODID, "female_damage2");
 
     private static boolean hasPlayedHurt = false;
 
     public static void preInit(FMLPreInitializationEvent event) {
-        // Ensure sounds.json and .ogg files exist in assets/wildfire_gender/sounds/
+        // Ensure sounds.json and .ogg files exist in assets/<MODID>/sounds/
     }
 
     @SubscribeEvent
@@ -41,7 +42,7 @@ public class WildfireSounds {
         GenderConfig.PlayerGenderSettings settings = GenderConfig.getPlayerSettings(player);
         if (settings == null || !settings.hurtSoundsEnabled || settings.voicePitch <= 0) return;
 
-        // Reset flag when invulnerability ends
+        // Reset flag when invulnerability ends so a subsequent hurt can play again
         if (player.hurtResistantTime == 0) {
             hasPlayedHurt = false;
         }
@@ -59,6 +60,7 @@ public class WildfireSounds {
         if (hasPlayedHurt) return;
         ResourceLocation sound = Math.random() < 0.5 ? FEMALE_DAMAGE : FEMALE_DAMAGE2;
         float pitch = settings.voicePitch / 100.0F;
+        // ensure sound is played on client sound handler
         Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.create(sound, pitch));
         hasPlayedHurt = true;
     }
