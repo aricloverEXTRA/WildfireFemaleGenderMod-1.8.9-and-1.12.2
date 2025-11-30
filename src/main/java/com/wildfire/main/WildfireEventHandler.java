@@ -4,9 +4,12 @@ import com.wildfire.gui.screen.GuiWardrobe;
 import com.wildfire.main.config.GenderConfig;
 import com.wildfire.physics.BreastPhysics;
 import com.wildfire.render.armor.EmptyGenderArmor;
+import com.wildfire.render.armor.SimpleGenderArmor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.item.ItemArmor;
+import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
@@ -22,7 +25,6 @@ public class WildfireEventHandler {
 
     public WildfireEventHandler() {
         MinecraftForge.EVENT_BUS.register(this);
-        MinecraftForge.EVENT_BUS.register(WildfireSounds.class);
     }
 
     @SubscribeEvent
@@ -52,38 +54,57 @@ public class WildfireEventHandler {
         BreastPhysics[] phys = GenderLayer.getPhysicsForPlayer(acp);
         if (phys == null) return;
 
-        final com.wildfire.api.IGenderArmor armor = EmptyGenderArmor.INSTANCE;
+        ItemStack chest = null;
+        try {
+            chest = player.inventory.armorInventory[2];
+        } catch (Throwable ignored) {}
 
-        // === PHYSICS OFF? RESET AND SKIP ===
+        final com.wildfire.api.IGenderArmor armor;
+        if (chest == null || !(chest.getItem() instanceof ItemArmor)) {
+            armor = EmptyGenderArmor.INSTANCE;
+        } else {
+            ItemArmor ia = (ItemArmor) chest.getItem();
+            if (chest.getItem() == net.minecraft.init.Items.leather_chestplate) {
+                armor = SimpleGenderArmor.LEATHER;
+            } else if (chest.getItem() == net.minecraft.init.Items.chainmail_chestplate) {
+                armor = SimpleGenderArmor.CHAINMAIL;
+            } else if (chest.getItem() == net.minecraft.init.Items.golden_chestplate) {
+                armor = SimpleGenderArmor.GOLD;
+            } else if (chest.getItem() == net.minecraft.init.Items.iron_chestplate) {
+                armor = SimpleGenderArmor.IRON;
+            } else if (chest.getItem() == net.minecraft.init.Items.diamond_chestplate) {
+                armor = SimpleGenderArmor.DIAMOND;
+            } else {
+                armor = SimpleGenderArmor.FALLBACK;
+            }
+        }
+
         if (!settings.physicsEnabled) {
             phys[0].resetPhysics();
             if (!settings.breastsUniboob) phys[1].resetPhysics();
             return;
         }
 
-        // === DUAL-PHYSICS: NO = synced, YES = independent ===
-        if (settings.breastsUniboob) {
-            phys[0].update((EntityLivingBase) player, armor);
-            phys[1].syncFrom(phys[0]);  // ← PERFECT MIRROR
-        } else {
+        boolean dualPhysics = !settings.breastsUniboob;
+        if (dualPhysics) {
             phys[0].update((EntityLivingBase) player, armor);
             phys[1].update((EntityLivingBase) player, armor);
+        } else {
+            phys[0].update((EntityLivingBase) player, armor);
+            phys[1].syncFrom(phys[0]);
         }
     }
 
     @SubscribeEvent
     public void onLivingJump(LivingEvent.LivingJumpEvent event) {
-        // No-op: physics.update() handles motion
     }
 
     @SubscribeEvent
     public void onPlayerAttack(AttackEntityEvent event) {
-        // No-op: physics.update() reads swing state
     }
 
     @SubscribeEvent
     public void onLivingHurt(LivingHurtEvent event) {
-        // WildfireSounds handles
     }
 
     @SubscribeEvent

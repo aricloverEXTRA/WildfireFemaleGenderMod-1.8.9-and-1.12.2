@@ -8,30 +8,38 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.common.MinecraftForge;
 import com.wildfire.gui.screen.GuiWardrobe;
 import com.wildfire.main.WildfireGenderMod;
+import com.wildfire.main.WildfireSounds;
 import com.wildfire.main.GenderLayer;
 import com.wildfire.main.WildfireEventHandler;
+import com.wildfire.main.handlers.ArmorTooltipHandler;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 public class ClientProxy extends CommonProxy {
     @Override
     public void init(FMLInitializationEvent event) {
         ClientRegistry.registerKeyBinding(WildfireGenderMod.openGuiKey);
+        ClientRegistry.registerKeyBinding(WildfireGenderMod.toggleBreastsKey);
 
         RenderPlayer renderDefault = Minecraft.getMinecraft().getRenderManager().getSkinMap().get("default");
         renderDefault.addLayer(new GenderLayer(renderDefault));
         RenderPlayer renderSlim = Minecraft.getMinecraft().getRenderManager().getSkinMap().get("slim");
         renderSlim.addLayer(new GenderLayer(renderSlim));
 
-        // Register key input helper (existing)
         MinecraftForge.EVENT_BUS.register(new Object() {
             @net.minecraftforge.fml.common.eventhandler.SubscribeEvent
             public void onKeyInput(net.minecraftforge.fml.common.gameevent.InputEvent.KeyInputEvent event) {
                 if (WildfireGenderMod.openGuiKey.isPressed() && Minecraft.getMinecraft().currentScreen == null) {
                     Minecraft.getMinecraft().displayGuiScreen(new GuiWardrobe());
                 }
+                if (WildfireGenderMod.toggleBreastsKey.isPressed()) {
+                    com.wildfire.main.config.ClientConfig.RENDER_BREASTS = !com.wildfire.main.config.ClientConfig.RENDER_BREASTS;
+                    System.out.println("[WFG] ToggleBreastsKey pressed -> RENDER_BREASTS = " + com.wildfire.main.config.ClientConfig.RENDER_BREASTS);
+                }
             }
         });
 
-        // Ensure the mod event handler is registered so physics and hurt-sounds actually run
         MinecraftForge.EVENT_BUS.register(new WildfireEventHandler());
+        MinecraftForge.EVENT_BUS.register(new WildfireSounds());
+        MinecraftForge.EVENT_BUS.register(new ArmorTooltipHandler());
     }
 }

@@ -23,8 +23,10 @@ public class WildfireButton extends GuiButton {
             FontRenderer fontrenderer = mc.fontRendererObj;
             GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
             this.hovered = mouseX >= this.xPosition && mouseY >= this.yPosition && mouseX < this.xPosition + this.width && mouseY < this.yPosition + this.height;
-            int color = this.hovered ? 0xFFFFFFFF : 0x66666666;
-            drawRect(this.xPosition, this.yPosition, this.xPosition + this.width, this.yPosition + this.height, color);
+
+            int bgColor = this.hovered ? 0xFF2A2A2A : 0xFF1A1A1A;
+            drawRect(this.xPosition, this.yPosition, this.xPosition + this.width, this.yPosition + this.height, bgColor);
+
             this.mouseDragged(mc, mouseX, mouseY);
             int j = 14737632;
 

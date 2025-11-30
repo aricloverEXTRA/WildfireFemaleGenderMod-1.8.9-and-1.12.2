@@ -1,3 +1,4 @@
+// (updated BreastPhysics with armor-override behavior)
 package com.wildfire.physics;
 
 import com.wildfire.api.IGenderArmor;
@@ -12,6 +13,12 @@ import net.minecraft.util.Vec3;
 /**
  * BreastPhysics – 1.8.9 compatible, physics driven ONLY by intensity/momentum.
  * Visual size slider is cosmetic only.
+ *
+ * Added: rotation-flop support and proper inertia scaling by momentum.
+ *
+ * IMPORTANT: added support for disabling physics while wearing armor that covers breasts
+ * when player settings.overrideArmorPhysics == false. If overrideArmorPhysics is true, physics
+ * still run even when armor is present.
  */
 public class BreastPhysics {
 
@@ -32,6 +39,15 @@ public class BreastPhysics {
 
     private static final float VISUAL_BREAST_WEIGHT = 0.1f;
 
+    // Rotation-flop tuning
+    private static final float ROTATION_FLOP_STRENGTH = 0.035f;
+    private static final float ROTATION_FLOP_MAX = 0.65f;
+
+    // Momentum tuning multipliers (adjust these if you want more/less momentum effect)
+    // momentumNormalized = settings.momentum / 100.0f  (range 0..1)
+    private static final float MOMENTUM_BASE = 0.25f;     // baseline fraction of motion always contributing
+    private static final float MOMENTUM_SCALE = 2.75f;    // how much extra contribution at full momentum
+
     public BreastPhysics() {
         resetPhysics();
     }
@@ -51,6 +67,14 @@ public class BreastPhysics {
         lastVerticalMoveVelocity = 0.0;
     }
 
+    /**
+     * Update physics for entity. The armor parameter represents the IGenderArmor
+     * providing information about the currently-worn armor (physicsResistance, coversBreasts, etc).
+     *
+     * Behavior change: if the entity is a player and is wearing armor that covers breasts (armor.coversBreasts())
+     * and the player's setting overrideArmorPhysics == false, then physics are suppressed for that tick.
+     * If overrideArmorPhysics == true then physics run normally.
+     */
     public void update(EntityLivingBase entity, IGenderArmor armor) {
         if (entity == null) return;
 
@@ -71,14 +95,15 @@ public class BreastPhysics {
         }
 
         float intensity = 1.0f;
-        float momentum = 1.0f;
+        float momentumNormalized = 1.0f; // 0..1
         GenderConfig.PlayerGenderSettings settings = null;
         boolean uniboob = false;
         if (entity instanceof EntityPlayer) {
             settings = GenderConfig.getPlayerSettings((EntityPlayer) entity);
             if (settings != null) {
                 intensity = clamp(settings.intensity / 100.0f, 0f, 1.5f);
-                momentum  = clamp(settings.momentum  / 100.0f, 0f, 2.0f);
+                // Normalize momentum slider to 0..1
+                momentumNormalized = clamp(settings.momentum / 100.0f, 0f, 1.0f);
                 uniboob   = settings.breastsUniboob;
             }
         }
@@ -89,19 +114,43 @@ public class BreastPhysics {
             else                         this.breastSize -= Math.abs(this.breastSize - target) / 2f;
         }
 
+        // If the armor reports that it covers breasts AND player has NOT enabled overrideArmorPhysics,
+        // suppress physics for this tick (zero velocities/targets and finish tick so positions settle).
+        try {
+            if (armor != null && armor.coversBreasts() && settings != null && !settings.overrideArmorPhysics) {
+                // zero dynamic quantities so breasts hold still (but keep cosmetic breastSize)
+                this.targetBounceX = 0f;
+                this.targetBounceY = 0f;
+                this.targetRotVel   = 0f;
+                this.velocity = 0f;
+                this.velocityX = 0f;
+                this.rotVelocity = 0f;
+                this.bounceVel = 0f;
+                this.bounceVelX = 0f;
+                this.bounceRotVel = 0f;
+                // run finishTick so final positions are computed and clamped
+                finishTick();
+                // no further updates while armor covers breasts and override is false
+                return;
+            }
+        } catch (Throwable ignored) {
+            // defensive: if armor implementation misbehaves, continue with normal physics.
+        }
+
         Vec3 curPos = new Vec3(entity.posX, entity.posY, entity.posZ);
         Vec3 motion = curPos.subtract(this.prePos);
         this.prePos = curPos;
 
         float bounceIntensity = intensity * 0.9f;
-        float resistance = MathHelper.clamp_float(armor.physicsResistance(), 0f, 1f);
+        float resistance = MathHelper.clamp_float(armor != null ? armor.physicsResistance() : 0f, 0f, 1f);
         bounceIntensity *= (1f - resistance);
 
         if (!uniboob) {
             bounceIntensity *= WildfireHelper.randFloat(0.95f, 1.05f);
         }
 
-        tickMovement(entity, motion, bounceIntensity, VISUAL_BREAST_WEIGHT, momentum, uniboob);
+        // IMPORTANT: momentum now scales inertia contributions (makes momentum meaningful)
+        tickMovement(entity, motion, bounceIntensity, VISUAL_BREAST_WEIGHT, momentumNormalized, uniboob);
         tickPose(entity, bounceIntensity);
         tickRide(entity, bounceIntensity, VISUAL_BREAST_WEIGHT, uniboob);
         tickArmSwing(entity, bounceIntensity, uniboob);
@@ -114,7 +163,7 @@ public class BreastPhysics {
     /* ------------------- PHYSICS STEPS ------------------- */
     private void tickMovement(EntityLivingBase entity, Vec3 motion,
                               float bounceIntensity, float breastWeight,
-                              float momentum, boolean uniboob) {
+                              float momentumNorm, boolean uniboob) {
         double vert = entity.motionY;
         if ((lastVerticalMoveVelocity <= 0 && vert > 0) ||
             (lastVerticalMoveVelocity < 0 && vert == 0)) {
@@ -122,13 +171,32 @@ public class BreastPhysics {
         }
         lastVerticalMoveVelocity = vert;
 
+        // vertical target from motion
         this.targetBounceY = (float) motion.yCoord * bounceIntensity;
         this.targetBounceY += breastWeight;
 
+        // rotation-driven target
         this.targetRotVel = calcRotation(entity, bounceIntensity);
         this.targetRotVel += (float) motion.yCoord * bounceIntensity * randomB;
 
+        // base lateral target from rotation
         this.targetBounceX = -calcRotation(entity, bounceIntensity) / 10f;
+
+        // Inertia contributions (momentum influences how much of the entity's translational motion becomes inertia)
+        // Compute momentum multiplier: baseline + scaled by slider
+        float momentumMultiplier = MOMENTUM_BASE + MOMENTUM_SCALE * momentumNorm; // range [MOMENTUM_BASE, MOMENTUM_BASE+MOMENTUM_SCALE]
+        // Use components of motion to generate lateral and slight vertical inertial offsets
+        float inertiaX = (float) motion.xCoord * momentumMultiplier;
+        float inertiaZ = (float) motion.zCoord * momentumMultiplier;
+        // Apply inertia: X affects sideways, Z gives a small vertical bob component (forward/back movement)
+        this.targetBounceX += inertiaX;
+        this.targetBounceY += inertiaZ * 0.35f; // small contribution to vertical target
+
+        // Rotation flopping: add lateral impulse when the player rotates the model with the mouse
+        float yawDelta = MathHelper.wrapAngleTo180_float(entity.rotationYaw - entity.prevRotationYaw);
+        float rotationFlop = yawDelta * ROTATION_FLOP_STRENGTH * bounceIntensity;
+        rotationFlop = clamp(rotationFlop, -ROTATION_FLOP_MAX, ROTATION_FLOP_MAX);
+        this.targetBounceX += rotationFlop;
 
         float f2 = (float) (entity.motionX * entity.motionX +
                             entity.motionY * entity.motionY +
@@ -137,7 +205,7 @@ public class BreastPhysics {
         if (f2 < 1.0F) f2 = 1.0F;
 
         this.targetBounceY += MathHelper.cos(entity.limbSwing * 0.6662F + (float) Math.PI) *
-                              0.5F * entity.limbSwingAmount * 0.5F / f2 * momentum;
+                              0.5F * entity.limbSwingAmount * 0.5F / f2 * momentumNorm;
     }
 
     private void tickPose(EntityLivingBase entity, float bounceIntensity) {
@@ -256,7 +324,7 @@ public class BreastPhysics {
         this.velocityX = -source.velocityX;
         this.velocity = source.velocity;
         this.bounceVelX = -source.bounceVelX;
-        this.bounceVel = source.bounceVel;
+        this.bounceVel = -source.bounceVel;
         this.rotVelocity = -source.rotVelocity;
         this.bounceRotVel = -source.bounceRotVel;
     }

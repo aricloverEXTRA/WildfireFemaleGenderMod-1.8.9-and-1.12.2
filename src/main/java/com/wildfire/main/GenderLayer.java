@@ -2,6 +2,7 @@ package com.wildfire.main;
 
 import com.wildfire.main.config.GenderConfig;
 import com.wildfire.physics.BreastPhysics;
+import com.wildfire.main.config.ClientConfig;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.model.ModelRenderer;
@@ -14,13 +15,6 @@ import net.minecraft.util.MathHelper;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * GenderLayer – FINAL 1.8.9
- * • 0% = NO RENDER
- * • Z-only scale (front sinks in)
- * • Y = -1.0F → perfect chest position
- * • Jacket perfect
- */
 public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
 
     private final RenderPlayer renderPlayer;
@@ -63,7 +57,6 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         rightBreastWearBottom.setTextureSize(64, 64);
     }
 
-    // --- Registration ---
     public static void ensureRegisteredForPlayer(AbstractClientPlayer player) {
         if (player == null) return;
         PHYSICS_MAP.computeIfAbsent(player.getUniqueID(),
@@ -89,7 +82,6 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         GenderConfig.PlayerGenderSettings cfg = GenderConfig.getPlayerSettings(player);
         if (cfg == null) return;
 
-        // --- NO RENDER AT 0% ---
         if (cfg.breastSize <= 0) return;
 
         ensureRegisteredForPlayer(player);
@@ -108,12 +100,10 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         float depth = -cfg.depth / 10.0F;
         float height = -(cfg.height / 40.0F);
 
-        // --- FINAL Y: CHEST LEVEL ---
         float baseX = breasts.getXOffset() - 0.350F;
         float baseY = 3.5F + height;
         float baseZ = breasts.getZOffset() + depth - 1.5F + MAX_PROTRUSION * sizeFactor + torsoPush;
 
-        // --- Physics ---
         float lPosX = interp(phys[0].getPrePositionX(), phys[0].getPositionX(), partialTicks);
         float lPosY = interp(phys[0].getPrePositionY(), phys[0].getPositionY(), partialTicks);
         float lBounce = interp(phys[0].getPreBounceRotation(), phys[0].getBounceRotation(), partialTicks);
@@ -159,10 +149,10 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
                     rBounce, rPosX * YAW_FACTOR, 1.0f, 1.0f, zScale, renderScale);
 
             renderBreast(leftBreastWearBottom, baseX - separation, baseY + lPosY + 0.5F, baseZ,
-                    lBounce + 4.0f, -lPosX * YAW_FACTOR, 1.0f, 1.0f, zScale, renderScale);
+                    lBounce + (float)Math.PI + (float)Math.toRadians(4.0), -lPosX * YAW_FACTOR, 1.0f, 1.0f, zScale, renderScale);
 
             renderBreast(rightBreastWearBottom, baseX + separation, baseY + rPosY + 0.5F, baseZ,
-                    rBounce + 4.0f, rPosX * YAW_FACTOR, 1.0f, 1.0f, zScale, renderScale);
+                    rBounce + (float)Math.PI + (float)Math.toRadians(4.0), rPosX * YAW_FACTOR, 1.0f, 1.0f, zScale, renderScale);
         }
 
         GlStateManager.disableAlpha();
@@ -194,9 +184,21 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
     }
 
     private boolean shouldRenderBreasts(AbstractClientPlayer player) {
+        if (!ClientConfig.RENDER_BREASTS) return false;
+
         GenderConfig.PlayerGenderSettings s = GenderConfig.getPlayerSettings(player);
-        return s != null && s.breastsEnabled
-                && ("Female".equals(s.gender) || "Other".equals(s.gender));
+        if (s == null) return false;
+
+        if (s.hideInArmor) {
+            try {
+                net.minecraft.item.ItemStack chest = player.inventory.armorInventory[2];
+                if (chest != null && chest.getItem() instanceof net.minecraft.item.ItemArmor) {
+                    return false;
+                }
+            } catch (Throwable ignored) {}
+        }
+
+        return s.breastsEnabled && ("Female".equals(s.gender) || "Other".equals(s.gender));
     }
 
     private static float interp(float a, float b, float t) {
