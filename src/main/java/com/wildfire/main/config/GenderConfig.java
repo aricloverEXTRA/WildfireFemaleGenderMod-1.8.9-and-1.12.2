@@ -7,14 +7,6 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 
 import java.io.File;
 
-/**
- * Single-file GenderConfig for Forge 1.8.9.
- * Added safe toggles:
- *  - overrideArmorPhysics (boolean)
- *  - showArmorTooltip (boolean)
- *  - hideInArmor (boolean)
- *  - holidayThemes (boolean)
- */
 public class GenderConfig {
     private static Configuration config;
     private static PlayerGenderSettings localPlayerSettings;
@@ -43,14 +35,10 @@ public class GenderConfig {
         public float voicePitch = 100.0F;
         public boolean darkMode = false;
 
-        // Safe, 1.8.9-friendly toggles (per-player)
         public boolean overrideArmorPhysics = false;
         public boolean showArmorTooltip = true;
         public boolean hideInArmor = false;
         public boolean holidayThemes = true;
-
-        public PlayerGenderSettings() {
-        }
     }
 
     public static void loadConfig(FMLPreInitializationEvent event) {
@@ -87,7 +75,6 @@ public class GenderConfig {
             localPlayerSettings.voicePitch = config.getFloat("VoicePitch", "General", 100.0F, 80.0F, 120.0F, "Voice pitch (80-120%)");
             localPlayerSettings.darkMode = config.getBoolean("DarkMode", "General", false, "Enable dark mode theme");
 
-            // new toggles (per-player defaults)
             localPlayerSettings.overrideArmorPhysics = config.getBoolean("OverrideArmorPhysics", "General", false, "Override armor interaction with breast physics");
             localPlayerSettings.showArmorTooltip = config.getBoolean("ShowArmorTooltip", "General", true, "Show armor stats tooltip for breast armor");
             localPlayerSettings.hideInArmor = config.getBoolean("HideInArmor", "General", false, "Hide breasts visually while wearing armor");
@@ -129,7 +116,6 @@ public class GenderConfig {
             config.get("General", "VoicePitch", 100.0F).set(localPlayerSettings.voicePitch);
             config.get("General", "DarkMode", false).set(localPlayerSettings.darkMode);
 
-            // new toggles saved
             config.get("General", "OverrideArmorPhysics", false).set(localPlayerSettings.overrideArmorPhysics);
             config.get("General", "ShowArmorTooltip", true).set(localPlayerSettings.showArmorTooltip);
             config.get("General", "HideInArmor", false).set(localPlayerSettings.hideInArmor);
@@ -144,7 +130,7 @@ public class GenderConfig {
     }
 
     public static PlayerGenderSettings getPlayerSettings(EntityPlayer player) {
-        if (player != Minecraft.getMinecraft().thePlayer) {
+        if (player != Minecraft.getMinecraft().player) {
             return null;
         }
         if (localPlayerSettings == null) {
@@ -155,7 +141,7 @@ public class GenderConfig {
     }
 
     public static void setOverrideArmorPhysics(EntityPlayer player, boolean enabled) {
-        if (player != Minecraft.getMinecraft().thePlayer) return;
+        if (player != Minecraft.getMinecraft().player) return;
         PlayerGenderSettings settings = getPlayerSettings(player);
         if (settings != null) {
             settings.overrideArmorPhysics = enabled;
@@ -169,7 +155,7 @@ public class GenderConfig {
     }
 
     public static void setShowArmorTooltip(EntityPlayer player, boolean enabled) {
-        if (player != Minecraft.getMinecraft().thePlayer) return;
+        if (player != Minecraft.getMinecraft().player) return;
         PlayerGenderSettings settings = getPlayerSettings(player);
         if (settings != null) {
             settings.showArmorTooltip = enabled;
@@ -183,7 +169,7 @@ public class GenderConfig {
     }
 
     public static void setHideInArmor(EntityPlayer player, boolean enabled) {
-        if (player != Minecraft.getMinecraft().thePlayer) return;
+        if (player != Minecraft.getMinecraft().player) return;
         PlayerGenderSettings settings = getPlayerSettings(player);
         if (settings != null) {
             settings.hideInArmor = enabled;
@@ -197,7 +183,7 @@ public class GenderConfig {
     }
 
     public static void setHolidayThemes(EntityPlayer player, boolean enabled) {
-        if (player != Minecraft.getMinecraft().thePlayer) return;
+        if (player != Minecraft.getMinecraft().player) return;
         PlayerGenderSettings settings = getPlayerSettings(player);
         if (settings != null) {
             settings.holidayThemes = enabled;
@@ -211,7 +197,7 @@ public class GenderConfig {
     }
 
     public static void setGender(EntityPlayer player, String gender) {
-        if (player != Minecraft.getMinecraft().thePlayer) return;
+        if (player != Minecraft.getMinecraft().player) return;
         PlayerGenderSettings settings = getPlayerSettings(player);
         if (gender != null && (gender.equals("Male") || gender.equals("Female") || gender.equals("Other"))) {
             settings.gender = gender;
@@ -225,7 +211,7 @@ public class GenderConfig {
     }
 
     public static void setDarkMode(EntityPlayer player, boolean darkMode) {
-        if (player != Minecraft.getMinecraft().thePlayer) return;
+        if (player != Minecraft.getMinecraft().player) return;
         PlayerGenderSettings settings = getPlayerSettings(player);
         if (settings != null) {
             settings.darkMode = darkMode;

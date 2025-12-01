@@ -14,35 +14,18 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * FakeGUIPlayer - preview entity wrapper with improved skin fetching and caching.
- *
- * Behavior:
- * - Creates an EntityOtherPlayerMP for previewing contributor skins.
- * - Attempts to resolve a usable skin URL by probing several public services (Crafatar, Crafty, Minotar)
- *   using a background thread and HEAD requests to avoid blocking the render thread.
- * - Registers the skin with Minecraft's texture manager using ThreadDownloadImageData when a valid endpoint is found.
- * - Caches ResourceLocation per-UUID so repeated opens don't re-download.
- *
- * Notes:
- * - If contributor UUIDs are placeholders, public endpoints will not have skins; you can provide real UUIDs in Contributors.
- * - This file also provides a simple previewBreastSize map (all contributors default to 100% for now).
- */
 public class FakeGUIPlayer {
     private final String name;
     private final UUID uuid;
     private EntityOtherPlayerMP entity;
 
-    // Simple cache for loaded ResourceLocations for contributor skins
     private static final Map<UUID, ResourceLocation> SKIN_CACHE = new ConcurrentHashMap<>();
 
-    // Simple preview breast size mapping (default 100% for all contributors for now)
     private static final Map<UUID, Float> PREVIEW_BREAST_SIZE = new ConcurrentHashMap<>();
 
     public FakeGUIPlayer(String name, UUID uuid) {
         this.name = name;
         this.uuid = uuid != null ? uuid : UUID.nameUUIDFromBytes(("fake:" + name).getBytes());
-        // default breast size: 100% for now
         PREVIEW_BREAST_SIZE.putIfAbsent(this.uuid, 100.0f);
     }
 
@@ -65,7 +48,7 @@ public class FakeGUIPlayer {
 
             // create the preview entity
             GameProfile profile = new GameProfile(this.uuid, this.name);
-            entity = new EntityOtherPlayerMP(mc.theWorld, profile);
+            entity = new EntityOtherPlayerMP(mc.world, profile);
 
             // schedule skin resolution & registration in background
             if (!SKIN_CACHE.containsKey(this.uuid)) {

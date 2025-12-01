@@ -5,7 +5,7 @@ import com.wildfire.gui.WildfireButton;
 import com.wildfire.gui.GuiUtils;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.util.StatCollector;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.EntityLivingBase;
@@ -36,7 +36,7 @@ public class GuiWardrobe extends GuiScreen {
 
         isBreastCancerAwarenessMonth = true; // Debugging purposes
 
-        EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+        EntityPlayer player = Minecraft.getMinecraft().player;
         this.selectedGender = GenderConfig.getGender(player);
         this.isDarkMode = GenderConfig.getDarkMode(player);
 
@@ -47,24 +47,26 @@ public class GuiWardrobe extends GuiScreen {
 
         this.buttonList.add(new WildfireButton(0, guiLeft + 6, guiTop + 102, 80, 15, getColoredGenderText(selectedGender)));
 
-        WildfireButton customizeButton = new WildfireButton(1, guiLeft + 100, guiTop + 6, 157, 20, StatCollector.translateToLocal("wildfire_gender.appearance_settings.title"));
+        WildfireButton customizeButton = new WildfireButton(1, guiLeft + 100, guiTop + 6, 157, 20,
+                I18n.format("wildfire_gender.appearance_settings.title"));
         customizeButton.enabled = !"Male".equals(this.selectedGender);
         this.buttonList.add(customizeButton);
 
         // Light/Dark theme toggle
         this.buttonList.add(new WildfireButton(3, guiLeft + 100, guiTop + 99, 24, 18, ""));
 
-        // Mod Credits button: 14px to the right of the theme button, lowered further by 1px
+        // Mod Credits button
         int themeBtnX = guiLeft + 100;
         int themeBtnWidth = 24;
         int creditsX = themeBtnX + themeBtnWidth + 14;
-        int creditsY = guiTop + 102; // lowered 1px further
-        this.buttonList.add(new WildfireButton(4, creditsX, creditsY, 78, 15, StatCollector.translateToLocal("wildfire_gender.credits.title")));
+        int creditsY = guiTop + 102;
+        this.buttonList.add(new WildfireButton(4, creditsX, creditsY, 78, 15,
+                I18n.format("wildfire_gender.credits.title")));
     }
 
     @Override
     protected void actionPerformed(GuiButton button) {
-        EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+        EntityPlayer player = Minecraft.getMinecraft().player;
         switch (button.id) {
             case 0:
                 if ("Male".equals(this.selectedGender)) {
@@ -102,11 +104,11 @@ public class GuiWardrobe extends GuiScreen {
     private String getColoredGenderText(String gender) {
         switch (gender) {
             case "Male":
-                return "§9" + StatCollector.translateToLocal("wildfire_gender.label.male");
+                return "§9" + I18n.format("wildfire_gender.label.male");
             case "Female":
-                return "§d" + StatCollector.translateToLocal("wildfire_gender.label.female");
+                return "§d" + I18n.format("wildfire_gender.label.female");
             case "Other":
-                return "§a" + StatCollector.translateToLocal("wildfire_gender.label.other");
+                return "§a" + I18n.format("wildfire_gender.label.other");
             default:
                 return gender;
         }
@@ -127,10 +129,11 @@ public class GuiWardrobe extends GuiScreen {
 
         super.drawScreen(mouseX, mouseY, partialTicks);
 
-        this.drawCenteredString(this.fontRendererObj, StatCollector.translateToLocal("wildfire_gender.wardrobe.title"), this.width / 2, guiTop - 15, 0xFFFFFF);
+        this.drawCenteredString(this.fontRenderer, I18n.format("wildfire_gender.wardrobe.title"),
+                this.width / 2, guiTop - 15, 0xFFFFFF);
 
-        // Inventory-style model preview that follows the cursor, clipped to avoid overlap
-        EntityLivingBase entity = this.mc.thePlayer;
+        // Inventory-style model preview
+        EntityLivingBase entity = this.mc.player;
         int posX = guiLeft + 50;
         int posY = guiTop + 120;
         int scissorX = (posX - 38) * this.mc.displayWidth / this.width;
@@ -143,14 +146,13 @@ public class GuiWardrobe extends GuiScreen {
         GL11.glDisable(GL11.GL_SCISSOR_TEST);
 
         if (isBreastCancerAwarenessMonth) {
-            String text = "\u00A7l" + StatCollector.translateToLocal("wildfire_gender.cancer_awareness.title"); // bold
-            int textWidth = this.fontRendererObj.getStringWidth(text);
+            String text = "\u00A7l" + I18n.format("wildfire_gender.cancer_awareness.title");
+            int textWidth = this.fontRenderer.getStringWidth(text);
             int textX = this.width / 2 - 10;
-            this.drawCenteredString(this.fontRendererObj, text, textX, guiTop + guiHeight + 10, 0xFFFFFF);
+            this.drawCenteredString(this.fontRenderer, text, textX, guiTop + guiHeight + 10, 0xFFFFFF);
 
-            // Draw ribbon to the right of the text
             mc.getTextureManager().bindTexture(RIBBON_TEXTURE);
-            int iconX = textX + (textWidth / 2) + 6; // right of centered text
+            int iconX = textX + (textWidth / 2) + 6;
             int iconY = guiTop + guiHeight + 8;
             GlStateManager.pushMatrix();
             GlStateManager.enableBlend();
@@ -165,8 +167,8 @@ public class GuiWardrobe extends GuiScreen {
             if (button.id == 3) {
                 ResourceLocation icon = isDarkMode ? MOON_ICON : SUN_ICON;
                 mc.getTextureManager().bindTexture(icon);
-                int x = button.xPosition + (button.width - 8) / 2;
-                int y = button.yPosition + (button.height - 8) / 2;
+                int x = button.x + (button.width - 8) / 2;
+                int y = button.y + (button.height - 8) / 2;
                 GlStateManager.pushMatrix();
                 GlStateManager.enableBlend();
                 GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
@@ -177,15 +179,20 @@ public class GuiWardrobe extends GuiScreen {
                 GlStateManager.popMatrix();
 
                 if (button.isMouseOver()) {
-                    String tooltip = isDarkMode ? StatCollector.translateToLocal("wildfire_gender.label.dark_mode") : StatCollector.translateToLocal("wildfire_gender.label.light_mode");
-                    drawHoveringText(Arrays.asList(tooltip), mouseX, mouseY, fontRendererObj);
+                    String tooltip = isDarkMode
+                            ? I18n.format("wildfire_gender.label.dark_mode")
+                            : I18n.format("wildfire_gender.label.light_mode");
+                    drawHoveringText(Arrays.asList(tooltip), mouseX, mouseY, fontRenderer);
                 }
             }
 
             if (button.id == 4 && button.isMouseOver()) {
-                drawHoveringText(Arrays.asList(StatCollector.translateToLocal("wildfire_gender.credits.title")), mouseX, mouseY, fontRendererObj);
+                drawHoveringText(
+                        Arrays.asList(I18n.format("wildfire_gender.credits.title")),
+                        mouseX, mouseY, fontRenderer
+                );
             }
-        }
+		}
     }
 
     @Override

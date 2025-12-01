@@ -10,7 +10,9 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.client.renderer.entity.layers.LayerRenderer;
 import net.minecraft.entity.player.EnumPlayerModelParts;
-import net.minecraft.util.MathHelper;
+import net.minecraft.item.ItemArmor;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.MathHelper;
 
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -89,7 +91,7 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         BreastPhysics[] phys = getPhysicsForPlayer(player);
         if (phys == null) return;
 
-        float sizeFactor = MathHelper.clamp_float(cfg.breastSize / 100.0f, 0.0f, 1.0f);
+        float sizeFactor = MathHelper.clamp(cfg.breastSize / 100.0f, 0.0f, 1.0f);
         float zScale = 0.1f + (1.0f - 0.1f) * sizeFactor;
         float torsoPush = (1.0f - sizeFactor) * 1.6f;
 
@@ -149,10 +151,12 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
                     rBounce, rPosX * YAW_FACTOR, 1.0f, 1.0f, zScale, renderScale);
 
             renderBreast(leftBreastWearBottom, baseX - separation, baseY + lPosY + 0.5F, baseZ,
-                    lBounce + (float)Math.PI + (float)Math.toRadians(4.0), -lPosX * YAW_FACTOR, 1.0f, 1.0f, zScale, renderScale);
+                    lBounce + (float) Math.PI + (float) Math.toRadians(4.0),
+                    -lPosX * YAW_FACTOR, 1.0f, 1.0f, zScale, renderScale);
 
             renderBreast(rightBreastWearBottom, baseX + separation, baseY + rPosY + 0.5F, baseZ,
-                    rBounce + (float)Math.PI + (float)Math.toRadians(4.0), rPosX * YAW_FACTOR, 1.0f, 1.0f, zScale, renderScale);
+                    rBounce + (float) Math.PI + (float) Math.toRadians(4.0),
+                    rPosX * YAW_FACTOR, 1.0f, 1.0f, zScale, renderScale);
         }
 
         GlStateManager.disableAlpha();
@@ -191,11 +195,12 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
 
         if (s.hideInArmor) {
             try {
-                net.minecraft.item.ItemStack chest = player.inventory.armorInventory[2];
-                if (chest != null && chest.getItem() instanceof net.minecraft.item.ItemArmor) {
+                ItemStack chest = player.inventory.armorInventory.get(2); // chestplate slot
+                if (!chest.isEmpty() && chest.getItem() instanceof ItemArmor) {
                     return false;
                 }
-            } catch (Throwable ignored) {}
+            } catch (Throwable ignored) {
+            }
         }
 
         return s.breastsEnabled && ("Female".equals(s.gender) || "Other".equals(s.gender));

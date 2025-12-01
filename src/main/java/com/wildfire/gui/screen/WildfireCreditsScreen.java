@@ -8,9 +8,9 @@ import com.wildfire.main.contributors.Contributors;
 import com.wildfire.main.config.GenderConfig;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.StatCollector;
 import org.lwjgl.opengl.GL11;
 
 import java.io.IOException;
@@ -66,11 +66,16 @@ public class WildfireCreditsScreen extends GuiScreen {
         this.buttonList.clear();
         navigationY = this.height / 2 + 82;
 
-        btnBack = new WildfireButton(0, this.width / 2 - 25, navigationY + 6, 50, 13, StatCollector.translateToLocal("wildfire_gender.details.go_back"));
-        btnPrev = new WildfireButton(1, this.width / 2 - 89, navigationY + 6, 60, 13, StatCollector.translateToLocal("wildfire_gender.details.prev_page"));
-        btnNext = new WildfireButton(2, this.width / 2 + 29, navigationY + 6, 60, 13, StatCollector.translateToLocal("wildfire_gender.details.next_page"));
-        btnGeneral = new WildfireButton(3, this.width / 2 - 89, navigationY + 34, 87, 13, StatCollector.translateToLocal("wildfire_gender.credits.general"));
-        btnTranslators = new WildfireButton(4, this.width / 2 + 2, navigationY + 34, 87, 13, StatCollector.translateToLocal("wildfire_gender.credits.translators"));
+        btnBack = new WildfireButton(0, this.width / 2 - 25, navigationY + 6, 50, 13,
+                I18n.format("wildfire_gender.details.go_back"));
+        btnPrev = new WildfireButton(1, this.width / 2 - 89, navigationY + 6, 60, 13,
+                I18n.format("wildfire_gender.details.prev_page"));
+        btnNext = new WildfireButton(2, this.width / 2 + 29, navigationY + 6, 60, 13,
+                I18n.format("wildfire_gender.details.next_page"));
+        btnGeneral = new WildfireButton(3, this.width / 2 - 89, navigationY + 34, 87, 13,
+                I18n.format("wildfire_gender.credits.general"));
+        btnTranslators = new WildfireButton(4, this.width / 2 + 2, navigationY + 34, 87, 13,
+                I18n.format("wildfire_gender.credits.translators"));
 
         updateButtonState();
 
@@ -136,15 +141,17 @@ public class WildfireCreditsScreen extends GuiScreen {
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawDefaultBackground();
 
-        boolean isDarkMode = mc.thePlayer != null && GenderConfig.getDarkMode(mc.thePlayer);
+        boolean isDarkMode = mc.player != null && GenderConfig.getDarkMode(mc.player);
 
         ResourceLocation btnContainer = isDarkMode ? DARK_BUTTON_CONTAINER : BUTTON_CONTAINER;
         ResourceLocation tabContainer = isDarkMode ? DARK_TAB_CONTAINER : TAB_CONTAINER;
         ResourceLocation creditContainer = isDarkMode ? DARK_CREDIT_CONTAINER : CREDIT_CONTAINER;
         ResourceLocation creditOutline = isDarkMode ? DARK_CREDIT_OUTLINE : CREDIT_OUTLINE;
 
-        drawCenteredString(fontRendererObj, StatCollector.translateToLocal("wildfire_gender.credits.title"), width / 2, height / 2 - 100, 0xFFFFFF);
-        drawCenteredString(fontRendererObj, StatCollector.translateToLocal("wildfire_gender.credits.description"), width / 2, height / 2 - 85, 0x888888);
+        drawCenteredString(fontRenderer, I18n.format("wildfire_gender.credits.title"),
+                width / 2, height / 2 - 100, 0xFFFFFF);
+        drawCenteredString(fontRenderer, I18n.format("wildfire_gender.credits.description"),
+                width / 2, height / 2 - 85, 0x888888);
 
         mc.getTextureManager().bindTexture(btnContainer);
         drawModalRectWithCustomSizedTexture(width / 2 - 95, navigationY, 0, 0, 190, 25, 190, 25);
@@ -192,7 +199,7 @@ public class WildfireCreditsScreen extends GuiScreen {
             GL11.glScissor(sx, sy, sw, sh);
 
             int drawCenterX = portraitX + portraitW / 2;
-            int drawCenterY = portraitY + (int) (portraitH * 0.80f) + PORTRAIT_PLAYER_DOWN_PX; // players lowered
+            int drawCenterY = portraitY + (int) (portraitH * 0.80f) + PORTRAIT_PLAYER_DOWN_PX;
 
             int mouseOffsetX = mouseX - drawCenterX;
             int mouseOffsetY = mouseY - drawCenterY;
@@ -208,11 +215,11 @@ public class WildfireCreditsScreen extends GuiScreen {
             GL11.glTranslatef(nameDrawX, nameDrawY, 0f);
             GL11.glScalef(0.55f, 0.55f, 1.0f);
             GL11.glTranslatef(-nameDrawX, -nameDrawY, 0f);
-            drawCenteredString(this.fontRendererObj, fp.getName(), nameDrawX, nameDrawY + 7, 0xFFFFFF);
+            drawCenteredString(this.fontRenderer, fp.getName(), nameDrawX, nameDrawY + 7, 0xFFFFFF);
             GL11.glPopMatrix();
 
             String name = fp.getName();
-            int textWidthUnscaled = this.fontRendererObj.getStringWidth(name);
+            int textWidthUnscaled = this.fontRenderer.getStringWidth(name);
             int scaledTextWidth = (int) (textWidthUnscaled * 0.55f);
             int textLeft = nameDrawX - (scaledTextWidth / 2);
             int textRight = nameDrawX + (scaledTextWidth / 2);
@@ -222,7 +229,7 @@ public class WildfireCreditsScreen extends GuiScreen {
 
             if (mouseX >= textLeft && mouseX <= textRight && mouseY >= textTop && mouseY <= textBottom) {
                 List<String> tooltip = new ArrayList<>();
-                String roleText = StatCollector.translateToLocal("wildfire_gender.contributor.role.generic.short");
+                String roleText = I18n.format("wildfire_gender.contributor.role.generic.short");
                 Contributor found = null;
                 for (Map.Entry<UUID, Contributor> e : Contributors.getContributors().entrySet()) {
                     if (e.getValue().name().equals(fp.getName())) {
@@ -232,14 +239,14 @@ public class WildfireCreditsScreen extends GuiScreen {
                 }
                 if (found != null) {
                     try {
-                        roleText = StatCollector.translateToLocal(found.getRole().shortNameKey());
+                        roleText = I18n.format(found.getRole().shortNameKey());
                     } catch (Throwable ignored) {}
                     if (found.getDescription() != null && !found.getDescription().isEmpty()) {
                         tooltip.add(found.getDescription());
                     }
                 }
                 tooltip.add(roleText + " - " + fp.getName());
-                drawHoveringText(tooltip, mouseX, mouseY);
+                drawHoveringText(tooltip, mouseX, mouseY, fontRenderer);
             }
         }
 

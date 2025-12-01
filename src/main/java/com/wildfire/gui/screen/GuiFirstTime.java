@@ -9,18 +9,20 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 public class GuiFirstTime extends GuiScreen {
-    private static final ResourceLocation FIRST_TIME_BG = new ResourceLocation("wildfire_gender:textures/gui/first_time_bg.png");
+    private static final ResourceLocation FIRST_TIME_BG =
+            new ResourceLocation("wildfire_gender:textures/gui/first_time_bg.png");
     private boolean clicked = false;
 
     @Override
     public void initGui() {
+        // no buttons to init
     }
 
     @Override
     public void updateScreen() {
         if (Mouse.isButtonDown(0) && !clicked) {
             clicked = true;
-            GenderConfig.PlayerGenderSettings settings = GenderConfig.getPlayerSettings(mc.thePlayer);
+            GenderConfig.PlayerGenderSettings settings = GenderConfig.getPlayerSettings(mc.player);
             if (settings != null) {
                 settings.showFirstTimeGui = false;
                 GenderConfig.saveConfig();
@@ -44,12 +46,15 @@ public class GuiFirstTime extends GuiScreen {
         int guiTop = (this.height - guiHeight) / 2;
 
         this.mc.getTextureManager().bindTexture(FIRST_TIME_BG);
-        this.drawModalRectWithCustomSizedTexture(guiLeft, guiTop, 0, 0, guiWidth, guiHeight, 263, 123);
+        this.drawModalRectWithCustomSizedTexture(guiLeft, guiTop, 0, 0,
+                guiWidth, guiHeight, 263, 123);
 
         String title = "Welcome to Female Gender Mod!";
         String info = "Click anywhere to customize your character's gender and appearance.";
-        this.drawCenteredString(this.fontRendererObj, title, guiLeft + guiWidth / 2, guiTop + 50, 0xFFFFFF);
-        this.drawCenteredString(this.fontRendererObj, info, guiLeft + guiWidth / 2, guiTop + 80, 0xAAAAAA);
+        this.drawCenteredString(this.fontRenderer, title,
+                guiLeft + guiWidth / 2, guiTop + 50, 0xFFFFFF);
+        this.drawCenteredString(this.fontRenderer, info,
+                guiLeft + guiWidth / 2, guiTop + 80, 0xAAAAAA);
 
         GlStateManager.enableLighting();
         GlStateManager.enableDepth();

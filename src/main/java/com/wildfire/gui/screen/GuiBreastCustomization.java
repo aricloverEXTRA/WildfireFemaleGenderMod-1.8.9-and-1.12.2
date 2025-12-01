@@ -6,7 +6,7 @@ import com.wildfire.gui.GuiUtils;
 import com.wildfire.gui.screen.GuiBreastUVEditor;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.util.StatCollector;
+import net.minecraft.client.resources.I18n;
 import net.minecraftforge.fml.client.config.GuiSlider;
 import org.lwjgl.input.Keyboard;
 import java.io.IOException;
@@ -37,7 +37,7 @@ public class GuiBreastCustomization extends GuiScreen implements GuiSlider.ISlid
     private boolean isDarkMode = false;
 
     private static String prefixFromKey(String key) {
-        String localized = StatCollector.translateToLocal(key);
+        String localized = I18n.format(key);
         localized = localized.replace("%s", "");
         localized = localized.replace("%%", "%");
         if (!localized.endsWith(" ")) localized = localized + " ";
@@ -47,8 +47,8 @@ public class GuiBreastCustomization extends GuiScreen implements GuiSlider.ISlid
     @Override
     public void initGui() {
         this.buttonList.clear();
-        this.settings = GenderConfig.getPlayerSettings(mc.thePlayer);
-        this.isDarkMode = GenderConfig.getDarkMode(mc.thePlayer);
+        this.settings = GenderConfig.getPlayerSettings(mc.player);
+        this.isDarkMode = GenderConfig.getDarkMode(mc.player);
 
         int guiWidth = 272;
         int guiHeight = 130;
@@ -67,79 +67,65 @@ public class GuiBreastCustomization extends GuiScreen implements GuiSlider.ISlid
         int horizontalSpacing = 4;
 
         breastSlider = new GuiSlider(0, sliderX, sliderY, sliderWidth, sliderHeight,
-                prefixFromKey("wildfire_gender.wardrobe.slider.breast_size"), "%", 0.0D, 100.0D, settings.breastSize, false, true, this);
+                I18n.format("wildfire_gender.wardrobe.slider.breast_size", ""), "%", 0.0D, 100.0D, settings.breastSize, false, true, this);
 
         separationSlider = new GuiSlider(1, sliderX, sliderY + spacing - 1, smallSliderWidth, sliderHeight,
-                prefixFromKey("wildfire_gender.wardrobe.slider.separation"), "", -10.0D, 10.0D, settings.separation, false, true, this);
+                I18n.format("wildfire_gender.wardrobe.slider.separation", ""), "", -10.0D, 10.0D, settings.separation, false, true, this);
 
         heightSlider = new GuiSlider(3, sliderX + smallSliderWidth + 3 + 1, sliderY + spacing - 1, smallSliderWidth, sliderHeight,
-                prefixFromKey("wildfire_gender.wardrobe.slider.height"), "", -10.0D, 10.0D, settings.height, false, true, this);
+                I18n.format("wildfire_gender.wardrobe.slider.height", ""), "", -10.0D, 10.0D, settings.height, false, true, this);
 
         depthSlider = new GuiSlider(2, sliderX, sliderY + spacing * 2 - 2, smallSliderWidth, sliderHeight,
-                prefixFromKey("wildfire_gender.wardrobe.slider.depth"), "", -10.0D, 0.0D, settings.depth, false, true, this);
+                I18n.format("wildfire_gender.wardrobe.slider.depth", ""), "", -10.0D, 0.0D, settings.depth, false, true, this);
 
         rotationSlider = new GuiSlider(4, sliderX + smallSliderWidth + 3 + 1, sliderY + spacing * 2 - 2, smallSliderWidth, sliderHeight,
-                prefixFromKey("wildfire_gender.wardrobe.slider.rotation"), "°", 0.0D, 10.0D, settings.rotation, false, true, this);
+                I18n.format("wildfire_gender.wardrobe.slider.rotation", ""), "°", 0.0D, 10.0D, settings.rotation, false, true, this);
 
         intensitySlider = new GuiSlider(7, sliderX, sliderY + spacing * 2 - 2, smallSliderWidth, sliderHeight,
-                prefixFromKey("wildfire_gender.slider.bounce"), "%", 0.0D, 150.0D, settings.intensity, false, true, this);
+                I18n.format("wildfire_gender.slider.bounce", ""), "%", 0.0D, 150.0D, settings.intensity, false, true, this);
 
         momentumSlider = new GuiSlider(8, sliderX + smallSliderWidth + horizontalSpacing, sliderY + spacing * 2 - 2, smallSliderWidth, sliderHeight,
-                prefixFromKey("wildfire_gender.slider.floppy"), "%", 25.0D, 100.0D, settings.momentum, false, true, this);
+                I18n.format("wildfire_gender.slider.floppy", ""), "%", 25.0D, 100.0D, settings.momentum, false, true, this);
 
         voicePitchSlider = new GuiSlider(10, sliderX, sliderY + spacing - 1, smallSliderWidth, sliderHeight,
-                prefixFromKey("wildfire_gender.slider.voice_pitch"), "%", 80.0D, 120.0D, settings.voicePitch, false, true, this);
+                I18n.format("wildfire_gender.slider.voice_pitch", ""), "%", 80.0D, 120.0D, settings.voicePitch, false, true, this);
 
-        String enabledText = "\u00A7a" + StatCollector.translateToLocal("wildfire_gender.label.enabled");
-        String disabledText = "\u00A7c" + StatCollector.translateToLocal("wildfire_gender.label.disabled");
+        String enabledText = "\u00A7a" + I18n.format("wildfire_gender.label.enabled");
+        String disabledText = "\u00A7c" + I18n.format("wildfire_gender.label.disabled");
 
-        physicsButton = new WildfireButton(5, sliderX, sliderY, sliderWidth, sliderHeight, String.format(
-                StatCollector.translateToLocal("wildfire_gender.char_settings.physics"),
-                settings.physicsEnabled ? enabledText : disabledText
-        ));
+        physicsButton = new WildfireButton(5, sliderX, sliderY, sliderWidth, sliderHeight,
+                I18n.format("wildfire_gender.char_settings.physics", settings.physicsEnabled ? enabledText : disabledText));
 
-        dualPhysicsButton = new WildfireButton(6, sliderX, sliderY + spacing - 1, sliderWidth, sliderHeight, String.format(
-                StatCollector.translateToLocal("wildfire_gender.breast_customization.dual_physics"),
-                settings.breastsUniboob ? StatCollector.translateToLocal("wildfire_gender.label.no") : StatCollector.translateToLocal("wildfire_gender.label.yes")
-        ));
+        dualPhysicsButton = new WildfireButton(6, sliderX, sliderY + spacing - 1, sliderWidth, sliderHeight,
+                I18n.format("wildfire_gender.breast_customization.dual_physics", settings.breastsUniboob ? I18n.format("wildfire_gender.label.no") : I18n.format("wildfire_gender.label.yes")));
 
         int armorY = sliderY + spacing - 1 + 28 + 14 - 5 + 11;
-        armorPhysicsButton = new WildfireButton(14, sliderX, armorY, sliderWidth, sliderHeight, String.format(
-                StatCollector.translateToLocal("wildfire_gender.char_settings.override_armor_physics"),
-                GenderConfig.getOverrideArmorPhysics(mc.thePlayer) ? enabledText : disabledText
-        ));
+        armorPhysicsButton = new WildfireButton(14, sliderX, armorY, sliderWidth, sliderHeight,
+                I18n.format("wildfire_gender.char_settings.override_armor_physics", GenderConfig.getOverrideArmorPhysics(mc.player) ? enabledText : disabledText));
 
-        soundButton = new WildfireButton(9, sliderX, sliderY, sliderWidth, sliderHeight, String.format(
-                StatCollector.translateToLocal("wildfire_gender.char_settings.hurt_sounds"),
-                settings.hurtSoundsEnabled ? enabledText : disabledText
-        ));
+        soundButton = new WildfireButton(9, sliderX, sliderY, sliderWidth, sliderHeight,
+                I18n.format("wildfire_gender.char_settings.hurt_sounds", settings.hurtSoundsEnabled ? enabledText : disabledText));
 
         int miscBase = sliderY + spacing - 1 + 28;
         int hideInArmorY = miscBase - 4;
         int showArmorTooltipY = hideInArmorY + 28 + 4 - 2 - 6;
         int holidayThemesY = showArmorTooltipY + 4 + 20;
 
-        hideInArmorButton = new WildfireButton(15, sliderX, hideInArmorY, sliderWidth, sliderHeight, String.format(
-                StatCollector.translateToLocal("wildfire_gender.char_settings.hide_in_armor"),
-                GenderConfig.getShowArmorTooltip(mc.thePlayer) ? enabledText : disabledText
-        ));
+        hideInArmorButton = new WildfireButton(15, sliderX, hideInArmorY, sliderWidth, sliderHeight,
+                I18n.format("wildfire_gender.char_settings.hide_in_armor", GenderConfig.getShowArmorTooltip(mc.player) ? enabledText : disabledText));
 
-        showArmorTooltipButton = new WildfireButton(16, sliderX, showArmorTooltipY, sliderWidth, sliderHeight, String.format(
-                StatCollector.translateToLocal("wildfire_gender.char_settings.show_armor_stat"),
-                GenderConfig.getShowArmorTooltip(mc.thePlayer) ? enabledText : disabledText
-        ));
+        showArmorTooltipButton = new WildfireButton(16, sliderX, showArmorTooltipY, sliderWidth, sliderHeight,
+                I18n.format("wildfire_gender.char_settings.show_armor_stat", GenderConfig.getShowArmorTooltip(mc.player) ? enabledText : disabledText));
 
-        holidayThemesButton = new WildfireButton(17, sliderX, holidayThemesY, sliderWidth, sliderHeight, String.format(
-                StatCollector.translateToLocal("wildfire_gender.misc.holiday_themes"),
-                GenderConfig.getHolidayThemes(mc.thePlayer) ? enabledText : disabledText
-        ));
+        holidayThemesButton = new WildfireButton(17, sliderX, holidayThemesY, sliderWidth, sliderHeight,
+                I18n.format("wildfire_gender.misc.holiday_themes", GenderConfig.getHolidayThemes(mc.player) ? enabledText : disabledText));
 
         int editorY = sliderY + spacing * 2 + 20 + 8;
-        breastTextureEditorButton = new WildfireButton(18, sliderX, editorY, 130, 15, StatCollector.translateToLocal("wildfire_gender.uv_editor"));
+        breastTextureEditorButton = new WildfireButton(18, sliderX, editorY, 130, 15, I18n.format("wildfire_gender.uv_editor"));
 
-        WildfireButton customizationTab = new WildfireButton(11, guiLeft + 6, guiTop + 6, 84, 12, StatCollector.translateToLocal("wildfire_gender.breast_customization.tab_customization"));
-        WildfireButton physicsTab = new WildfireButton(12, guiLeft + 94, guiTop + 6, 84, 12, StatCollector.translateToLocal("wildfire_gender.breast_customization.tab_physics"));
-        WildfireButton miscTab = new WildfireButton(13, guiLeft + 182, guiTop + 6, 84, 12, StatCollector.translateToLocal("wildfire_gender.breast_customization.tab_miscellaneous"));
+        WildfireButton customizationTab = new WildfireButton(11, guiLeft + 6, guiTop + 6, 84, 12, I18n.format("wildfire_gender.breast_customization.tab_customization"));
+        WildfireButton physicsTab = new WildfireButton(12, guiLeft + 94, guiTop + 6, 84, 12, I18n.format("wildfire_gender.breast_customization.tab_physics"));
+        WildfireButton miscTab = new WildfireButton(13, guiLeft + 182, guiTop + 6, 84, 12, I18n.format("wildfire_gender.breast_customization.tab_miscellaneous"));
 
         this.buttonList.add(customizationTab);
         this.buttonList.add(physicsTab);
@@ -251,67 +237,53 @@ public class GuiBreastCustomization extends GuiScreen implements GuiSlider.ISlid
         switch (button.id) {
             case 5:
                 settings.physicsEnabled = !settings.physicsEnabled;
-                physicsButton.displayString = String.format(
-                        StatCollector.translateToLocal("wildfire_gender.char_settings.physics"),
-                        settings.physicsEnabled ? StatCollector.translateToLocal("wildfire_gender.label.enabled") : StatCollector.translateToLocal("wildfire_gender.label.disabled")
-                );
+                physicsButton.displayString = I18n.format("wildfire_gender.char_settings.physics",
+                        settings.physicsEnabled ? I18n.format("wildfire_gender.label.enabled") : I18n.format("wildfire_gender.label.disabled"));
                 GenderConfig.saveConfig();
                 updateSlidersState();
                 break;
             case 6:
                 settings.breastsUniboob = !settings.breastsUniboob;
-                dualPhysicsButton.displayString = String.format(
-                        StatCollector.translateToLocal("wildfire_gender.breast_customization.dual_physics"),
-                        settings.breastsUniboob ? StatCollector.translateToLocal("wildfire_gender.label.no") : StatCollector.translateToLocal("wildfire_gender.label.yes")
-                );
+                dualPhysicsButton.displayString = I18n.format("wildfire_gender.breast_customization.dual_physics",
+                        settings.breastsUniboob ? I18n.format("wildfire_gender.label.no") : I18n.format("wildfire_gender.label.yes"));
                 GenderConfig.saveConfig();
                 break;
             case 9:
                 settings.hurtSoundsEnabled = !settings.hurtSoundsEnabled;
-                String enabled = "\u00A7a" + StatCollector.translateToLocal("wildfire_gender.label.enabled");
-                String disabled = "\u00A7c" + StatCollector.translateToLocal("wildfire_gender.label.disabled");
-                soundButton.displayString = String.format(
-                        StatCollector.translateToLocal("wildfire_gender.char_settings.hurt_sounds"),
-                        settings.hurtSoundsEnabled ? enabled : disabled
-                );
+                String enabled = "\u00A7a" + I18n.format("wildfire_gender.label.enabled");
+                String disabled = "\u00A7c" + I18n.format("wildfire_gender.label.disabled");
+                soundButton.displayString = I18n.format("wildfire_gender.char_settings.hurt_sounds",
+                        settings.hurtSoundsEnabled ? enabled : disabled);
                 GenderConfig.saveConfig();
                 updateSlidersState();
                 break;
             case 14:
-                boolean newArmorPhysics = !GenderConfig.getOverrideArmorPhysics(mc.thePlayer);
-                GenderConfig.setOverrideArmorPhysics(mc.thePlayer, newArmorPhysics);
-                armorPhysicsButton.displayString = String.format(
-                        StatCollector.translateToLocal("wildfire_gender.char_settings.override_armor_physics"),
-                        newArmorPhysics ? ("\u00A7a" + StatCollector.translateToLocal("wildfire_gender.label.enabled")) : ("\u00A7c" + StatCollector.translateToLocal("wildfire_gender.label.disabled"))
-                );
+                boolean newArmorPhysics = !GenderConfig.getOverrideArmorPhysics(mc.player);
+                GenderConfig.setOverrideArmorPhysics(mc.player, newArmorPhysics);
+                armorPhysicsButton.displayString = I18n.format("wildfire_gender.char_settings.override_armor_physics",
+                        newArmorPhysics ? ("\u00A7a" + I18n.format("wildfire_gender.label.enabled")) : ("\u00A7c" + I18n.format("wildfire_gender.label.disabled")));
                 break;
             case 15:
-                boolean newHide = !GenderConfig.getHideInArmor(mc.thePlayer);
-                GenderConfig.setHideInArmor(mc.thePlayer, newHide);
-                hideInArmorButton.displayString = String.format(
-                        StatCollector.translateToLocal("wildfire_gender.char_settings.hide_in_armor"),
-                        newHide ? ("\u00A7a" + StatCollector.translateToLocal("wildfire_gender.label.enabled")) : ("\u00A7c" + StatCollector.translateToLocal("wildfire_gender.label.disabled"))
-                );
+                boolean newHide = !GenderConfig.getHideInArmor(mc.player);
+                GenderConfig.setHideInArmor(mc.player, newHide);
+                hideInArmorButton.displayString = I18n.format("wildfire_gender.char_settings.hide_in_armor",
+                        newHide ? ("\u00A7a" + I18n.format("wildfire_gender.label.enabled")) : ("\u00A7c" + I18n.format("wildfire_gender.label.disabled")));
                 break;
             case 16:
-                boolean newTooltip = !GenderConfig.getShowArmorTooltip(mc.thePlayer);
-                GenderConfig.setShowArmorTooltip(mc.thePlayer, newTooltip);
-                showArmorTooltipButton.displayString = String.format(
-                        StatCollector.translateToLocal("wildfire_gender.char_settings.show_armor_stat"),
-                        newTooltip ? ("\u00A7a" + StatCollector.translateToLocal("wildfire_gender.label.enabled")) : ("\u00A7c" + StatCollector.translateToLocal("wildfire_gender.label.disabled"))
-                );
+                boolean newTooltip = !GenderConfig.getShowArmorTooltip(mc.player);
+                GenderConfig.setShowArmorTooltip(mc.player, newTooltip);
+                showArmorTooltipButton.displayString = I18n.format("wildfire_gender.char_settings.show_armor_stat",
+                        newTooltip ? ("\u00A7a" + I18n.format("wildfire_gender.label.enabled")) : ("\u00A7c" + I18n.format("wildfire_gender.label.disabled")));
                 break;
             case 17:
-                boolean newHoliday = !GenderConfig.getHolidayThemes(mc.thePlayer);
-                GenderConfig.setHolidayThemes(mc.thePlayer, newHoliday);
-                holidayThemesButton.displayString = String.format(
-                        StatCollector.translateToLocal("wildfire_gender.misc.holiday_themes"),
-                        newHoliday ? ("\u00A7a" + StatCollector.translateToLocal("wildfire_gender.label.enabled")) : ("\u00A7c" + StatCollector.translateToLocal("wildfire_gender.label.disabled"))
-                );
+                boolean newHoliday = !GenderConfig.getHolidayThemes(mc.player);
+                GenderConfig.setHolidayThemes(mc.player, newHoliday);
+                holidayThemesButton.displayString = I18n.format("wildfire_gender.misc.holiday_themes",
+                        newHoliday ? ("\u00A7a" + I18n.format("wildfire_gender.label.enabled")) : ("\u00A7c" + I18n.format("wildfire_gender.label.disabled")));
                 break;
             case 18:
-                if (mc.thePlayer != null) {
-                    mc.displayGuiScreen(new GuiBreastUVEditor(this, Objects.requireNonNull(mc.thePlayer).getUniqueID()));
+                if (mc.player != null) {
+                    mc.displayGuiScreen(new GuiBreastUVEditor(this, Objects.requireNonNull(mc.player).getUniqueID()));
                 } else {
                     mc.displayGuiScreen(new GuiBreastUVEditor(this, null));
                 }
@@ -369,7 +341,7 @@ public class GuiBreastCustomization extends GuiScreen implements GuiSlider.ISlid
                 WildfireButton wb = (WildfireButton) button;
                 if (!wb.enabled && (wb.id == 11 || wb.id == 12 || wb.id == 13)) {
                     GlStateManager.color(0.5F, 0.5F, 0.5F, 1.0F);
-                    wb.drawButton(mc, mouseX, mouseY);
+                    wb.drawButton(mc, mouseX, mouseY, partialTicks);
                     GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
                 }
             }
@@ -377,18 +349,18 @@ public class GuiBreastCustomization extends GuiScreen implements GuiSlider.ISlid
 
         int previewCenterX = guiLeft + 44;
         int previewCenterY = guiTop + 6 + 44;
-        GuiUtils.drawEntityOnScreenNoScissor(this, previewCenterX, previewCenterY, 48, mouseX - previewCenterX, mouseY - previewCenterY, this.mc.thePlayer);
+        GuiUtils.drawEntityOnScreenNoScissor(this, previewCenterX, previewCenterY, 48, mouseX - previewCenterX, mouseY - previewCenterY, this.mc.player);
 
-        this.drawCenteredString(this.fontRendererObj, StatCollector.translateToLocal("wildfire_gender.appearance_settings.title"), this.width / 2, guiTop - 15, 0xFFFFFF);
+        this.drawCenteredString(this.fontRenderer, I18n.format("wildfire_gender.appearance_settings.title"), this.width / 2, guiTop - 15, 0xFFFFFF);
 
         if (armorPhysicsButton != null && armorPhysicsButton.isMouseOver()) {
-            drawHoveringText(Arrays.asList(StatCollector.translateToLocal("wildfire_gender.tooltip.override_armor_physics.line1")), mouseX, mouseY);
+            drawHoveringText(Arrays.asList(I18n.format("wildfire_gender.tooltip.override_armor_physics.line1")), mouseX, mouseY, fontRenderer);
         }
         if (soundButton != null && soundButton.isMouseOver()) {
-            drawHoveringText(Arrays.asList(StatCollector.translateToLocal("wildfire_gender.tooltip.hurt_sounds")), mouseX, mouseY);
+            drawHoveringText(Arrays.asList(I18n.format("wildfire_gender.tooltip.hurt_sounds")), mouseX, mouseY, fontRenderer);
         }
         if (holidayThemesButton != null && holidayThemesButton.isMouseOver()) {
-            drawHoveringText(Arrays.asList(StatCollector.translateToLocal("wildfire_gender.tooltip.holiday_themes.line1")), mouseX, mouseY);
+            drawHoveringText(Arrays.asList(I18n.format("wildfire_gender.tooltip.holiday_themes.line1")), mouseX, mouseY, fontRenderer);
         }
     }
 
