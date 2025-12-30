@@ -6,17 +6,16 @@ import com.wildfire.gui.WildfireButton;
 import com.wildfire.main.contributors.Contributor;
 import com.wildfire.main.contributors.Contributors;
 import com.wildfire.main.config.GenderConfig;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.StatCollector;
 import org.lwjgl.opengl.GL11;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.Map.Entry;
 import java.util.UUID;
 
 public class WildfireCreditsScreen extends GuiScreen {
@@ -42,19 +41,80 @@ public class WildfireCreditsScreen extends GuiScreen {
 
     private FakeGUIPlayer[] genPlayers = new FakeGUIPlayer[0];
     private FakeGUIPlayer[] transPlayers = new FakeGUIPlayer[0];
+
     private static final int PORTRAIT_PLAYER_DOWN_PX = 20;
+
+    private static final int BOX_WIDTH = 52;
+    private static final int BOX_HEIGHT = 68;
+    private static final int H_SPACING = 8;
+    private static final int V_SPACING = 8;
 
     public WildfireCreditsScreen() {
         Map<UUID, Contributor> map = Contributors.getContributors();
         List<FakeGUIPlayer> generals = new ArrayList<>();
         List<FakeGUIPlayer> translators = new ArrayList<>();
 
-        for (Map.Entry<UUID, Contributor> e : map.entrySet()) {
+        // Hard-ordered GENERAL list
+        List<UUID> orderedGeneral = Arrays.asList(
+                UUID.fromString("23b6feed-2dfe-4f2e-9429-863fd4adb946"), // WildfireFGM
+                UUID.fromString("70336328-0de7-430e-8cba-2779e2a05ab5"), // celeste
+                UUID.fromString("64e57307-72e5-4f43-be9c-181e8e35cc9b"), // pupnewfster
+                UUID.fromString("ad8ee68c-0aa1-47f9-b29f-f92fa1ef66dc"), // DiaDemiEmi
+                UUID.fromString("3f36f7e9-7459-43fe-87ce-4e8a5d47da80"), // IzzyBizzy45
+                UUID.fromString("618a8390-51b1-43b2-a53a-ab72c1bbd8bd"), // Kichura
+                UUID.fromString("ad3cb52d-524b-41b4-b9d6-b91ec440811d"), // RacoonDog
+                UUID.fromString("9a60e979-c890-4b43-a4c0-32d8a9f6b6b9"), // SavLeftUs
+                UUID.fromString("525b0455-15e9-49b7-b61d-f291e8ee6c5b")  // Powerless001
+        );
+
+        Set<UUID> alreadyAdded = new HashSet<>();
+        for (UUID id : orderedGeneral) {
+            Contributor c = map.get(id);
+            if (c == null) continue;
+            if (!Boolean.TRUE.equals(c.showInCredits())) continue;
+            if (c.getRole() == Contributor.Role.TRANSLATOR) continue;
+            generals.add(new FakeGUIPlayer(c.name(), id));
+            alreadyAdded.add(id);
+        }
+
+        // Any other GENERAL contributors not in ordered list
+        for (Entry<UUID, Contributor> e : map.entrySet()) {
+            UUID id = e.getKey();
+            if (alreadyAdded.contains(id)) continue;
             Contributor c = e.getValue();
             if (c == null || !Boolean.TRUE.equals(c.showInCredits())) continue;
-            FakeGUIPlayer p = new FakeGUIPlayer(c.name(), e.getKey());
-            if (c.getRole() == Contributor.Role.TRANSLATOR) translators.add(p);
-            else generals.add(p);
+            if (c.getRole() == Contributor.Role.TRANSLATOR) continue;
+            generals.add(new FakeGUIPlayer(c.name(), id));
+        }
+
+        // Hard-ordered TRANSLATOR list
+        List<UUID> orderedTranslators = Arrays.asList(
+                UUID.fromString("8fb5e95d-7f41-4b4c-b8c5-4f15ea3fa2c1"), // ArcticWah
+                UUID.fromString("4c3e3225-aec0-499c-b563-2b17cdb017f8"), // Betawolfy
+                UUID.fromString("33feda66-c706-4725-8983-f62e5e6cbee7"), // Bluelight
+                UUID.fromString("e31edb15-d8bd-44ac-8ec3-b54114e9d595"), // PinguinLars
+                UUID.fromString("242c1a3a-83ee-4aa6-a3de-568cdac082a4")  // le0n_lol
+        );
+
+        Set<UUID> transAlready = new HashSet<>();
+        for (UUID id : orderedTranslators) {
+            Contributor c = map.get(id);
+            if (c == null) continue;
+            if (!Boolean.TRUE.equals(c.showInCredits())) continue;
+            if (c.getRole() != Contributor.Role.TRANSLATOR) continue;
+            translators.add(new FakeGUIPlayer(c.name(), id));
+            transAlready.add(id);
+        }
+
+        // Any other translators not in ordered list
+        for (Entry<UUID, Contributor> e : map.entrySet()) {
+            UUID id = e.getKey();
+            if (transAlready.contains(id)) continue;
+            Contributor c = e.getValue();
+            if (c == null || !Boolean.TRUE.equals(c.showInCredits())) continue;
+            if (c.getRole() == Contributor.Role.TRANSLATOR) {
+                translators.add(new FakeGUIPlayer(c.name(), id));
+            }
         }
 
         genPlayers = generals.toArray(new FakeGUIPlayer[0]);
@@ -151,14 +211,15 @@ public class WildfireCreditsScreen extends GuiScreen {
         mc.getTextureManager().bindTexture(tabContainer);
         drawModalRectWithCustomSizedTexture(width / 2 - 95, navigationY + 28, 0, 0, 190, 25, 190, 25);
 
-        final int boxW = 52;
-        final int boxH = 68;
         FakeGUIPlayer[] active = getActivePlayers();
         int startIndex = creditsPage * BOXES_PER_PAGE;
         int endIndex = Math.min(startIndex + BOXES_PER_PAGE, active.length);
 
         int rows = (int) Math.ceil((double) Math.max(1, endIndex - startIndex) / COLUMNS);
-        int startY = this.height / 2 - (rows * boxH) / 2 + 4;
+        int totalHeight = rows * BOX_HEIGHT + (rows - 1) * V_SPACING;
+        int startY = this.height / 2 - (totalHeight / 2) + 4;
+
+        Map<UUID, Contributor> contribMap = Contributors.getContributors();
 
         for (int i = startIndex; i < endIndex; i++) {
             FakeGUIPlayer fp = active[i];
@@ -167,17 +228,42 @@ public class WildfireCreditsScreen extends GuiScreen {
             int row = local / COLUMNS;
 
             int remainingInRow = Math.min(endIndex - startIndex - row * COLUMNS, COLUMNS);
-            int rowWidth = remainingInRow * boxW;
-            int startX = (this.width / 2) - (rowWidth / 2) + 4;
+            int rowWidth = remainingInRow * BOX_WIDTH + (remainingInRow - 1) * H_SPACING;
+            int startX = (this.width / 2) - (rowWidth / 2);
 
-            int cx = startX + (col * boxW);
-            int cy = startY + (row * boxH);
+            int cx = startX + col * (BOX_WIDTH + H_SPACING);
+            int cy = startY + row * (BOX_HEIGHT + V_SPACING);
 
             this.mc.getTextureManager().bindTexture(creditContainer);
-            drawModalRectWithCustomSizedTexture(cx, cy, 0, 0, 52, 68, 52, 68);
+            drawModalRectWithCustomSizedTexture(cx, cy, 0, 0, BOX_WIDTH, BOX_HEIGHT, BOX_WIDTH, BOX_HEIGHT);
 
+            Contributor found = null;
+            UUID uuid = fp.getUUID();
+            if (uuid != null) {
+                found = contribMap.get(uuid);
+            }
+            if (found == null) {
+                for (Entry<UUID, Contributor> e : contribMap.entrySet()) {
+                    if (e.getValue().name().equals(fp.getName())) {
+                        found = e.getValue();
+                        break;
+                    }
+                }
+            }
+
+            int outlineColor = 0xFFFFFFFF;
+            if (found != null) {
+                outlineColor = found.getColor();
+            }
+
+            float r = ((outlineColor >> 16) & 0xFF) / 255.0F;
+            float g = ((outlineColor >> 8) & 0xFF) / 255.0F;
+            float b = (outlineColor & 0xFF) / 255.0F;
+
+            GL11.glColor4f(r, g, b, 1.0F);
             this.mc.getTextureManager().bindTexture(creditOutline);
             drawModalRectWithCustomSizedTexture(cx + 3, cy + 3, 0, 0, 46, 53, 46, 53);
+            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 
             final int portraitX = cx + 3;
             final int portraitY = cy + 3;
@@ -192,18 +278,20 @@ public class WildfireCreditsScreen extends GuiScreen {
             GL11.glScissor(sx, sy, sw, sh);
 
             int drawCenterX = portraitX + portraitW / 2;
-            int drawCenterY = portraitY + (int) (portraitH * 0.80f) + PORTRAIT_PLAYER_DOWN_PX; // players lowered
+            int drawCenterY = portraitY + (int) (portraitH * 0.80f) + PORTRAIT_PLAYER_DOWN_PX + 8;
+            int modelScale = 38;
 
             int mouseOffsetX = mouseX - drawCenterX;
             int mouseOffsetY = mouseY - drawCenterY;
 
             EntityLivingBase entity = fp.getEntity();
-            GuiUtils.drawEntityOnScreenNoScissor(this, drawCenterX, drawCenterY, 40, mouseOffsetX, mouseOffsetY, entity);
+            GuiUtils.drawEntityOnScreenNoScissor(this, drawCenterX, drawCenterY, 38, mouseOffsetX, mouseOffsetY, entity);
 
             GL11.glDisable(GL11.GL_SCISSOR_TEST);
 
-            int nameDrawX = cx + (boxW / 2);
-            int nameDrawY = cy + 55 - 54;
+            int nameDrawX = cx + (BOX_WIDTH / 2);
+            int nameDrawY = cy + 55;
+
             GL11.glPushMatrix();
             GL11.glTranslatef(nameDrawX, nameDrawY, 0f);
             GL11.glScalef(0.55f, 0.55f, 1.0f);
@@ -223,22 +311,32 @@ public class WildfireCreditsScreen extends GuiScreen {
             if (mouseX >= textLeft && mouseX <= textRight && mouseY >= textTop && mouseY <= textBottom) {
                 List<String> tooltip = new ArrayList<>();
                 String roleText = StatCollector.translateToLocal("wildfire_gender.contributor.role.generic.short");
-                Contributor found = null;
-                for (Map.Entry<UUID, Contributor> e : Contributors.getContributors().entrySet()) {
-                    if (e.getValue().name().equals(fp.getName())) {
-                        found = e.getValue();
-                        break;
-                    }
-                }
+                int roleColor = 0xFFFFFF;
+
                 if (found != null) {
-                    try {
-                        roleText = StatCollector.translateToLocal(found.getRole().shortNameKey());
-                    } catch (Throwable ignored) {}
+                    // manual text overrides for celeste + pupnewfster
+                    UUID id = uuid;
+                    if (id != null) {
+                        String idStr = id.toString();
+                        if (idStr.equals("70336328-0de7-430e-8cba-2779e2a05ab5")) { // celeste
+                            roleText = "Maintainer (Fabric)";
+                        } else if (idStr.equals("64e57307-72e5-4f43-be9c-181e8e35cc9b")) { // pupnewfster
+                            roleText = "Maintainer (NeoForge)";
+                        } else {
+                            try {
+                                roleText = StatCollector.translateToLocal(found.getRole().shortNameKey());
+                            } catch (Throwable ignored) {}
+                        }
+                    }
+
+                    roleColor = found.getColor();
+
                     if (found.getDescription() != null && !found.getDescription().isEmpty()) {
-                        tooltip.add(found.getDescription());
+                        tooltip.add(Contributor.getLegacyColorCode(roleColor) + found.getDescription());
                     }
                 }
-                tooltip.add(roleText + " - " + fp.getName());
+
+                tooltip.add(Contributor.getLegacyColorCode(roleColor) + roleText + " - " + fp.getName());
                 drawHoveringText(tooltip, mouseX, mouseY);
             }
         }

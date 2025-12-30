@@ -4,7 +4,6 @@ import com.wildfire.main.contributors.Contributors;
 import com.wildfire.main.contributors.Contributor;
 import com.wildfire.main.config.GenderConfig;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.common.MinecraftForge;
@@ -13,12 +12,9 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
-/**
- * SyncedPlayerList - minimal Forge 1.8.9 implementation.
- * Shows players currently in the world (local / server players) as a best-effort substitute
- * for the modern cloud-synced player list.
- */
 public final class SyncedPlayerList {
     private static List<SyncedEntry> entries = new ArrayList<>();
 
@@ -38,27 +34,28 @@ public final class SyncedPlayerList {
         }
 
         List<SyncedEntry> newList = new ArrayList<>();
+        Map<UUID, Contributor> contribs = Contributors.getContributors();
+
         for (Object o : mc.theWorld.playerEntities) {
             if (!(o instanceof EntityPlayer)) continue;
             EntityPlayer p = (EntityPlayer) o;
             if (p.getUniqueID().equals(mc.thePlayer.getUniqueID())) continue;
-            Contributor.Role role = Contributors.getContributors().getOrDefault(p.getUniqueID(), null) != null ? Contributors.getContributors().get(p.getUniqueID()).getRole() : null;
+
+            Contributor c = contribs.get(p.getUniqueID());
             int color = 0xFFFFFF;
-            if (role != null) {
-                // simple mapping for role colors: creators -> light purple, translators -> light blue, developers -> gold
-                switch (role) {
-                    case MOD_CREATOR: color = 0xFF99FF; break;
-                    case TRANSLATOR: color = 0x66CCFF; break;
-                    case DEVELOPER: color = 0xFFD700; break;
-                    default: color = 0xFFFFFF; break;
-                }
+            if (c != null) {
+                color = c.getColor();
             }
-            String gender = "Male";
-            // attempt to fetch local stored gender for the player (if available)
+
+            String gender = "Unknown";
             try {
-                // best-effort: GenderConfig only supports local player in this 1.8.9 port, so we can't read remote players
-                gender = "Unknown";
+                // 1.8.9 recreation of the mod only supports local player config, so remote players are always "Unknown"
+                GenderConfig.PlayerGenderSettings settings = GenderConfig.getPlayerSettings(p);
+                if (settings != null) {
+                    gender = settings.gender;
+                }
             } catch (Exception ignored) {}
+
             newList.add(new SyncedEntry(p.getName(), color, gender));
             if (newList.size() >= 40) break;
         }
@@ -81,6 +78,10 @@ public final class SyncedPlayerList {
         final String name;
         final int color;
         final String gender;
-        SyncedEntry(String name, int color, String gender) { this.name = name; this.color = color; this.gender = gender; }
+        SyncedEntry(String name, int color, String gender) {
+            this.name = name;
+            this.color = color;
+            this.gender = gender;
+        }
     }
 }

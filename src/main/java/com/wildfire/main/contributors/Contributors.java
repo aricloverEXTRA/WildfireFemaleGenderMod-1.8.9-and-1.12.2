@@ -13,7 +13,7 @@ public final class Contributors {
     private static final Map<UUID, Contributor> CONTRIBUTORS = new LinkedHashMap<>();
 
     static {
-        // Fill with the canonical hardcoded contributor list (UUIDs are the exact ones from upstream)
+        // canonical contributor list
         CONTRIBUTORS.put(UUID.fromString("23b6feed-2dfe-4f2e-9429-863fd4adb946"),
                 new Contributor(Contributor.Role.MOD_CREATOR, "WildfireFGM", null, true));
         CONTRIBUTORS.put(UUID.fromString("70336328-0de7-430e-8cba-2779e2a05ab5"),

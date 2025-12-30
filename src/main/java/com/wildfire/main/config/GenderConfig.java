@@ -7,17 +7,10 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 
 import java.io.File;
 
-/**
- * Single-file GenderConfig for Forge 1.8.9.
- * Added safe toggles:
- *  - overrideArmorPhysics (boolean)
- *  - showArmorTooltip (boolean)
- *  - hideInArmor (boolean)
- *  - holidayThemes (boolean)
- */
 public class GenderConfig {
     private static Configuration config;
     private static PlayerGenderSettings localPlayerSettings;
+	private static PlayerGenderSettings fakeCreditsSettings;
 
     public static class PlayerGenderSettings {
         public String gender = "Male";
@@ -42,8 +35,6 @@ public class GenderConfig {
         public float momentum = 50.0F;
         public float voicePitch = 100.0F;
         public boolean darkMode = false;
-
-        // Safe, 1.8.9-friendly toggles (per-player)
         public boolean overrideArmorPhysics = false;
         public boolean showArmorTooltip = true;
         public boolean hideInArmor = false;
@@ -86,8 +77,6 @@ public class GenderConfig {
             localPlayerSettings.momentum = config.getFloat("Momentum", "General", 50.0F, 25.0F, 100.0F, "Physics momentum (25-100%)");
             localPlayerSettings.voicePitch = config.getFloat("VoicePitch", "General", 100.0F, 80.0F, 120.0F, "Voice pitch (80-120%)");
             localPlayerSettings.darkMode = config.getBoolean("DarkMode", "General", false, "Enable dark mode theme");
-
-            // new toggles (per-player defaults)
             localPlayerSettings.overrideArmorPhysics = config.getBoolean("OverrideArmorPhysics", "General", false, "Override armor interaction with breast physics");
             localPlayerSettings.showArmorTooltip = config.getBoolean("ShowArmorTooltip", "General", true, "Show armor stats tooltip for breast armor");
             localPlayerSettings.hideInArmor = config.getBoolean("HideInArmor", "General", false, "Hide breasts visually while wearing armor");
@@ -152,6 +141,26 @@ public class GenderConfig {
             localPlayerSettings.showFirstTimeGui = true;
         }
         return localPlayerSettings;
+    }
+
+    public static PlayerGenderSettings getStaticFakeCreditsSettings() {
+        if (fakeCreditsSettings == null) {
+            fakeCreditsSettings = new PlayerGenderSettings();
+            fakeCreditsSettings.gender = "Female";
+            fakeCreditsSettings.breastsEnabled = true;
+            fakeCreditsSettings.breastSize = 100.0F;
+            fakeCreditsSettings.physicsEnabled = false;
+            fakeCreditsSettings.hideInArmor = false;
+            fakeCreditsSettings.separation = 0.0F;
+            fakeCreditsSettings.depth = 0.0F;
+            fakeCreditsSettings.height = 0.0F;
+            fakeCreditsSettings.breastsOffsetX = 0.5F;
+            fakeCreditsSettings.breastsOffsetY = -1.5F;
+            fakeCreditsSettings.breastsOffsetZ = -2.0F;
+            fakeCreditsSettings.breastsCleavage = 1.0F;
+            fakeCreditsSettings.breastsUniboob = false;
+        }
+        return fakeCreditsSettings;
     }
 
     public static void setOverrideArmorPhysics(EntityPlayer player, boolean enabled) {
