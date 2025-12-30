@@ -7,7 +7,8 @@ public enum UVDirection {
     WEST("west", "W", 0xFF00FF00),   // green
     DOWN("down", "D", 0xFF0000FF),   // blue
     UP("up", "U", 0xFF00FFFF),       // cyan
-    NORTH("north", "N", 0xFFFF00FF); // magenta
+    NORTH("north", "N", 0xFFFF00FF), // magenta
+    SOUTH("south", "S", 0xFFFF00);   // yellow
 
     private final String saveName;
     private final String shortName;
