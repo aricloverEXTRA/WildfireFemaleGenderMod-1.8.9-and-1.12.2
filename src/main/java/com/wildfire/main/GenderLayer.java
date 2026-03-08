@@ -90,7 +90,7 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
 
         if (!shouldRenderBreasts(player)) return;
 
-        boolean isFake = player instanceof FakeGUIPlayer.FakeEntityPlayer;
+        boolean isFake = player.getEntityData().getBoolean("WFG_FakeGUIPlayer");
 
         GenderConfig.PlayerGenderSettings cfg =
                 isFake ? GenderConfig.getStaticFakeCreditsSettings()
@@ -290,7 +290,7 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         if (!ClientConfig.RENDER_BREASTS) return false;
 
         // Fake GUI players
-        if (player instanceof FakeGUIPlayer.FakeEntityPlayer) {
+        if (player.getEntityData().getBoolean("WFG_FakeGUIPlayer")) {
             if (!ClientConfig.CREDITS_RENDER_BREASTS) return false;
 
             GenderConfig.PlayerGenderSettings s = GenderConfig.getStaticFakeCreditsSettings();

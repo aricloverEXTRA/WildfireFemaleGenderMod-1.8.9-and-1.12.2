@@ -149,16 +149,14 @@ public class GenderConfig {
             fakeCreditsSettings.gender = "Female";
             fakeCreditsSettings.breastsEnabled = true;
             fakeCreditsSettings.breastSize = 100.0F;
-            fakeCreditsSettings.physicsEnabled = false;
-            fakeCreditsSettings.hideInArmor = false;
-            fakeCreditsSettings.separation = 0.0F;
+            fakeCreditsSettings.bounceMultiplier = 0.0F;
+            fakeCreditsSettings.separation = 2.0F;
             fakeCreditsSettings.depth = 0.0F;
             fakeCreditsSettings.height = 0.0F;
-            fakeCreditsSettings.breastsOffsetX = 0.5F;
-            fakeCreditsSettings.breastsOffsetY = -1.5F;
-            fakeCreditsSettings.breastsOffsetZ = -2.0F;
+            fakeCreditsSettings.rotation = 0.0F;
             fakeCreditsSettings.breastsCleavage = 1.0F;
             fakeCreditsSettings.breastsUniboob = false;
+            fakeCreditsSettings.physicsEnabled = false;
         }
         return fakeCreditsSettings;
     }

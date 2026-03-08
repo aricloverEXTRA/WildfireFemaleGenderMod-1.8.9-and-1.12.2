@@ -50,6 +50,7 @@ dependencies {
     //your libraries wont be accessible outside of intellij
     //example:
     //compile "studio.dreamys:libSkyblock:1.1.1"
+	compile group: 'com.googlecode.json-simple', name: 'json-simple', version: '1.1.1'
 }
 
 processResources {

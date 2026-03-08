@@ -9,6 +9,7 @@ public class Contributor {
         MOD_CREATOR(0xFFCC66FF),          // light purple
         FABRIC_MAINTAINER(0xFFA78FFF),    // purple-ish
         NEOFORGE_MAINTAINER(0xFFA78FFF),  // purple-ish
+        CI_MAINTAINER(0xFF50C878),        // emerald green
         DEVELOPER(0xFFFFD700),            // gold
         TRANSLATOR(0xFF66CCFF),           // light blue
         MASCOT(0xFFFFD700),               // gold
@@ -27,14 +28,24 @@ public class Contributor {
 
         public String shortNameKey() {
             switch (this) {
-                case MOD_CREATOR: return "wildfire_gender.contributor.role.mod_creator.short";
-                case FABRIC_MAINTAINER: return "wildfire_gender.contributor.role.fabric_maintainer.short";
-                case NEOFORGE_MAINTAINER: return "wildfire_gender.contributor.role.neoforge_maintainer.short";
-                case DEVELOPER: return "wildfire_gender.contributor.role.developer.short";
-                case TRANSLATOR: return "wildfire_gender.contributor.role.translator.short";
-                case MASCOT: return "wildfire_gender.contributor.role.mascot.short";
-                case VOICE_ACTOR_FEMALE: return "wildfire_gender.contributor.role.voice_actor_female.short";
-                default: return "wildfire_gender.contributor.role.generic.short";
+                case MOD_CREATOR:
+                    return "wildfire_gender.contributor.role.mod_creator.short";
+                case FABRIC_MAINTAINER:
+                    return "wildfire_gender.contributor.role.fabric_maintainer.short";
+                case NEOFORGE_MAINTAINER:
+                    return "wildfire_gender.contributor.role.neoforge_maintainer.short";
+                case CI_MAINTAINER:
+                    return "wildfire_gender.contributor.role.ci_maintainer.short";
+                case DEVELOPER:
+                    return "wildfire_gender.contributor.role.developer.short";
+                case TRANSLATOR:
+                    return "wildfire_gender.contributor.role.translator.short";
+                case MASCOT:
+                    return "wildfire_gender.contributor.role.mascot.short";
+                case VOICE_ACTOR_FEMALE:
+                    return "wildfire_gender.contributor.role.voice_actor_female.short";
+                default:
+                    return "wildfire_gender.contributor.role.generic.short";
             }
         }
 

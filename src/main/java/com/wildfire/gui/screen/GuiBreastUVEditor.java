@@ -96,7 +96,7 @@ public class GuiBreastUVEditor extends GuiScreen {
 
         // Debug button: open generated PNGs
         this.buttonList.add(new WildfireButton(BTN_OPEN_GENERATED, sidebarX + 5, 28, SIDEBAR_WIDTH - 10, 16,
-                StatCollector.translateToLocal("wildfire_gender.uv_editor.open_generated")));
+                StatCollector.translateToLocal("Open Generated (debug)")));
 
         int columnsPadding = 6;
         int leftColX = sidebarX + 5;

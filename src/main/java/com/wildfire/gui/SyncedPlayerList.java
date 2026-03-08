@@ -49,7 +49,6 @@ public final class SyncedPlayerList {
 
             String gender = "Unknown";
             try {
-                // 1.8.9 recreation of the mod only supports local player config, so remote players are always "Unknown"
                 GenderConfig.PlayerGenderSettings settings = GenderConfig.getPlayerSettings(p);
                 if (settings != null) {
                     gender = settings.gender;

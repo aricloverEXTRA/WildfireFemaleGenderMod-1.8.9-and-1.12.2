@@ -1,13 +1,12 @@
 package com.wildfire.main.uvs;
 
-import com.wildfire.main.uvs.BreastTypes;
-
 public enum UVDirection {
     EAST("east", "E", 0xFFFF0000),   // red
     WEST("west", "W", 0xFF00FF00),   // green
     DOWN("down", "D", 0xFF0000FF),   // blue
     UP("up", "U", 0xFF00FFFF),       // cyan
-    NORTH("north", "N", 0xFFFF00FF); // magenta
+    NORTH("north", "N", 0xFFFF00FF), // magenta
+    SOUTH("south", "S", 0xFFFFFF00); // yellow
 
     private final String saveName;
     private final String shortName;
@@ -38,6 +37,7 @@ public enum UVDirection {
             case DOWN: return "Bottom Face";
             case UP:   return "Top Face";
             case NORTH:return "Front Face";
+            case SOUTH:return "Back Face";
             default:   return saveName;
         }
     }
