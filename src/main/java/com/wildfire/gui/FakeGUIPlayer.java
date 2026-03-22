@@ -3,6 +3,7 @@ package com.wildfire.gui;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityOtherPlayerMP;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -16,8 +17,12 @@ public class FakeGUIPlayer {
     private final UUID uuid;
     private EntityOtherPlayerMP entity;
 
-    // Used by GenderLayer if you want a static preview size
+    // Static preview size for credits
     public static float STATIC_FAKE_BREAST_SIZE = 100.0F;
+
+    // Fixed UVs for credits (no UVStorage)
+    public static final int LEFT_X1 = 20, LEFT_Y1 = 20, LEFT_X2 = 23, LEFT_Y2 = 23;
+    public static final int RIGHT_X1 = 24, RIGHT_Y1 = 20, RIGHT_X2 = 27, RIGHT_Y2 = 23;
 
     public FakeGUIPlayer(String name, UUID uuid) {
         this.name = name;
@@ -42,10 +47,18 @@ public class FakeGUIPlayer {
             World world = mc.theWorld != null ? mc.theWorld : mc.thePlayer.worldObj;
 
             String dummyName = "uuid_" + uuid.toString().replace("-", "").substring(0, 12);
-
             GameProfile profile = new GameProfile(this.uuid, dummyName);
-            entity = new EntityOtherPlayerMP(world, profile);
 
+            // Local skin path
+            ResourceLocation localSkin = new ResourceLocation(
+                    "wildfire_gender",
+                    "textures/credit_skins/" + uuid.toString() + ".png"
+            );
+
+            // Use our custom credits player class
+            entity = new EntityCreditsPlayer(world, profile, localSkin);
+
+            // Mark as fake
             entity.getEntityData().setBoolean("WFG_FakeGUIPlayer", true);
 
             entity.rotationYawHead = 0.0F;
@@ -58,7 +71,6 @@ public class FakeGUIPlayer {
     public void tick() {
         if (entity != null) {
             entity.prevRotationYawHead = entity.rotationYawHead;
-            // Optional: add subtle idle animation here if desired
         }
     }
 }

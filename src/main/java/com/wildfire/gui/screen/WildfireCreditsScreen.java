@@ -24,9 +24,6 @@ public class WildfireCreditsScreen extends GuiScreen {
     private static final int BOXES_PER_PAGE = 12;
     private static final int COLUMNS = 6;
 
-    // CustomSkinLoader detection
-    private static final boolean HAS_CSL = net.minecraftforge.fml.common.Loader.isModLoaded("customskinloader");
-
     private static final ResourceLocation CREDIT_CONTAINER = new ResourceLocation("wildfire_gender:textures/gui/credits/credit_container.png");
     private static final ResourceLocation CREDIT_OUTLINE = new ResourceLocation("wildfire_gender:textures/gui/credits/credit_outline.png");
     private static final ResourceLocation BUTTON_CONTAINER = new ResourceLocation("wildfire_gender:textures/gui/credits/button_container.png");
@@ -202,17 +199,6 @@ public class WildfireCreditsScreen extends GuiScreen {
 
         boolean isDarkMode = mc.thePlayer != null && GenderConfig.getDarkMode(mc.thePlayer);
 
-        // CSL warning (small reminder)
-        if (!HAS_CSL) {
-            drawCenteredString(
-                    fontRendererObj,
-                    "CustomSkinLoader not detected - skins may fallback to Steve/Alex.",
-                    width / 2,
-                    height / 2 - 115,
-                    0xFF5555
-            );
-        }
-
         ResourceLocation btnContainer = isDarkMode ? DARK_BUTTON_CONTAINER : BUTTON_CONTAINER;
         ResourceLocation tabContainer = isDarkMode ? DARK_TAB_CONTAINER : TAB_CONTAINER;
         ResourceLocation creditContainer = isDarkMode ? DARK_CREDIT_CONTAINER : CREDIT_CONTAINER;
@@ -303,7 +289,7 @@ public class WildfireCreditsScreen extends GuiScreen {
             // Fake player entity
             AbstractClientPlayer entity = fp.getEntity();
 
-            // Render model (CSL handles skin)
+            // Render model
             GuiUtils.drawEntityOnScreenNoScissor(
                     this,
                     drawCenterX,

@@ -53,20 +53,20 @@ public final class UVStorage {
 
     static {
         LEFT_BASE_DEST = new UVLayout();
-        LEFT_BASE_DEST.put(UVDirection.EAST, new UVQuad(24, 21, 27, 26));
-        LEFT_BASE_DEST.put(UVDirection.WEST, new UVQuad(16, 21, 19, 26));
-        LEFT_BASE_DEST.put(UVDirection.DOWN, new UVQuad(20, 17, 23, 20));
-        LEFT_BASE_DEST.put(UVDirection.UP, new UVQuad(20, 25, 23, 26));
-        LEFT_BASE_DEST.put(UVDirection.NORTH, new UVQuad(20, 21, 23, 26));
-        LEFT_BASE_DEST.put(UVDirection.SOUTH, new UVQuad(20, 21, 23, 26));
+		LEFT_BASE_DEST.put(UVDirection.EAST,  new UVQuad(20, 20, 23, 23));
+		LEFT_BASE_DEST.put(UVDirection.WEST,  new UVQuad(20, 20, 23, 23));
+		LEFT_BASE_DEST.put(UVDirection.UP,    new UVQuad(20, 20, 23, 23));
+		LEFT_BASE_DEST.put(UVDirection.DOWN,  new UVQuad(20, 20, 23, 23));
+		LEFT_BASE_DEST.put(UVDirection.NORTH, new UVQuad(20, 20, 23, 23));
+		LEFT_BASE_DEST.put(UVDirection.SOUTH, new UVQuad(20, 20, 23, 23));
 
         RIGHT_BASE_DEST = new UVLayout();
-        RIGHT_BASE_DEST.put(UVDirection.EAST, new UVQuad(28, 21, 31, 26));
-        RIGHT_BASE_DEST.put(UVDirection.WEST, new UVQuad(21, 21, 23, 26));
-        RIGHT_BASE_DEST.put(UVDirection.DOWN, new UVQuad(24, 17, 27, 20));
-        RIGHT_BASE_DEST.put(UVDirection.UP, new UVQuad(24, 25, 27, 26));
-        RIGHT_BASE_DEST.put(UVDirection.NORTH, new UVQuad(24, 21, 27, 26));
-        RIGHT_BASE_DEST.put(UVDirection.SOUTH, new UVQuad(24, 21, 27, 26));
+		RIGHT_BASE_DEST.put(UVDirection.EAST,  new UVQuad(24, 20, 27, 23));
+		RIGHT_BASE_DEST.put(UVDirection.WEST,  new UVQuad(24, 20, 27, 23));
+		RIGHT_BASE_DEST.put(UVDirection.UP,    new UVQuad(24, 20, 27, 23));
+		RIGHT_BASE_DEST.put(UVDirection.DOWN,  new UVQuad(24, 20, 27, 23));
+		RIGHT_BASE_DEST.put(UVDirection.NORTH, new UVQuad(24, 20, 27, 23));
+		RIGHT_BASE_DEST.put(UVDirection.SOUTH, new UVQuad(24, 20, 27, 23));
 
         LEFT_OVERLAY_DEST = new UVLayout();
         LEFT_OVERLAY_DEST.put(UVDirection.EAST, new UVQuad(0, 0, 0, 0));

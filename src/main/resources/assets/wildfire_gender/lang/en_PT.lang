@@ -1,0 +1,142 @@
+key.category.wildfire_gender.generic=Za Wildfire Feminine Gender Mod
+key.wildfire_gender.gender_menu=Female Gender Menu
+key.wildfire_gender.toggle=Toggle Breast Rendering
+toast.wildfire_gender.get_started=Push ze '%s' barrel to get goin!
+
+wildfire_gender.armor.tooltip=+%s Borst Support
+
+wildfire_gender.uv_editor=Breast Texture Editor
+wildfire_gender.uv_editor.reset_defaults_all=Reset All to Default UVs
+wildfire_gender.uv_editor.reset_defaults=Reset to Default UVs
+wildfire_gender.uv_editor.no_face_selected=Select a texture face on the left to edit it.
+wildfire_gender.uv_editor.selection.left_breast=Left
+wildfire_gender.uv_editor.selection.right_breast=Right
+wildfire_gender.uv_editor.selection.left_breast_overlay=Left
+wildfire_gender.uv_editor.selection.right_breast_overlay=Right
+
+wildfire_gender.uv_editor.selection.layer_body=Body Layer
+wildfire_gender.uv_editor.selection.layer_jacket=Jacket Layer
+
+wildfire_gender.uv_editor.xpos=X-Pos
+wildfire_gender.uv_editor.ypos=Y-Pos
+wildfire_gender.uv_editor.width=Width
+wildfire_gender.uv_editor.height=Height
+wildfire_gender.uv_editor.increment_tip.line1=Hold SHIFT for +10
+wildfire_gender.uv_editor.increment_tip.line2=SHIFT+CTRL for +20
+wildfire_gender.uv_editor.add=Add
+wildfire_gender.uv_editor.remove=Remove
+
+wildfire_gender.uv_editor.faces.inner=Inner Face
+wildfire_gender.uv_editor.faces.outer=Outer Face
+wildfire_gender.uv_editor.faces.top=Top Face
+wildfire_gender.uv_editor.faces.bottom=Bottom Face
+wildfire_gender.uv_editor.faces.front=Front Face
+
+wildfire_gender.credits.title=Mod Credits
+wildfire_gender.credits.description=This is a list of the awesome people who have made this mod possible!
+wildfire_gender.credits.general=General
+wildfire_gender.credits.translators=Translators
+
+wildfire_gender.player_list.title=Feminine Menu!!!
+wildfire_gender.player_list.settings_button=Tit Wrench
+wildfire_gender.player_list.sync_status=Obtain ze tit info
+wildfire_gender.player_list.state.loading=Obtainin' tit info...
+wildfire_gender.player_list.state.synced=Fellow Pirate Analyze!
+wildfire_gender.player_list.bounce_multiplier=Tit Boing-Boing Multiplaiah!: %sx
+wildfire_gender.player_list.breast_momentum=Tit speed!: %s%%
+wildfire_gender.player_list.female_sounds=Feminine Grunts: %s
+wildfire_gender.wardrobe.players_using_mod=Fellow mateys using ze mod:
+
+wildfire_gender.always_show_list=Show Synced Players: %s
+wildfire_gender.always_show_list.mod_ui_only=This screen
+wildfire_gender.always_show_list.mod_ui_only.tooltip=The synced player list will only show while in this menu
+wildfire_gender.always_show_list.tab_list_open=Player list
+wildfire_gender.always_show_list.tab_list_open.tooltip=The synced player list will show while in this menu or by pressing %s
+wildfire_gender.always_show_list.always=Always
+wildfire_gender.always_show_list.always.tooltip=The synced player list will always show
+
+wildfire_gender.wardrobe.title=Comrade Wildfaiah's tit mod
+wildfire_gender.breast_customization.tab_customization=Tit Wrench
+wildfire_gender.breast_customization.tab_physics=Tit Boing-Boing!!!
+wildfire_gender.breast_customization.tab_miscellaneous=Ze Barrel!
+
+wildfire_gender.breast_customization.presets.add_new=New tit preset...
+wildfire_gender.breast_customization.presets.delete=No tit!!
+
+# Slider strings: use %s and no trailing percent/degree characters here.
+wildfire_gender.wardrobe.slider.breast_size=Tit Awooga!: %s
+wildfire_gender.wardrobe.slider.separation=Tit Fresh Air Space: %s
+wildfire_gender.wardrobe.slider.height=Tit Altitude: %s
+wildfire_gender.wardrobe.slider.depth=Tit Depth: %s
+wildfire_gender.wardrobe.slider.rotation=Tit tilt: %s
+wildfire_gender.slider.voice_pitch=Wohman Voice Pitch: %s
+
+wildfire_gender.appearance_settings.title=Ze Matey Appearance
+wildfire_gender.char_settings.title=Character Settings OLD
+wildfire_gender.char_settings.physics=Tit Boing-Boing action!: %s
+wildfire_gender.char_settings.jump=Jump
+wildfire_gender.char_settings.jumping=Stop Jumping
+
+wildfire_gender.char_settings.override_armor_physics=Tit Boing-Boings in armor: %s
+wildfire_gender.tooltip.override_armor_physics.line1=Ze tit shall remain free even under ze constraints of matey attire!
+wildfire_gender.tooltip.override_armor_physics.line2=Zis is for custom matey attire zat iz minimal or non-existent, usually added via image barrels.
+
+wildfire_gender.char_settings.hide_in_armor=Hide ze tit in matey attire: %s
+wildfire_gender.char_settings.show_armor_stat=Show Armor Tooltip: %s
+wildfire_gender.char_settings.hurt_sounds=Wohman Noises: %s
+wildfire_gender.tooltip.hurt_sounds=Ze matey will grunt like ze wohman if ze gender is set as 'Wohman' or 'Unidentified'
+
+wildfire_gender.breast_customization.dual_physics=Ze tits disconnected!: %s
+
+wildfire_gender.label.gender=Gender
+wildfire_gender.label.female=Wohman
+wildfire_gender.label.male=Man
+wildfire_gender.label.other=Unidentified
+
+# color-friendly plain labels (we will add color codes in Java)
+wildfire_gender.label.enabled=Arr! Yas!
+wildfire_gender.label.disabled=Arrrgh! Nah!
+wildfire_gender.label.on=Yah
+wildfire_gender.label.off=Nah
+wildfire_gender.label.yes=Yah
+wildfire_gender.label.no=Nah
+wildfire_gender.label.with_creator=Matey, you're aboard with ze creator!
+wildfire_gender.label.with_contributor=Matey, you're aboard with a fellow comrade of ze creator!
+wildfire_gender.label.with_both=Arrrgh! Ze creator and a comrade of her's are aboard!
+
+wildfire_gender.slider.bounce=Ze tit Boing-Boings harder: %s
+wildfire_gender.slider.floppy=Ze tit Boing-Boings faster: %s
+
+wildfire_gender.cancer_awareness.title=Aye matey! It's ze breast cancer awareness month!
+
+wildfire_gender.first_time_setup.title=Ahoy, matey! Welcome aboard to ze female gender mod by Wildfire!
+wildfire_gender.first_time_setup.description=Would ya like to enable ze sky ship analyzing? sky ship analyzing will make ya able to see mateys tits without ze ship having ze mod!
+wildfire_gender.first_time_setup.notice=Ya can always change em analyzing latah!
+wildfire_gender.first_time_setup.enable=Sky Ship Analyzing iz On
+wildfire_gender.first_time_setup.disable=Sky Ship Analyzing iz Off
+
+wildfire_gender.details.next_page=Next Book
+wildfire_gender.details.prev_page=Prev Boom
+wildfire_gender.details.go_back=Go Back
+
+wildfire_gender.contributor.role.mod_creator=Female Gender Mod Creator
+wildfire_gender.contributor.role.mod_creator.short=Mod Creator
+wildfire_gender.contributor.role.ci_maintainer=Female Gender Mod Contributor
+wildfire_gender.contributor.role.ci_maintainer.short=CI/CD Maintainer
+wildfire_gender.contributor.role.developer=Female Gender Mod Contributor
+wildfire_gender.contributor.role.developer.short=Programmer
+wildfire_gender.contributor.role.translator=Female Gender Mod Translator
+wildfire_gender.contributor.role.translator.short=Mod Translator
+wildfire_gender.contributor.role.voice_actor_female=Keira Emberlyn Voice Actress
+wildfire_gender.contributor.role.voice_actor_female.short=Voice Actress
+wildfire_gender.contributor.role.generic=Female Gender Mod Contributor
+wildfire_gender.contributor.role.generic.short=Contributor
+
+wildfire_gender.misc.holiday_themes=Holiday Themes: %s
+wildfire_gender.tooltip.holiday_themes.line1=When enabled, this feature automatically showcases cosmetics like Santa hats and other holiday-themed items during their respective holidays.
+
+wildfire_gender.not_in_world.title=Unavailable in Main Menu
+wildfire_gender.not_in_world=You need to be in a world to configure your gender settings.
+
+wildfire_gender.label.dark_mode=Theme: Dark
+wildfire_gender.label.light_mode=Theme: Light (default)
