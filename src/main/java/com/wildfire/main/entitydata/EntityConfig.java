@@ -13,7 +13,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.item.EntityArmorStand;
 import net.minecraft.item.ItemStack;
 import net.minecraft.init.Items;
-
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,11 +20,6 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-/**
- * EntityConfig - simplified, Java 8 / Forge 1.8.9 compatible.
- *
- * Keep Breasts.java in package com.wildfire.main.entitydata (no-arg constructor) so this class compiles cleanly.
- */
 public class EntityConfig {
     public static final LoadingCache<UUID, EntityConfig> CACHE = CacheBuilder.newBuilder()
             .expireAfterAccess(5, TimeUnit.MINUTES)
@@ -38,21 +32,20 @@ public class EntityConfig {
 
     public final UUID uuid;
 
-    // Safe defaults (lightweight, don't depend on external Configuration constants)
     protected String gender = "Male";
     protected float pBustSize = 0.6f;
     protected boolean breastPhysics = true;
     protected float bounceMultiplier = 0.3328767f;
     protected float floppyMultiplier = 0.75f;
 
-    protected UVLayout leftBreastUVLayout = UVLayout.defaultsForLargeFemale();
-    protected UVLayout rightBreastUVLayout = UVLayout.defaultsForLargeFemale();
+    protected UVLayout leftBreastUVLayout = UVLayout.defaultsForLeft();
+    protected UVLayout rightBreastUVLayout = UVLayout.defaultsForRight();
 
-    protected UVLayout leftBreastOverlayUVLayout = UVLayout.defaultsForLargeFemale();
-    protected UVLayout rightBreastOverlayUVLayout = UVLayout.defaultsForLargeFemale();
+    protected UVLayout leftBreastOverlayUVLayout = UVLayout.leftOverlayDefaults();
+    protected UVLayout rightBreastOverlayUVLayout = UVLayout.rightOverlayDefaults();
 
-    protected UVLayout leftBreastArmorUVLayout = UVLayout.defaultsForLargeFemale();
-    protected UVLayout rightBreastArmorUVLayout = UVLayout.defaultsForLargeFemale();
+    protected UVLayout leftBreastArmorUVLayout = UVLayout.defaultsForLeft();
+    protected UVLayout rightBreastArmorUVLayout = UVLayout.defaultsForRight();
 
     protected float voicePitch = 1.0f;
 
@@ -63,7 +56,6 @@ public class EntityConfig {
     protected boolean jacketLayer = true;
     protected Object fromComponent = null;
 
-    // simplification flag (kept for compatibility)
     public boolean forceSimplifiedPhysics = false;
 
     protected EntityConfig(UUID uuid) {
@@ -79,17 +71,12 @@ public class EntityConfig {
             this.gender = "Male";
             return;
         }
-        // no-op: add NBT/component parsing logic if you have a schema
     }
 
     public static boolean isSupportedEntity(EntityLivingBase entity) {
         return (entity instanceof EntityPlayer) || (entity instanceof EntityArmorStand);
     }
 
-    /**
-     * Attempts to return the PlayerConfig via WildfireGender.getOrAddPlayerById(UUID) reflectively.
-     * If that method does not exist, falls back to a cached EntityConfig.
-     */
     public static EntityConfig getEntity(EntityLivingBase entity) {
         if (entity == null) return null;
         UUID id = entity.getUniqueID();
@@ -109,8 +96,6 @@ public class EntityConfig {
         return CACHE.getUnchecked(id);
     }
 
-    /* ----------------- getters / setters ----------------- */
-
     public String getGender() {
         return this.gender;
     }
@@ -127,7 +112,6 @@ public class EntityConfig {
         return this.breastPhysics;
     }
 
-    /** Obsolete compat method kept as noop */
     public boolean getArmorPhysicsOverride() {
         return false;
     }
@@ -206,18 +190,12 @@ public class EntityConfig {
         return this.rightBreastArmorUVLayout;
     }
 
-    /**
-     * Client-side breast physics tick.
-     *
-     * This method looks up the player's chest slot and maps common vanilla chestplates to
-     * the SimpleGenderArmor presets so armor resistance/tightness is applied to physics.
-     */
     public void tickBreastPhysics(EntityLivingBase entity) {
         ItemStack chest = null;
         try {
             if (entity instanceof EntityPlayer) {
                 EntityPlayer p = (EntityPlayer) entity;
-                chest = p.inventory.armorInventory[2]; // chest slot index for 1.8.9
+                chest = p.inventory.armorInventory[2];
             }
         } catch (Throwable ignored) {}
 
