@@ -22,12 +22,35 @@ import net.minecraft.entity.player.EntityPlayer;
 
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
 
+/**
+ * FIXED: Replaced unbounded ConcurrentHashMap with Guava LoadingCache.
+ * Players automatically removed after 5 minutes of inactivity.
+ */
 public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
 
     private final RenderPlayer renderPlayer;
     private static final float MAX_PROTRUSION = 1.6f;
-    private static final ConcurrentHashMap<UUID, BreastPhysics[]> PHYSICS_MAP = new ConcurrentHashMap<>();
+    
+    // FIXED: Use LoadingCache instead of raw map + manual cleanup
+    private static final LoadingCache<UUID, BreastPhysics[]> PHYSICS_CACHE = CacheBuilder.newBuilder()
+            .expireAfterAccess(5, TimeUnit.MINUTES)
+            .removalListener((RemovalListener<UUID, BreastPhysics[]>) notification -> {
+                if (notification.getValue() != null) {
+                    System.out.println("[WFG] Physics cleaned up for player: " + notification.getKey());
+                }
+            })
+            .build(new CacheLoader<UUID, BreastPhysics[]>() {
+                @Override
+                public BreastPhysics[] load(UUID key) {
+                    return new BreastPhysics[]{new BreastPhysics(), new BreastPhysics()};
+                }
+            });
 
     public GenderLayer(RenderPlayer renderPlayer) {
         this.renderPlayer = renderPlayer;
@@ -38,8 +61,11 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         getPhysicsForPlayer(player);
     }
 
+    // FIXED: Explicit cleanup (cache will auto-cleanup anyway after 5 min)
     public static void unregister(UUID playerId) {
-        PHYSICS_MAP.remove(playerId);
+        if (playerId != null) {
+            PHYSICS_CACHE.invalidate(playerId);
+        }
     }
 
     @Override
@@ -60,12 +86,9 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         float zScale = 0.1f + (0.9f * sizeFactor);
         float torsoPush = (1.0f - sizeFactor) * 1.6f;
 
-        // XOffset here acts as the "Separation" logic from 1.21.11
-        // Negative = further apart, Positive = closer together
         float separationBase = 0.8125F + (cfg.breastsCleavage / 60.0F);
         float userXOffset = cfg.breastsOffsetX; 
 
-        // Height and Depth (Y and Z)
         float baseY = 3.5F + cfg.breastsOffsetY - (cfg.height / 40.0F);
         float baseZ = cfg.breastsOffsetZ - (cfg.depth / 10.0F) - 1.5F + (MAX_PROTRUSION * sizeFactor) + torsoPush;
 
@@ -87,7 +110,6 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
             lPosY = interp(phys[0].getPrePositionY(), phys[0].getPositionY(), partialTicks);
             lBounce = interp(phys[0].getPreBounceRotation(), phys[0].getBounceRotation(), partialTicks);
         }
-        // Apply userXOffset to move the model "a few pixels to the right/left"
         renderSide(player, entityCfg.getLeftBreastUVLayout(), (userXOffset - separationBase) - (lPosX * 0.34f), baseY + lPosY, baseZ, lBounce, renderScale, zScale, 0.0F);
         renderSide(player, entityCfg.getLeftBreastOverlayUVLayout(), (userXOffset - separationBase) - (lPosX * 0.34f), baseY + lPosY, baseZ, lBounce, renderScale, zScale, 0.25F);
 
@@ -111,7 +133,6 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         UVQuad north = layout.get(UVDirection.NORTH);
         if (north == null) return;
 
-        // This ModelRenderer logic mimics the 1.21.11 "Face Reference"
         ModelRenderer box = new ModelRenderer((ModelBiped) renderPlayer.getMainModel(), north.x1(), north.y1());
         box.addBox(-2.0F, -2.5F, -2.0F, 4, 5, 4, inflate);
         
@@ -128,25 +149,17 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         }
 
         GlStateManager.pushMatrix();
-        // The rotation point is what controls the 'pivot' for the bounce
         box.setRotationPoint(x, y, z);
-        
-        // Translate to the rotation point
         GlStateManager.translate(box.rotationPointX * renderScale, box.rotationPointY * renderScale, box.rotationPointZ * renderScale);
-        
-        // Scale only the Z axis for depth
         GlStateManager.scale(1.0F, 1.0F, zScale);
-        
-        // Rotate
         box.rotateAngleX = (float) Math.toRadians(-26.92) + bounce;
-        
-        // Render the box at the origin (since we translated the matrix)
         box.render(renderScale);
         GlStateManager.popMatrix();
     }
 
     public static BreastPhysics[] getPhysicsForPlayer(AbstractClientPlayer player) {
-        return PHYSICS_MAP.computeIfAbsent(player.getUniqueID(), id -> new BreastPhysics[]{new BreastPhysics(), new BreastPhysics()});
+        if (player == null) return null;
+        return PHYSICS_CACHE.getUnchecked(player.getUniqueID());
     }
 
     private boolean shouldRenderBreasts(AbstractClientPlayer player) {
@@ -160,8 +173,12 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         return s.breastsEnabled && !"Male".equals(s.gender);
     }
 
-    private static float interp(float a, float b, float t) { return a + (b - a) * t; }
+    private static float interp(float a, float b, float t) { 
+        return a + (b - a) * t; 
+    }
 
     @Override
-    public boolean shouldCombineTextures() { return false; }
+    public boolean shouldCombineTextures() { 
+        return false; 
+    }
 }

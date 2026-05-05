@@ -109,6 +109,7 @@ public class WildfireEventHandler {
 
     @SubscribeEvent
     public void onPlayerLoggedOut(PlayerLoggedOutEvent event) {
+        // FIXED: Proper cleanup on logout
         if (event.player == Minecraft.getMinecraft().thePlayer) {
             if (event.player instanceof net.minecraft.client.entity.AbstractClientPlayer) {
                 net.minecraft.client.entity.AbstractClientPlayer acp = (net.minecraft.client.entity.AbstractClientPlayer) event.player;
