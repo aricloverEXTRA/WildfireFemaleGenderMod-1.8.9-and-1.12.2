@@ -170,9 +170,7 @@ public class GuiWardrobe extends GuiScreen {
                 GlStateManager.pushMatrix();
                 GlStateManager.enableBlend();
                 GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-                GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-                drawModalRectWithCustomSizedTexture(x, y, 0, 0, 8, 8, 8, 8);
-                GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+                drawTexturedModalRect(x, y, 0, 0, 8, 8);
                 GlStateManager.disableBlend();
                 GlStateManager.popMatrix();
 

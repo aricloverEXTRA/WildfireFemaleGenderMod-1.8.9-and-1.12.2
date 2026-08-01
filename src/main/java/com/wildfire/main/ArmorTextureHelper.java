@@ -13,6 +13,10 @@ public final class ArmorTextureHelper {
     private ArmorTextureHelper() {}
 
     public static ResourceLocation getArmorTextureForPlayerUUID(UUID uuid) {
+        return getArmorTextureForPlayerUUID(uuid, false);
+    }
+
+    public static ResourceLocation getArmorTextureForPlayerUUID(UUID uuid, boolean overlay) {
         try {
             Minecraft mc = Minecraft.getMinecraft();
             if (mc == null || mc.thePlayer == null || uuid == null) return null;
@@ -28,7 +32,10 @@ public final class ArmorTextureHelper {
             if (!(chest.getItem() instanceof ItemArmor)) return null;
 
             ItemArmor ia = (ItemArmor) chest.getItem();
-            String texPath = ia.getArmorTexture(chest, lp, 2, null);
+            String texPath = ia.getArmorTexture(chest, lp, 2, overlay ? "overlay" : null);
+            if (texPath == null && overlay) {
+                texPath = ia.getArmorTexture(chest, lp, 2, null);
+            }
             if (texPath == null) return null;
             return new ResourceLocation(texPath);
         } catch (Throwable t) {

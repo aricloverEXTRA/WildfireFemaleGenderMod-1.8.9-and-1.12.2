@@ -13,6 +13,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.item.EntityArmorStand;
 import net.minecraft.item.ItemStack;
 import net.minecraft.init.Items;
+import javax.annotation.Nonnull;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -79,7 +80,7 @@ public class EntityConfig {
 
     public static EntityConfig getEntity(EntityLivingBase entity) {
         if (entity == null) return null;
-        UUID id = entity.getUniqueID();
+        @Nonnull UUID id = entity.getUniqueID();
 
         if (entity instanceof EntityPlayer) {
             try {

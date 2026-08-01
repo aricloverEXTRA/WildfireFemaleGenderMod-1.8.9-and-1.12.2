@@ -6,8 +6,9 @@ import com.wildfire.physics.BreastPhysics;
 import com.wildfire.render.armor.EmptyGenderArmor;
 import com.wildfire.render.armor.SimpleGenderArmor;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
@@ -15,56 +16,67 @@ import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.lwjgl.input.Keyboard;
 
 public class WildfireEventHandler {
-
     private static final int GENDER_MENU_KEY = Keyboard.KEY_G;
 
     public WildfireEventHandler() {
-        MinecraftForge.EVENT_BUS.register(this);
     }
 
     @SubscribeEvent
     public void onKeyInput(TickEvent.ClientTickEvent evt) {
-        if (evt.phase != TickEvent.Phase.END) return;
-        if (Keyboard.isKeyDown(GENDER_MENU_KEY) && Minecraft.getMinecraft().currentScreen == null) {
-            EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+        if (evt.phase != TickEvent.Phase.END) {
+            return;
+        }
+        Minecraft minecraft = Minecraft.getMinecraft();
+        if (Keyboard.isKeyDown(GENDER_MENU_KEY) && minecraft != null && minecraft.currentScreen == null) {
+            EntityPlayer player = minecraft.thePlayer;
             if (player != null) {
-                Minecraft.getMinecraft().displayGuiScreen(new GuiWardrobe());
+                minecraft.displayGuiScreen(new GuiWardrobe());
             }
         }
     }
 
     @SubscribeEvent
     public void onPlayerTick(TickEvent.PlayerTickEvent evt) {
-        if (evt.phase != TickEvent.Phase.END) return;
+        if (evt.phase != TickEvent.Phase.END) {
+            return;
+        }
         EntityPlayer player = evt.player;
-        if (player != Minecraft.getMinecraft().thePlayer) return;
+        Minecraft minecraft = Minecraft.getMinecraft();
+        if (player == null || minecraft == null || player != minecraft.thePlayer) {
+            return;
+        }
 
         GenderConfig.PlayerGenderSettings settings = GenderConfig.getPlayerSettings(player);
-        if (settings == null) return;
-        if (!(player instanceof net.minecraft.client.entity.AbstractClientPlayer)) return;
+        if (settings == null || !(player instanceof AbstractClientPlayer)) {
+            return;
+        }
 
-        net.minecraft.client.entity.AbstractClientPlayer acp = (net.minecraft.client.entity.AbstractClientPlayer) player;
-
+        AbstractClientPlayer acp = (AbstractClientPlayer) player;
         GenderLayer.ensureRegisteredForPlayer(acp);
         BreastPhysics[] phys = GenderLayer.getPhysicsForPlayer(acp);
-        if (phys == null) return;
+        if (phys == null) {
+            return;
+        }
 
         ItemStack chest = null;
         try {
             chest = player.inventory.armorInventory[2];
-        } catch (Throwable ignored) {}
+        } catch (Throwable ignored) {
+        }
 
-        final com.wildfire.api.IGenderArmor armor;
+        com.wildfire.api.IGenderArmor armor;
         if (chest == null || !(chest.getItem() instanceof ItemArmor)) {
             armor = EmptyGenderArmor.INSTANCE;
         } else {
-            ItemArmor ia = (ItemArmor) chest.getItem();
-            if (chest.getItem() == net.minecraft.init.Items.leather_chestplate) {
+            ItemArmor itemArmor = (ItemArmor) chest.getItem();
+            if (itemArmor == null) {
+                armor = EmptyGenderArmor.INSTANCE;
+            } else if (chest.getItem() == net.minecraft.init.Items.leather_chestplate) {
                 armor = SimpleGenderArmor.LEATHER;
             } else if (chest.getItem() == net.minecraft.init.Items.chainmail_chestplate) {
                 armor = SimpleGenderArmor.CHAINMAIL;
@@ -81,7 +93,9 @@ public class WildfireEventHandler {
 
         if (!settings.physicsEnabled) {
             phys[0].resetPhysics();
-            if (!settings.breastsUniboob) phys[1].resetPhysics();
+            if (!settings.breastsUniboob) {
+                phys[1].resetPhysics();
+            }
             return;
         }
 
@@ -109,12 +123,8 @@ public class WildfireEventHandler {
 
     @SubscribeEvent
     public void onPlayerLoggedOut(PlayerLoggedOutEvent event) {
-        // FIXED: Proper cleanup on logout
-        if (event.player == Minecraft.getMinecraft().thePlayer) {
-            if (event.player instanceof net.minecraft.client.entity.AbstractClientPlayer) {
-                net.minecraft.client.entity.AbstractClientPlayer acp = (net.minecraft.client.entity.AbstractClientPlayer) event.player;
-                GenderLayer.unregister(acp.getUniqueID());
-            }
+        if (event.player instanceof AbstractClientPlayer) {
+            GenderLayer.unregister(event.player.getUniqueID());
         }
     }
 }

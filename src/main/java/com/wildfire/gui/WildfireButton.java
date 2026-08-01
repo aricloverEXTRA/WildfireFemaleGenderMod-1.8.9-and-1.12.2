@@ -6,7 +6,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 
 public class WildfireButton extends GuiButton {
-    private final boolean transparent;
 
     public WildfireButton(int buttonId, int x, int y, int widthIn, int heightIn, String buttonText) {
         this(buttonId, x, y, widthIn, heightIn, buttonText, false);
@@ -14,7 +13,6 @@ public class WildfireButton extends GuiButton {
 
     public WildfireButton(int buttonId, int x, int y, int widthIn, int heightIn, String buttonText, boolean transparent) {
         super(buttonId, x, y, widthIn, heightIn, buttonText);
-        this.transparent = transparent;
     }
 
     @Override

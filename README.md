@@ -26,7 +26,7 @@ H - Open Customization Settings
 The Female Gender Mod is licensed under the GNU LGPLv3, a free and open-source license. For more information,
 please see the [license file](./LICENSE).
 
-## Frequently Asked Question
+## Frequently Asked Questions
 
 <details>
 <summary>1) Can you include a male bulge?</summary>
@@ -74,7 +74,7 @@ I am not providing support for past versions of Minecraft. The mod will only be 
 <details>
 <summary>7) Is this mod compatible with Minecraft: Bedrock Edition (Mobile)?</summary>
 
-No, and it never will be.
+Female Gender Mod is not available for Bedrock Edition and there are no plans to support it. However, [Extended Character Appearance](https://zazakrizpycreations.blogspot.com/2026/04/ExtendedCharacterAppearance.html) offers a very similar character model for Bedrock Edition players.
 
 </details>
 

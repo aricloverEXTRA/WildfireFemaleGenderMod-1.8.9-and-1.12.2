@@ -1,9 +1,5 @@
 package com.wildfire.main.uvs;
 
-/**
- * Represents a UV coordinate quad (rectangle) on a texture.
- * Stores the four corners: (x1, y1) to (x2, y2)
- */
 public class UVQuad {
     private final int x1;
     private final int y1;
@@ -17,15 +13,37 @@ public class UVQuad {
         this.y2 = y2;
     }
 
-    public int x1() { return x1; }
-    public int y1() { return y1; }
-    public int x2() { return x2; }
-    public int y2() { return y2; }
+    public int x1() {
+        return x1;
+    }
 
-    public UVQuad addX1(int delta) { return new UVQuad(x1 + delta, y1, x2, y2); }
-    public UVQuad addX2(int delta) { return new UVQuad(x1, y1, x2 + delta, y2); }
-    public UVQuad addY1(int delta) { return new UVQuad(x1, y1 + delta, x2, y2); }
-    public UVQuad addY2(int delta) { return new UVQuad(x1, y1, x2, y2 + delta); }
+    public int y1() {
+        return y1;
+    }
+
+    public int x2() {
+        return x2;
+    }
+
+    public int y2() {
+        return y2;
+    }
+
+    public UVQuad addX1(int delta) {
+        return new UVQuad(x1 + delta, y1, x2, y2);
+    }
+
+    public UVQuad addX2(int delta) {
+        return new UVQuad(x1, y1, x2 + delta, y2);
+    }
+
+    public UVQuad addY1(int delta) {
+        return new UVQuad(x1, y1 + delta, x2, y2);
+    }
+
+    public UVQuad addY2(int delta) {
+        return new UVQuad(x1, y1, x2, y2 + delta);
+    }
 
     @Override
     public String toString() {
@@ -34,7 +52,9 @@ public class UVQuad {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof UVQuad)) return false;
+        if (!(o instanceof UVQuad)) {
+            return false;
+        }
         UVQuad q = (UVQuad) o;
         return x1 == q.x1 && y1 == q.y1 && x2 == q.x2 && y2 == q.y2;
     }

@@ -6,7 +6,6 @@ import com.wildfire.gui.WildfireButton;
 import com.wildfire.main.contributors.Contributor;
 import com.wildfire.main.contributors.Contributors;
 import com.wildfire.main.config.GenderConfig;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;

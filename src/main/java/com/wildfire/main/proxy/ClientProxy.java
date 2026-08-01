@@ -2,7 +2,6 @@ package com.wildfire.main.proxy;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.RenderPlayer;
-import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.common.MinecraftForge;
@@ -12,7 +11,6 @@ import com.wildfire.main.WildfireSounds;
 import com.wildfire.main.GenderLayer;
 import com.wildfire.main.WildfireEventHandler;
 import com.wildfire.main.handlers.ArmorTooltipHandler;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 public class ClientProxy extends CommonProxy {
     @Override

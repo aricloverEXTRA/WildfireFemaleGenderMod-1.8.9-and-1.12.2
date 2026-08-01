@@ -2,7 +2,6 @@ package com.wildfire.gui.screen;
 
 import com.wildfire.main.config.GenderConfig;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.input.Mouse;
@@ -44,7 +43,7 @@ public class GuiFirstTime extends GuiScreen {
         int guiTop = (this.height - guiHeight) / 2;
 
         this.mc.getTextureManager().bindTexture(FIRST_TIME_BG);
-        this.drawModalRectWithCustomSizedTexture(guiLeft, guiTop, 0, 0, guiWidth, guiHeight, 263, 123);
+        GuiScreen.drawModalRectWithCustomSizedTexture(guiLeft, guiTop, 0, 0, guiWidth, guiHeight, 263, 123);
 
         String title = "Welcome to Female Gender Mod!";
         String info = "Click anywhere to customize your character's gender and appearance.";
