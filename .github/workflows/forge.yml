@@ -1,53 +1,39 @@
 name: Build Forge mod with Gradle
 
 on:
-  push:
-  pull_request:
-
-permissions:
-  contents: read
+  - push
+  - pull_request
 
 jobs:
-  build:
-    name: Build Mod
-    runs-on: ubuntu-24.04
+  gradle:
+    runs-on: ubuntu-latest
     timeout-minutes: 30
 
     steps:
-      - name: Checkout repository
+      - name: Checkout source
         uses: actions/checkout@v7
         with:
           persist-credentials: false
 
-      # Loom / modern Gradle requires Java 17 to run.
-      # The Gradle toolchain in build.gradle.kts handles Java 8 compilation.
-      - name: Set up JDK 17
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
+
+      - name: Setup Java
         uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 17
+          check-latest: true
           cache: gradle
 
-      - name: Set up Gradle
+      - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
+
+      - name: Execute Gradle build
+        run: ./gradlew build
+
+      - name: Upload built mod JAR
+        uses: actions/upload-artifact@v7
         with:
-          cache-disabled: false
-
-      - name: Verify environment
-        run: |
-          java -version
-          ./gradlew --version
-
-      - name: Make Gradle wrapper executable
-        run: chmod +x ./gradlew
-
-      - name: Build Forge mod
-        run: ./gradlew build --no-daemon
-
-      - name: Upload compiled artifacts
-        if: success()
-        uses: actions/upload-artifact@v5
-        with:
-          name: WFGM-${{ github.sha }}
+          name: mod-jar
           path: build/libs/*.jar
-          if-no-files-found: error
