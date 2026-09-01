@@ -72,7 +72,6 @@ public class BreastPhysics {
         try {
             boolean isArmorStand = entity instanceof net.minecraft.entity.item.EntityArmorStand;
             boolean forceSimplified = false;
-            // Check EntityConfig forceSimplifiedPhysics if available
             try {
                 com.wildfire.main.entitydata.EntityConfig cfg = com.wildfire.main.entitydata.EntityConfig.getEntity(entity);
                 if (cfg != null) forceSimplified = cfg.forceSimplifiedPhysics;

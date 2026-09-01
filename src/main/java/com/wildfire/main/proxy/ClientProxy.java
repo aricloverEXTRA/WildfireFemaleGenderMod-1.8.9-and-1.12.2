@@ -18,10 +18,14 @@ public class ClientProxy extends CommonProxy {
         ClientRegistry.registerKeyBinding(WildfireGenderMod.openGuiKey);
         ClientRegistry.registerKeyBinding(WildfireGenderMod.toggleBreastsKey);
 
-        RenderPlayer renderDefault = Minecraft.getMinecraft().getRenderManager().getSkinMap().get("default");
-        renderDefault.addLayer(new GenderLayer(renderDefault));
-        RenderPlayer renderSlim = Minecraft.getMinecraft().getRenderManager().getSkinMap().get("slim");
-        renderSlim.addLayer(new GenderLayer(renderSlim));
+        try {
+            RenderPlayer renderDefault = Minecraft.getMinecraft().getRenderManager().getSkinMap().get("default");
+            if (renderDefault != null) renderDefault.addLayer(new GenderLayer(renderDefault));
+            RenderPlayer renderSlim = Minecraft.getMinecraft().getRenderManager().getSkinMap().get("slim");
+            if (renderSlim != null) renderSlim.addLayer(new GenderLayer(renderSlim));
+        } catch (Throwable t) {
+            System.err.println("[WFG] Failed to register GenderLayer: " + t.getMessage());
+        }
 
         MinecraftForge.EVENT_BUS.register(new Object() {
             @net.minecraftforge.fml.common.eventhandler.SubscribeEvent

@@ -34,7 +34,10 @@ public class GuiWardrobe extends GuiScreen {
     public void initGui() {
         this.buttonList.clear();
 
-        isBreastCancerAwarenessMonth = true; // Debugging purposes
+        EntityPlayer _p = Minecraft.getMinecraft().thePlayer;
+        boolean holidayEnabled = true;
+        try { holidayEnabled = GenderConfig.getHolidayThemes(_p); } catch (Throwable ignored) {}
+        isBreastCancerAwarenessMonth = holidayEnabled && java.time.Month.from(java.time.ZonedDateTime.now()) == java.time.Month.OCTOBER;
 
         EntityPlayer player = Minecraft.getMinecraft().thePlayer;
         this.selectedGender = GenderConfig.getGender(player);

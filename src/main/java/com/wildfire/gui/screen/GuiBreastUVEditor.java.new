@@ -104,7 +104,6 @@ public class GuiBreastUVEditor extends GuiScreen {
         this.drawDefaultBackground();
         drawRect(this.width - SIDEBAR_WIDTH, 0, this.width, this.height, COLOR_SIDEBAR_BG);
 
-        // Draw texture preview
         ResourceLocation texture = null;
         try {
             if (this.mc.thePlayer != null) texture = this.mc.thePlayer.getLocationSkin();
@@ -134,7 +133,6 @@ public class GuiBreastUVEditor extends GuiScreen {
             }
         }
 
-        // Entity preview - with error handling
         try {
             GlStateManager.pushMatrix();
             GlStateManager.enableDepth();
@@ -154,12 +152,10 @@ public class GuiBreastUVEditor extends GuiScreen {
         super.drawScreen(mouseX, mouseY, partialTicks);
         renderButtonIcons();
 
-        // Tooltip for selected face info
         if (this.selectedDirection != null && this.selectedUVs != null) {
             UVQuad q = this.selectedUVs.get(this.selectedDirection);
             if (q != null) {
                 String info = String.format("%s: [%d,%d -> %d,%d] %s", this.selectedDirection.name(), q.x1(), q.y1(), q.x2(), q.y2(), this.selectedDirection.getDirectionText(this.selectedBreastIndex));
-                // Draw near sidebar
             }
         }
     }

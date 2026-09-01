@@ -133,8 +133,17 @@ public class GenderConfig {
     }
 
     public static PlayerGenderSettings getPlayerSettings(EntityPlayer player) {
-        if (player != Minecraft.getMinecraft().thePlayer) {
-            return null;
+        try {
+            if (player == null) return localPlayerSettings;
+            Minecraft mc = Minecraft.getMinecraft();
+            if (mc == null || mc.thePlayer == null) return localPlayerSettings;
+            // Allow local player only for now (1.8.9 has no server sync), but don't NPE on remote
+            if (player != mc.thePlayer) {
+                // For remote players, return null to indicate no local config, but don't crash
+                return null;
+            }
+        } catch (Throwable ignored) {
+            return localPlayerSettings;
         }
         if (localPlayerSettings == null) {
             localPlayerSettings = new PlayerGenderSettings();

@@ -219,8 +219,12 @@ public class EntityConfig {
             }
         }
 
-        this.getLeftBreastPhysics().update(entity, armor);
-        this.getRightBreastPhysics().update(entity, armor);
+        try {
+            this.getLeftBreastPhysics().update(entity, armor);
+            this.getRightBreastPhysics().update(entity, armor);
+        } catch (Throwable t) {
+            System.err.println("[WFG] tickBreastPhysics error: " + t.getMessage());
+        }
     }
 
     @Override
