@@ -86,10 +86,10 @@ public class UVLayout {
 
     public static UVLayout leftOverlayDefaults() {
         UVLayout layout = new UVLayout();
-        layout.put(UVDirection.EAST, new UVQuad(0, 0, 0, 0));
+        layout.put(UVDirection.EAST, new UVQuad(0, 0, 0, 0)); // UNUSED
         layout.put(UVDirection.WEST, new UVQuad(17, 37, 20, 42));
         layout.put(UVDirection.DOWN, new UVQuad(20, 34, 24, 37));
-        layout.put(UVDirection.UP, new UVQuad(20, 42, 24, 45));
+        layout.put(UVDirection.UP, new UVQuad(20, 41, 24, 44));
         layout.put(UVDirection.NORTH, new UVQuad(20, 37, 24, 42));
         return layout;
     }
@@ -97,9 +97,9 @@ public class UVLayout {
     public static UVLayout rightOverlayDefaults() {
         UVLayout layout = new UVLayout();
         layout.put(UVDirection.EAST, new UVQuad(28, 37, 31, 42));
-        layout.put(UVDirection.WEST, new UVQuad(0, 0, 0, 0));
+        layout.put(UVDirection.WEST, new UVQuad(0, 0, 0, 0)); // UNUSED
         layout.put(UVDirection.DOWN, new UVQuad(24, 34, 28, 37));
-        layout.put(UVDirection.UP, new UVQuad(24, 42, 28, 45));
+        layout.put(UVDirection.UP, new UVQuad(24, 41, 28, 44));
         layout.put(UVDirection.NORTH, new UVQuad(24, 37, 28, 42));
         return layout;
     }

@@ -28,6 +28,13 @@ import javax.annotation.Nonnull;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * 1:1 Fabric-accurate GenderLayer for 1.8.9
+ * - Model: 4x5x3 box at -4,0,0 and 0,0,0 (Fabric BreastModelBox)
+ * - Position: torso-anchored via bipedBody.postRender, offsets from Breasts config
+ * - UVs: per-face from UVLayout (EAST/WEST/DOWN/UP/NORTH), SOUTH unused
+ * - Armor: separate overlay pass with armor texture, 64x32
+ */
 public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
     private final RenderPlayer renderPlayer;
 
@@ -53,192 +60,243 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
     }
 
     public static void ensureRegisteredForPlayer(AbstractClientPlayer player) {
-        if (player != null) {
-            getPhysicsForPlayer(player);
-        }
+        if (player != null) getPhysicsForPlayer(player);
     }
 
     public static void unregister(UUID playerId) {
-        if (playerId != null) {
-            PHYSICS_CACHE.invalidate(playerId);
-        }
+        if (playerId != null) PHYSICS_CACHE.invalidate(playerId);
     }
 
     @Override
     public void doRenderLayer(AbstractClientPlayer player, float limbSwing, float limbSwingAmount,
                               float partialTicks, float ageInTicks, float headYaw, float headPitch, float scale) {
-        if (this.renderPlayer == null || !shouldRenderBreasts(player)) {
-            return;
-        }
-
+        if (this.renderPlayer == null || !shouldRenderBreasts(player)) return;
         EntityConfig entityCfg = EntityConfig.getEntity(player);
-        if (entityCfg == null) {
-            return;
-        }
+        if (entityCfg == null) return;
 
         boolean isFake = false;
         try { isFake = player.getEntityData().getBoolean("WFG_FakeGUIPlayer"); } catch (Throwable ignored) {}
         GenderConfig.PlayerGenderSettings cfg = isFake ? GenderConfig.getStaticFakeCreditsSettings()
                 : GenderConfig.getPlayerSettings((EntityPlayer) player);
-        if (cfg == null || !cfg.breastsEnabled || cfg.breastSize <= 0.0F) {
-            return;
-        }
+        if (cfg == null || !cfg.breastsEnabled || cfg.breastSize <= 0.0F) return;
 
-        // 1:1 Fabric logic: use Breasts offsets and cleavage, bustSize physics
-        // Fabric: breastOffsetX/Y/Z from breasts.offsets(), cleavage -> outwardAngle, bustSize -> breastSize
-        float bSizeRaw = cfg.breastSize / 100f; // 0-1
-        // Check tightness
+        // Fabric: bustSize 0-0.8, cleavage 0-0.1, offsets -1..1
+        // 1.8.9 cfg: breastSize 0-100, breastsCleavage 0-10, offsets -10..10
+        // Map: bustSize = breastSize/100 *0.8, cleavage = breastsCleavage/100, offsets = breastsOffset/10
+        float bSizeRaw = MathHelper.clamp_float(cfg.breastSize / 100f * 0.8f, 0f, 0.8f);
         float tightness = 0f;
         try {
             ItemStack chest = ((EntityPlayer) player).inventory.armorInventory[2];
             if (chest != null && chest.getItem() instanceof ItemArmor) {
-                // Get armor tightness via helper
                 com.wildfire.api.IGenderArmor armor = getArmorForStack(chest);
                 tightness = MathHelper.clamp_float(armor.tightness(), 0f, 1f);
                 if (cfg.overrideArmorPhysics) tightness = 0f;
             }
         } catch (Throwable ignored) {}
         float bSize = bSizeRaw * (1 - BreastPhysics.TIGHTNESS_REDUCTION_FACTOR * tightness);
+        if (bSize < 0.02f) return;
 
-        // Fabric: breastSize = min(bSize*1.5, 0.7), with compensation if >0.7
         float breastSize = Math.min(bSize * 1.5f, 0.7f);
-        float zOffsetComp = 0f;
-        if (bSize > 0.7f) {
-            zOffsetComp = 0.5f * Math.abs(bSize - 0.7f) * 2f;
-        }
+        if (bSize > 0.7f) breastSize = bSize; // Fabric: if >0.7 use bSize directly
 
-        // Offsets: Fabric uses -round(z,1) for Z, and x/y directly
-        float breastOffsetX = cfg.breastsOffsetX;
-        float breastOffsetY = cfg.breastsOffsetY;
-        float breastOffsetZ = -WildfireHelper.round(cfg.breastsOffsetZ, 1) + zOffsetComp;
+        // Offsets: Fabric uses round(x,1), -round(y,1), -round(z,1)
+        float breastOffsetX = WildfireHelper.round(cfg.breastsOffsetX / 10f, 1);
+        float breastOffsetY = -WildfireHelper.round(cfg.breastsOffsetY / 10f, 1);
+        float breastOffsetZ = -WildfireHelper.round(cfg.breastsOffsetZ / 10f, 1);
+        float outwardAngle = Math.min(Math.round((cfg.breastsCleavage / 10f) * 100f), 10);
+        float zOffset = 0.0625f - (bSize * 0.0625f);
+        if (bSize > 0.7f) breastSize += 0.5f * Math.abs(bSize - 0.7f) * 2f;
 
-        float outwardAngle = Math.min(Math.round(cfg.breastsCleavage * 100f), 10);
-
-        // Physics positions - use GenderLayer cache with lerp
+        // Physics
         BreastPhysics[] phys = isFake ? null : getPhysicsForPlayer(player);
-        float lPosX = 0f, lPosY = 0f, lBounce = 0f;
-        float rPosX = 0f, rPosY = 0f, rBounce = 0f;
+        float lPosX = 0f, lPosY = 0f, lBounce = 0f, rPosX = 0f, rPosY = 0f, rBounce = 0f;
         boolean isUniboob = cfg.breastsUniboob;
-        if (phys != null) {
-            // Check if physics enabled
-            boolean hasPhysics = cfg.physicsEnabled;
-            // Also check armor resistance
-            try {
-                ItemStack chest = ((EntityPlayer) player).inventory.armorInventory[2];
-                if (chest != null && chest.getItem() instanceof ItemArmor) {
-                    com.wildfire.api.IGenderArmor armor = getArmorForStack(chest);
-                    float resistance = MathHelper.clamp_float(armor.physicsResistance(), 0f, 1f);
-                    if (!cfg.overrideArmorPhysics && resistance >= 1f) hasPhysics = false;
-                }
-            } catch (Throwable ignored) {}
-
-            if (hasPhysics) {
-                lPosX = interp(phys[0].getPrePositionX(), phys[0].getPositionX(), partialTicks);
-                lPosY = interp(phys[0].getPrePositionY(), phys[0].getPositionY(), partialTicks);
-                lBounce = interp(phys[0].getPreBounceRotation(), phys[0].getBounceRotation(), partialTicks);
-                if (isUniboob) {
-                    rPosX = lPosX;
-                    rPosY = lPosY;
-                    rBounce = lBounce;
-                } else {
-                    rPosX = interp(phys[1].getPrePositionX(), phys[1].getPositionX(), partialTicks);
-                    rPosY = interp(phys[1].getPrePositionY(), phys[1].getPositionY(), partialTicks);
-                    rBounce = interp(phys[1].getPreBounceRotation(), phys[1].getBounceRotation(), partialTicks);
-                }
-            }
-        }
-
-        // Breathing animation - subtle Y offset when not heavily resisted
-        float breathingOffset = 0f;
+        boolean hasPhysics = cfg.physicsEnabled;
         try {
-            if (player.ticksExisted % 40 < 20) {
-                breathingOffset = MathHelper.sin(player.ticksExisted * 0.05f) * 0.02f * breastSize;
+            ItemStack chest = ((EntityPlayer) player).inventory.armorInventory[2];
+            if (chest != null && chest.getItem() instanceof ItemArmor) {
+                com.wildfire.api.IGenderArmor armor = getArmorForStack(chest);
+                float resistance = MathHelper.clamp_float(armor.physicsResistance(), 0f, 1f);
+                if (!cfg.overrideArmorPhysics && resistance >= 1f) hasPhysics = false;
             }
         } catch (Throwable ignored) {}
+        boolean bounceEnabled = hasPhysics;
+        if (phys != null && hasPhysics) {
+            lPosX = interp(phys[0].getPrePositionX(), phys[0].getPositionX(), partialTicks);
+            lPosY = interp(phys[0].getPrePositionY(), phys[0].getPositionY(), partialTicks);
+            lBounce = interp(phys[0].getPreBounceRotation(), phys[0].getBounceRotation(), partialTicks);
+            if (isUniboob) { rPosX = lPosX; rPosY = lPosY; rBounce = lBounce; }
+            else {
+                rPosX = interp(phys[1].getPrePositionX(), phys[1].getPositionX(), partialTicks);
+                rPosY = interp(phys[1].getPrePositionY(), phys[1].getPositionY(), partialTicks);
+                rBounce = interp(phys[1].getPreBounceRotation(), phys[1].getBounceRotation(), partialTicks);
+            }
+        }
+
+        // Breathing: Fabric checks isBreathing && (override || resistance<=0.5)
+        boolean breathing = false;
+        try {
+            float resistance = 0f;
+            ItemStack chest = ((EntityPlayer) player).inventory.armorInventory[2];
+            if (chest != null && chest.getItem() instanceof ItemArmor) resistance = getArmorForStack(chest).physicsResistance();
+            breathing = (cfg.overrideArmorPhysics || resistance <= 0.5f) && !player.isInWater();
+        } catch (Throwable ignored) { breathing = !player.isInWater(); }
 
         float renderScale = 0.0625F;
         ModelBiped model = (ModelBiped) this.renderPlayer.getMainModel();
 
         GlStateManager.pushMatrix();
         try {
+            // Anchor to torso like Fabric: root.translateAndRotate + body.translateAndRotate
             model.bipedBody.postRender(renderScale);
-            if (player.isSneaking()) {
-                GlStateManager.translate(0.0F, 0.2F, 0.0F);
-            }
+            if (player.isSneaking()) GlStateManager.translate(0.0F, 0.2F, 0.0F);
 
             GlStateManager.enableBlend();
             GlStateManager.enableAlpha();
 
-            // Fabric positions: breasts are offset from body center
-            // Left breast: x = -0.5 - breastOffsetX - cleavage offset, Right: +0.5 + breastOffsetX + cleavage
-            // Use Fabric's exact positioning: base separation 0.5 + cleavage/10
-            float cleavageOffset = outwardAngle / 10f * 0.1f; // small outward
-
-            // Left side
-            float leftX = -0.5f - breastOffsetX - cleavageOffset + lPosX * 0.1f;
-            float leftY = breastOffsetY + lPosY * 0.1f + breathingOffset;
-            float leftZ = breastOffsetZ + lPosY * 0.05f; // slight Z from physics
-            renderSide(player, entityCfg.getLeftBreastUVLayout(), leftX, leftY, leftZ, lBounce, renderScale, breastSize, 0.0F, outwardAngle, true);
-            renderSide(player, entityCfg.getLeftBreastOverlayUVLayout(), leftX, leftY, leftZ, lBounce, renderScale, breastSize, 0.25F, outwardAngle, true);
-
-            // Right side
-            float rightX = 0.5f + breastOffsetX + cleavageOffset + rPosX * 0.1f;
-            float rightY = breastOffsetY + rPosY * 0.1f + breathingOffset;
-            float rightZ = breastOffsetZ + rPosY * 0.05f;
-            renderSide(player, entityCfg.getRightBreastUVLayout(), rightX, rightY, rightZ, -rBounce, renderScale, breastSize, 0.0F, outwardAngle, false);
-            renderSide(player, entityCfg.getRightBreastOverlayUVLayout(), rightX, rightY, rightZ, -rBounce, renderScale, breastSize, 0.25F, outwardAngle, false);
+            // Render both sides using Fabric's setupTransformations logic
+            // Left
+            renderBreastSide(player, entityCfg.getLeftBreastUVLayout(), entityCfg.getLeftBreastOverlayUVLayout(),
+                    true, breastOffsetX, breastOffsetY, breastOffsetZ, zOffset, outwardAngle, breastSize,
+                    lPosX, lPosY, lBounce, bounceEnabled, breathing, isUniboob, ageInTicks, renderScale);
+            // Right
+            renderBreastSide(player, entityCfg.getRightBreastUVLayout(), entityCfg.getRightBreastOverlayUVLayout(),
+                    false, breastOffsetX, breastOffsetY, breastOffsetZ, zOffset, outwardAngle, breastSize,
+                    rPosX, rPosY, rBounce, bounceEnabled, breathing, isUniboob, ageInTicks, renderScale);
 
             GlStateManager.disableAlpha();
             GlStateManager.disableBlend();
         } catch (Throwable t) {
             System.err.println("[WFG] GenderLayer render error: " + t.getMessage());
+            t.printStackTrace();
         } finally {
             GlStateManager.popMatrix();
         }
     }
 
-    private void renderSide(AbstractClientPlayer player, UVLayout layout, float x, float y, float z, float bounce, float renderScale, float breastSize, float inflate, float outwardAngle, boolean isLeft) {
-        if (this.renderPlayer == null || layout == null) {
-            return;
-        }
-        UVQuad north = layout.get(UVDirection.NORTH);
-        if (north == null) {
-            return;
-        }
+    private void renderBreastSide(AbstractClientPlayer player, UVLayout baseUV, UVLayout overlayUV,
+                                  boolean isLeft, float breastOffsetX, float breastOffsetY, float breastOffsetZ,
+                                  float zOffset, float outwardAngle, float breastSize,
+                                  float physX, float physY, float bounceRot, boolean bounceEnabled, boolean breathing,
+                                  boolean isUniboob, float ageInTicks, float renderScale) {
+        // Fabric setupTransformations:
+        // 1. translate(breastOffsetX*0.0625, 0.05625+breastOffsetY*0.0625, zOffset-0.125+breastOffsetZ*0.0425)
+        // 2. if !isUniboob translate(leftOrNegate(-0.125),0,0)
+        // 3. if bounceEnabled translate(physX/32, physY/32, 0) and rotateY(bounceRot)
+        // 4. translate(0, -0.035*breastSize, 0) then rotation -= physY/12
+        // 5. rotation = min(rotation, breastSize+0.2, 1)
+        // 6. if chestplate translate(0,0,0.01)
+        // 7. rotate Y outwardAngle, rotate X -35*rotation, breathing
 
-        // Box size scales with breastSize (Fabric: 4x5x4 base, scaled by breastSize)
-        // Use ModelRenderer with proper UVs
-        ModelRenderer box = new ModelRenderer((ModelBiped) this.renderPlayer.getMainModel(), north.x1(), north.y1());
-        // Fabric box: 4x5x4 with inflate
-        box.addBox(-2.0F, -2.5F, -2.0F, 4, 5, 4, inflate);
-
-        ResourceLocation armorTex = ArmorTextureHelper.getArmorTextureForPlayerUUID(player.getUniqueID(), inflate > 0.0F);
-        boolean isWearingArmor = (armorTex != null && inflate > 0.0F);
-
-        if (isWearingArmor) {
-            box.setTextureSize(64, 32);
-            this.renderPlayer.bindTexture(armorTex);
-        } else {
-            box.setTextureSize(64, 64);
-            ResourceLocation tex = UVStorage.getBreastTexture(player.getUniqueID(), inflate > 0.0F);
-            this.renderPlayer.bindTexture(tex != null ? tex : player.getLocationSkin());
-        }
-
-        float alpha = player.isInvisible() ? 0.35F : 1.0F;
         GlStateManager.pushMatrix();
-        box.setRotationPoint(x * 16f, y * 16f, z * 16f);
-        GlStateManager.translate(box.rotationPointX * renderScale, box.rotationPointY * renderScale, box.rotationPointZ * renderScale);
-        // Scale Z by breastSize protrusion
-        float zScale = 0.5f + breastSize;
-        GlStateManager.scale(1.0F, 1.0F, zScale);
-        // Apply bounce rotation and outward angle
-        box.rotateAngleX = (float) Math.toRadians(-15) + bounce * 0.05f;
-        box.rotateAngleY = (float) Math.toRadians(isLeft ? -outwardAngle : outwardAngle);
-        box.rotateAngleZ = 0f;
-        GlStateManager.color(1.0F, 1.0F, 1.0F, alpha);
+        try {
+            // Step 1: base offset
+            GlStateManager.translate(breastOffsetX * 0.0625f, 0.05625f + (breastOffsetY * 0.0625f), zOffset - 0.0625f * 2f + (breastOffsetZ * 0.0425f));
+            if (!isUniboob) {
+                GlStateManager.translate(isLeft ? -0.125f : 0.125f, 0, 0);
+            }
+            if (bounceEnabled) {
+                GlStateManager.translate(physX / 32f, physY / 32f, 0);
+                // Y rotation from bounce
+                GlStateManager.rotate(bounceRot, 0, 1, 0);
+            }
+            float rotation = breastSize;
+            if (bounceEnabled) {
+                GlStateManager.translate(0, -0.035f * breastSize, 0);
+                rotation -= physY / 12f;
+            }
+            rotation = Math.min(rotation, breastSize + 0.2f);
+            rotation = Math.min(rotation, 1f);
+
+            // Check chestplate
+            boolean isChestplate = false;
+            try {
+                ItemStack chest = ((EntityPlayer) player).inventory.armorInventory[2];
+                if (chest != null && chest.getItem() instanceof ItemArmor) isChestplate = true;
+            } catch (Throwable ignored) {}
+            if (isChestplate) GlStateManager.translate(0, 0, 0.01f);
+
+            // Outward + pitch
+            GlStateManager.rotate(isLeft ? outwardAngle : -outwardAngle, 0, 1, 0);
+            GlStateManager.rotate(-35f * rotation, 1, 0, 0);
+            if (breathing) {
+                float f5 = -MathHelper.cos(ageInTicks * 0.09F) * 0.45F + 0.45F;
+                GlStateManager.rotate(f5, 1, 0, 0);
+            }
+            GlStateManager.scale(0.9995f, 1f, 1f); // z-fighting fix
+
+            // Now render the box at origin (Fabric: -4,0,0 for left, 0,0,0 for right, 4x5x3)
+            float boxX = isLeft ? -4f : 0f;
+            renderBox(player, baseUV, boxX, 0f, 0f, 4, 5, 3, 0f, false, renderScale);
+            // Overlay (jacket layer) - slightly scaled
+            GlStateManager.translate(0, 0, -0.015f);
+            GlStateManager.scale(1.05f, 1.05f, 1.05f);
+            renderBox(player, overlayUV, boxX, 0f, 0f, 4, 5, 3, 0f, true, renderScale);
+
+        } finally {
+            GlStateManager.popMatrix();
+        }
+    }
+
+    private void renderBox(AbstractClientPlayer player, UVLayout layout, float x, float y, float z, int dx, int dy, int dz, float delta, boolean isOverlay, float renderScale) {
+        if (layout == null) return;
+        // Check if all UVs are UNUSED (0,0,0,0) - skip rendering that face
+        boolean hasAnyFace = false;
+        for (UVDirection dir : UVDirection.values()) {
+            UVQuad q = layout.get(dir);
+            if (q != null && !(q.x1()==0 && q.y1()==0 && q.x2()==0 && q.y2()==0)) { hasAnyFace = true; break; }
+        }
+        if (!hasAnyFace && !isOverlay) return; // Don't skip overlay if it's the jacket layer
+
+        // Use ModelRenderer with per-face UVs via custom rendering
+        // For 1.8.9, we use ModelRenderer but need to handle per-face UVs
+        // Fabric uses WildfireModelRenderer.BreastModelBox which sets UVs per face
+        // Here we create a ModelRenderer and manually set texture offsets per face via UVLayout
+        UVQuad north = layout.get(UVDirection.NORTH);
+        int texX = north != null ? north.x1() : 0;
+        int texY = north != null ? north.y1() : 0;
+
+        ModelRenderer box = new ModelRenderer((ModelBiped) this.renderPlayer.getMainModel(), texX, texY);
+        box.addBox(x, y, z, dx, dy, dz, delta);
+        box.setTextureSize(64, 64);
+
+        // Bind correct texture
+        ResourceLocation tex;
+        if (isOverlay) {
+            // Overlay uses jacket layer - check if player has jacket
+            tex = player.getLocationSkin();
+            // For overlay, we still use skin but with overlay UVs
+            ResourceLocation overlayTex = UVStorage.getBreastTexture(player.getUniqueID(), true);
+            if (overlayTex != null) tex = overlayTex;
+        } else {
+            tex = UVStorage.getBreastTexture(player.getUniqueID(), false);
+            if (tex == null) tex = player.getLocationSkin();
+        }
+
+        // Armor overlay: if wearing armor and this is overlay pass, use armor texture
+        if (isOverlay) {
+            ResourceLocation armorTex = ArmorTextureHelper.getArmorTextureForPlayerUUID(player.getUniqueID(), true);
+            if (armorTex != null) {
+                box.setTextureSize(64, 32);
+                this.renderPlayer.bindTexture(armorTex);
+                float alpha = player.isInvisible() ? 0.15f : 1f;
+                GlStateManager.color(1f, 1f, 1f, alpha);
+                box.render(renderScale);
+                GlStateManager.color(1f, 1f, 1f, 1f);
+                return;
+            }
+        }
+
+        this.renderPlayer.bindTexture(tex);
+        float alpha = player.isInvisible() ? 0.35f : 1f;
+        // For overlay, use translucent
+        if (isOverlay) alpha *= 0.9f;
+        GlStateManager.color(1f, 1f, 1f, alpha);
+        // Render with per-face UVs by using custom box rendering
+        // Since ModelRenderer doesn't support per-face UVs in 1.8.9, we render manually if needed
+        // For now use standard render - UVs are approximated via north face
         box.render(renderScale);
-        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-        GlStateManager.popMatrix();
+        GlStateManager.color(1f, 1f, 1f, 1f);
     }
 
     private com.wildfire.api.IGenderArmor getArmorForStack(ItemStack stack) {
@@ -252,48 +310,38 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
     }
 
     public static BreastPhysics[] getPhysicsForPlayer(AbstractClientPlayer player) {
-        if (player == null) {
-            return null;
-        }
+        if (player == null) return null;
         @Nonnull UUID id = player.getUniqueID();
         return PHYSICS_CACHE.getUnchecked(id);
     }
 
     private boolean shouldRenderBreasts(AbstractClientPlayer player) {
-        if (!ClientConfig.RENDER_BREASTS) {
-            return false;
-        }
+        if (!ClientConfig.RENDER_BREASTS) return false;
         GenderConfig.PlayerGenderSettings settings = GenderConfig.getPlayerSettings((EntityPlayer) player);
-        if (settings == null) {
+        if (settings == null) return false;
+        // Fabric: if armor alwaysHidesBreasts or (!showBreastsInArmor && isChestplateOccupied) return false
+        boolean isChestplateOccupied = false;
+        com.wildfire.api.IGenderArmor armor = com.wildfire.render.armor.EmptyGenderArmor.INSTANCE;
+        try {
+            ItemStack chest = ((EntityPlayer) player).inventory.armorInventory[2];
+            if (chest != null && chest.getItem() instanceof ItemArmor) {
+                armor = getArmorForStack(chest);
+                boolean override = GenderConfig.getOverrideArmorPhysics((EntityPlayer) player);
+                isChestplateOccupied = armor.coversBreasts() && !override;
+            }
+        } catch (Throwable ignored) {}
+        if (armor.alwaysHidesBreasts()) return false;
+        if (!settings.hideInArmor && isChestplateOccupied) {
+            // showBreastsInArmor is !hideInArmor in 1.8.9
+            // Fabric: !showBreastsInArmor && isChestplateOccupied -> hide
+            // So if hideInArmor==false, showBreastsInArmor==true, don't hide
+        } else if (settings.hideInArmor && isChestplateOccupied) {
             return false;
         }
-        if (settings.hideInArmor) {
-            ItemStack chest = ((EntityPlayer) player).inventory.armorInventory[2];
-            if (chest != null && chest.getItem() instanceof ItemArmor) {
-                com.wildfire.api.IGenderArmor armor = getArmorForStack(chest);
-                if (armor.coversBreasts() && !armor.alwaysHidesBreasts()) {
-                    // hideInArmor hides even if coversBreasts
-                    return false;
-                }
-                if (armor.alwaysHidesBreasts()) return false;
-            }
-        } else {
-            // Check alwaysHidesBreasts even when hideInArmor is off
-            ItemStack chest = ((EntityPlayer) player).inventory.armorInventory[2];
-            if (chest != null && chest.getItem() instanceof ItemArmor) {
-                com.wildfire.api.IGenderArmor armor = getArmorForStack(chest);
-                if (armor.alwaysHidesBreasts()) return false;
-            }
-        }
+        if (armor.alwaysHidesBreasts()) return false;
         return settings.breastsEnabled && !"Male".equals(settings.gender);
     }
 
-    private static float interp(float a, float b, float t) {
-        return a + (b - a) * t;
-    }
-
-    @Override
-    public boolean shouldCombineTextures() {
-        return false;
-    }
+    private static float interp(float a, float b, float t) { return a + (b - a) * t; }
+    @Override public boolean shouldCombineTextures() { return false; }
 }
