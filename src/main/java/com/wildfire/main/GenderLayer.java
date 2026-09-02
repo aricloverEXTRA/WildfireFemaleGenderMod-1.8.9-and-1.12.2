@@ -100,7 +100,6 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         float breastOffsetZ = -WildfireHelper.round(cfg.breastsOffsetZ / 10f, 1);
         float outwardAngle = Math.min(Math.round((cfg.breastsCleavage / 10f) * 100f), 10);
         float zOffset = 0.0625f - (bSize * 0.0625f);
-        if (bSize > 0.7f) breastSize += 0.5f * Math.abs(bSize - 0.7f) * 2f;
 
         BreastPhysics[] phys = isFake ? null : getPhysicsForPlayer(player);
         float lPosX = 0f, lPosY = 0f, lBounce = 0f, rPosX = 0f, rPosY = 0f, rBounce = 0f;
@@ -292,14 +291,17 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         float alpha = 1f;
         if (isOverlay) alpha *= 0.9f;
         GlStateManager.color(1f, 1f, 1f, alpha);
-        GlStateManager.enableBlend();
-        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 
-        float texW = useArmorTex ? 64f : 64f;
-        float texH = useArmorTex ? 32f : 64f;
+        float texW = 64f;
+        float texH = 64f;
 
-        float x1 = x - delta, y1 = y - delta, z1 = z - delta;
-        float x2 = x + dx + delta, y2 = y + dy + delta, z2 = z + dz + delta;
+        float x1 = x * 0.0625f, y1 = y * 0.0625f, z1 = z * 0.0625f;
+        float x2 = (x + dx) * 0.0625f, y2 = (y + dy) * 0.0625f, z2 = (z + dz) * 0.0625f;
+        float d = delta * 0.0625f;
+        x1 -= d; y1 -= d; z1 -= d;
+        x2 += d; y2 += d; z2 += d;
+
+        this.renderPlayer.bindTexture(tex);
 
         Tessellator tess = Tessellator.getInstance();
         WorldRenderer wr = tess.getWorldRenderer();
@@ -314,9 +316,6 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
             float v1 = quad.y1() / texH;
             float u2 = (quad.x2() + 1) / texW;
             float v2 = (quad.y2() + 1) / texH;
-
-            u1 = Math.max(0, Math.min(1, u1)); u2 = Math.max(0, Math.min(1, u2));
-            v1 = Math.max(0, Math.min(1, v1)); v2 = Math.max(0, Math.min(1, v2));
 
             wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL);
             switch (dir) {
@@ -354,7 +353,6 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
             }
             tess.draw();
         }
-        GlStateManager.disableBlend();
         GlStateManager.color(1f, 1f, 1f, 1f);
     }
 
