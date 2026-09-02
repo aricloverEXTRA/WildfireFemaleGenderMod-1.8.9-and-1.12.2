@@ -95,10 +95,10 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         float breastSize = Math.min(bSize * 1.5f, 0.7f);
         if (bSize > 0.7f) breastSize = bSize;
 
-        float breastOffsetX = WildfireHelper.round(cfg.breastsOffsetX / 10f, 1);
-        float breastOffsetY = -WildfireHelper.round(cfg.breastsOffsetY / 10f, 1);
-        float breastOffsetZ = -WildfireHelper.round(cfg.breastsOffsetZ / 10f, 1);
-        float outwardAngle = Math.min(Math.round((cfg.breastsCleavage / 10f) * 100f), 10);
+        float breastOffsetX = WildfireHelper.round(cfg.breastsOffsetX, 1);
+        float breastOffsetY = -WildfireHelper.round(cfg.breastsOffsetY, 1);
+        float breastOffsetZ = -WildfireHelper.round(cfg.breastsOffsetZ, 1);
+        float outwardAngle = Math.min(Math.round(cfg.breastsCleavage * 100f), 10);
         float zOffset = 0.0625f - (bSize * 0.0625f);
 
         BreastPhysics[] phys = isFake ? null : getPhysicsForPlayer(player);
@@ -252,11 +252,7 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         if (isOverlay) {
             ResourceLocation armorTex = ArmorTextureHelper.getArmorTextureForPlayerUUID(player.getUniqueID(), true);
             if (armorTex != null) {
-                box.setTextureSize(64, 32);
-                this.renderPlayer.bindTexture(armorTex);
-                GlStateManager.color(1f, 1f, 1f, 1f);
-                box.render(renderScale);
-                GlStateManager.color(1f, 1f, 1f, 1f);
+                renderBoxWithUVs(player, layout, x, y, z, dx, dy, dz, delta, true, renderScale);
                 return;
             }
         }
@@ -273,12 +269,10 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
     private void renderBoxWithUVs(AbstractClientPlayer player, UVLayout layout, float x, float y, float z, int dx, int dy, int dz, float delta, boolean isOverlay, float renderScale) {
 
         ResourceLocation tex;
-        boolean useArmorTex = false;
         if (isOverlay) {
             ResourceLocation armorTex = ArmorTextureHelper.getArmorTextureForPlayerUUID(player.getUniqueID(), true);
             if (armorTex != null) {
                 tex = armorTex;
-                useArmorTex = true;
             } else {
                 tex = UVStorage.getBreastTexture(player.getUniqueID(), true);
                 if (tex == null) tex = player.getLocationSkin();

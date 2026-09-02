@@ -66,6 +66,11 @@ public class FakeGUIPlayer {
     public void tick() {
         if (entity != null) {
             entity.prevRotationYawHead = entity.rotationYawHead;
+            entity.ticksExisted++;
+            try {
+                com.wildfire.main.entitydata.EntityConfig cfg = com.wildfire.main.entitydata.EntityConfig.getEntity(entity);
+                if (cfg != null) cfg.tickBreastPhysics(entity);
+            } catch (Throwable ignored) {}
         }
     }
 }

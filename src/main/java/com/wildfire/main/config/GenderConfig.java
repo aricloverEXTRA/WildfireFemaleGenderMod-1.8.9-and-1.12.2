@@ -21,10 +21,10 @@ public class GenderConfig {
         public float depth = 0.0F;
         public float height = 0.0F;
         public float rotation = 0.0F;
-        public float breastsOffsetX = 0.5F;
-        public float breastsOffsetY = -1.5F;
-        public float breastsOffsetZ = -2.0F;
-        public float breastsCleavage = 1.0F;
+        public float breastsOffsetX = 0.0F;
+        public float breastsOffsetY = 0.0F;
+        public float breastsOffsetZ = 0.0F;
+        public float breastsCleavage = 0.0F;
         public boolean breastsUniboob = false;
         public float stiffness = 0.1F;
         public float damping = 0.85F;

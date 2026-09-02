@@ -270,8 +270,8 @@ public class WildfireCreditsScreen extends GuiScreen {
             GL11.glScissor(sx, sy, sw, sh);
 
             int drawCenterX = portraitX + portraitW / 2;
-            int drawCenterY = portraitY + (int)(portraitH * 0.80f) + PORTRAIT_PLAYER_DOWN_PX + 8;
-            int modelScale = 38;
+            int drawCenterY = portraitY + (int)(portraitH * 0.80f) + PORTRAIT_PLAYER_DOWN_PX + 12;
+            int modelScale = 32;
 
             int mouseOffsetX = mouseX - drawCenterX;
             int mouseOffsetY = mouseY - drawCenterY;
