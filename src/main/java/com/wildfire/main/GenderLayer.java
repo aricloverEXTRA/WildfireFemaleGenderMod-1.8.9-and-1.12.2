@@ -75,6 +75,8 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
     public void doRenderLayer(AbstractClientPlayer player, float limbSwing, float limbSwingAmount,
                               float partialTicks, float ageInTicks, float headYaw, float headPitch, float scale) {
         if (this.renderPlayer == null || !shouldRenderBreasts(player)) return;
+        // Invisibility: hide breasts entirely when player is invisible (like Fabric - don't render translucent)
+        if (player.isInvisible()) return;
         EntityConfig entityCfg = EntityConfig.getEntity(player);
         if (entityCfg == null) return;
 
@@ -194,8 +196,8 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
 
         GlStateManager.pushMatrix();
         try {
-            // Step 1: base offset - amplified for 1.8.9 visibility (Fabric uses 0.0625, we use 0.125 for stronger slider effect)
-            GlStateManager.translate(breastOffsetX * 0.125f, 0.05625f + (breastOffsetY * 0.125f), zOffset - 0.0625f * 2f + (breastOffsetZ * 0.1f));
+            // Step 1: base offset - Fabric exact (was amplified 2x causing gigantic breasts)
+            GlStateManager.translate(breastOffsetX * 0.0625f, 0.05625f + (breastOffsetY * 0.0625f), zOffset - 0.0625f * 2f + (breastOffsetZ * 0.0425f));
             // FIX: Don't reposition based on dual-physics - breasts should stay same position regardless of physics mode
             // Fabric's isUniboob translation was causing visible jump when toggling dual-physics
             if (bounceEnabled) {
@@ -219,8 +221,8 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
             } catch (Throwable ignored) {}
             if (isChestplate) GlStateManager.translate(0, 0, 0.01f);
 
-            // Outward + pitch - amplified cleavage for 1.8.9 (Fabric 0-10, we double for visibility)
-            GlStateManager.rotate(isLeft ? outwardAngle * 1.5f : -outwardAngle * 1.5f, 0, 1, 0);
+            // Outward + pitch - Fabric exact
+            GlStateManager.rotate(isLeft ? outwardAngle : -outwardAngle, 0, 1, 0);
             GlStateManager.rotate(-35f * rotation, 1, 0, 0);
             if (breathing) {
                 float f5 = -MathHelper.cos(ageInTicks * 0.09F) * 0.45F + 0.45F;
@@ -285,8 +287,7 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
             if (armorTex != null) {
                 box.setTextureSize(64, 32);
                 this.renderPlayer.bindTexture(armorTex);
-                float alpha = player.isInvisible() ? 0.15f : 1f;
-                GlStateManager.color(1f, 1f, 1f, alpha);
+                GlStateManager.color(1f, 1f, 1f, 1f);
                 box.render(renderScale);
                 GlStateManager.color(1f, 1f, 1f, 1f);
                 return;
@@ -294,8 +295,7 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         }
 
         this.renderPlayer.bindTexture(tex);
-        float alpha = player.isInvisible() ? 0.35f : 1f;
-        // For overlay, use translucent
+        float alpha = 1f;
         if (isOverlay) alpha *= 0.9f;
         GlStateManager.color(1f, 1f, 1f, alpha);
         // Render with per-face UVs by using custom box rendering
@@ -322,10 +322,9 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
             tex = UVStorage.getBreastTexture(player.getUniqueID(), false);
             if (tex == null) tex = player.getLocationSkin();
         }
-        this.renderPlayer.bindTexture(tex);
-        float alpha = player.isInvisible() ? 0.35f : 1f;
+        // Already checked isInvisible at top - this is unreachable but keep for safety
+        float alpha = 1f;
         if (isOverlay) alpha *= 0.9f;
-        if (useArmorTex && player.isInvisible()) alpha = 0.15f;
         GlStateManager.color(1f, 1f, 1f, alpha);
         GlStateManager.enableBlend();
         GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);

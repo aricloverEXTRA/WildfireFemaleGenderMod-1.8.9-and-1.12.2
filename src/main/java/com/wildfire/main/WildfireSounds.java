@@ -39,11 +39,17 @@ public class WildfireSounds {
         if (!(event.entityLiving instanceof EntityPlayer)) return;
         EntityPlayer player = (EntityPlayer) event.entityLiving;
         if (!player.worldObj.isRemote) return;
-
+        // Fabric: only for Female/Other, check gender
         GenderConfig.PlayerGenderSettings settings = GenderConfig.getPlayerSettings(player);
-        if (settings != null && settings.hurtSoundsEnabled && settings.voicePitch > 0) {
-            playFemaleHurt(player, settings);
+        if (settings == null || !settings.hurtSoundsEnabled || settings.voicePitch <= 0) return;
+        if ("Male".equals(settings.gender)) return;
+        // Fabric: check hurtTime == hurtDuration to avoid double-play from server packet
+        // In 1.8.9, use hurtTime check
+        if (player.hurtTime != player.maxHurtTime && player.hurtTime > 0) {
+            // Only play on initial hurt, not every tick
+            if (player.hurtTime != player.hurtResistantTime) return;
         }
+        playFemaleHurt(player, settings);
     }
 
     @SubscribeEvent
@@ -80,21 +86,24 @@ public class WildfireSounds {
             return;  // Already played recently
         }
 
-        float pitch = settings.voicePitch / 100.0F;
+        // Fabric: pitch = voicePitch (0.8-1.2) + random variation ±0.2
+        float basePitch = settings.voicePitch / 100.0F; // 0.8-1.2
+        float pitchVariation = (player.getRNG().nextFloat() - player.getRNG().nextFloat()) * 0.2F;
+        float pitch = basePitch + pitchVariation;
 
         boolean played = false;
+        // Fabric uses single sound event "female_hurt" with 2 variants - we try both
         for (String key : new String[]{SOUND_KEY1, SOUND_KEY2}) {
             for (String domain : TRY_DOMAINS) {
-                if (!resourceExists(domain, key)) continue;
-
                 ResourceLocation candidate = new ResourceLocation(domain, key);
                 try {
+                    // Use PositionedSoundRecord with correct pitch
                     Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.create(candidate, pitch));
                     played = true;
                     lastPlayedPerPlayer.put(playerName, currentTime);
                     break;
                 } catch (Throwable t) {
-                    System.err.println("[WFG] playFemaleHurt: failed to play " + candidate + " -> " + t.getMessage());
+                    // Try next domain
                 }
             }
             if (played) break;
@@ -102,10 +111,16 @@ public class WildfireSounds {
 
         if (!played) {
             try {
-                player.playSound("random.hurt", 1.0F, pitch);
+                // Fallback: play with pitch variation like Fabric
+                player.playSound("game.player.hurt", 1.0F, pitch);
                 lastPlayedPerPlayer.put(playerName, currentTime);
             } catch (Throwable t) {
-                System.err.println("[WFG] playFemaleHurt: final fallback failed: " + t.getMessage());
+                try {
+                    player.playSound("random.hurt", 1.0F, pitch);
+                    lastPlayedPerPlayer.put(playerName, currentTime);
+                } catch (Throwable t2) {
+                    System.err.println("[WFG] playFemaleHurt: fallback failed: " + t2.getMessage());
+                }
             }
         }
     }
