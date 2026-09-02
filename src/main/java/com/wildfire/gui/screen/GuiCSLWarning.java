@@ -19,10 +19,10 @@ public class GuiCSLWarning extends GuiScreen {
     @Override
     protected void actionPerformed(GuiButton button) {
         if (button.id == 0) {
-            // Continue to credits
+
             mc.displayGuiScreen(new WildfireCreditsScreen());
         } else if (button.id == 1) {
-            // Go back to wardrobe
+
             mc.displayGuiScreen(new GuiWardrobe());
         }
     }

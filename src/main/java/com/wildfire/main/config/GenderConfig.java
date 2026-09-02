@@ -118,7 +118,6 @@ public class GenderConfig {
             config.get("General", "VoicePitch", 100.0F).set(localPlayerSettings.voicePitch);
             config.get("General", "DarkMode", false).set(localPlayerSettings.darkMode);
 
-            // new toggles saved
             config.get("General", "OverrideArmorPhysics", false).set(localPlayerSettings.overrideArmorPhysics);
             config.get("General", "ShowArmorTooltip", true).set(localPlayerSettings.showArmorTooltip);
             config.get("General", "HideInArmor", false).set(localPlayerSettings.hideInArmor);
@@ -137,9 +136,9 @@ public class GenderConfig {
             if (player == null) return localPlayerSettings;
             Minecraft mc = Minecraft.getMinecraft();
             if (mc == null || mc.thePlayer == null) return localPlayerSettings;
-            // Allow local player only for now (1.8.9 has no server sync), but don't NPE on remote
+
             if (player != mc.thePlayer) {
-                // For remote players, return null to indicate no local config, but don't crash
+
                 return null;
             }
         } catch (Throwable ignored) {

@@ -10,10 +10,6 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-/**
- * Intercepts vanilla hurt sounds and replaces with female hurt sounds for Female/Other players
- * Like Fabric's LivingEntityMixin and Neo's PlayLevelSoundEvent
- */
 @SideOnly(Side.CLIENT)
 public class SoundEventHandler {
 
@@ -42,30 +38,25 @@ public class SoundEventHandler {
             if (settings == null || !settings.hurtSoundsEnabled) return;
             if ("Male".equals(settings.gender)) return;
 
-            // Only replace if this is the local player's hurt sound
-            // Check if player is actually hurt (hurtTime > 0)
             if (player.hurtTime == 0) return;
 
-            // Replace with female hurt sound
             float basePitch = settings.voicePitch / 100f;
             float pitchVariation = (player.getRNG().nextFloat() - player.getRNG().nextFloat()) * 0.2F;
             float pitch = basePitch + pitchVariation;
 
-            // Try female sounds
             String[] trySounds = {"female_damage", "female_damage2"};
             String[] domains = {"wildfire_gender", "femalegendermodlegacyforge"};
             for (String key : trySounds) {
                 for (String domain : domains) {
                     ResourceLocation rl = new ResourceLocation(domain, key);
                     try {
-                        event.sound = PositionedSoundRecord.create(rl, pitch);
-                        event.result = event.sound;
+                        event.result = PositionedSoundRecord.create(rl, pitch);
                         return;
                     } catch (Throwable ignored) {}
                 }
             }
         } catch (Throwable t) {
-            // Don't crash on sound handling
+
         }
     }
 }

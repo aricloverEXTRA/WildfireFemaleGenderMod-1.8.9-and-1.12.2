@@ -32,13 +32,6 @@ import javax.annotation.Nonnull;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-/**
- * 1:1 Fabric-accurate GenderLayer for 1.8.9
- * - Model: 4x5x3 box at -4,0,0 and 0,0,0 (Fabric BreastModelBox)
- * - Position: torso-anchored via bipedBody.postRender, offsets from Breasts config
- * - UVs: per-face from UVLayout (EAST/WEST/DOWN/UP/NORTH), SOUTH unused
- * - Armor: separate overlay pass with armor texture, 64x32
- */
 public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
     private final RenderPlayer renderPlayer;
 
@@ -75,7 +68,7 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
     public void doRenderLayer(AbstractClientPlayer player, float limbSwing, float limbSwingAmount,
                               float partialTicks, float ageInTicks, float headYaw, float headPitch, float scale) {
         if (this.renderPlayer == null || !shouldRenderBreasts(player)) return;
-        // Invisibility: hide breasts entirely when player is invisible (like Fabric - don't render translucent)
+
         if (player.isInvisible()) return;
         EntityConfig entityCfg = EntityConfig.getEntity(player);
         if (entityCfg == null) return;
@@ -86,9 +79,6 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
                 : GenderConfig.getPlayerSettings((EntityPlayer) player);
         if (cfg == null || !cfg.breastsEnabled || cfg.breastSize <= 0.0F) return;
 
-        // Fabric: bustSize 0-0.8, cleavage 0-0.1, offsets -1..1
-        // 1.8.9 cfg: breastSize 0-100, breastsCleavage 0-10, offsets -10..10
-        // Map: bustSize = breastSize/100 *0.8, cleavage = breastsCleavage/100, offsets = breastsOffset/10
         float bSizeRaw = MathHelper.clamp_float(cfg.breastSize / 100f * 0.8f, 0f, 0.8f);
         float tightness = 0f;
         try {
@@ -103,9 +93,8 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         if (bSize < 0.02f) return;
 
         float breastSize = Math.min(bSize * 1.5f, 0.7f);
-        if (bSize > 0.7f) breastSize = bSize; // Fabric: if >0.7 use bSize directly
+        if (bSize > 0.7f) breastSize = bSize;
 
-        // Offsets: Fabric uses round(x,1), -round(y,1), -round(z,1)
         float breastOffsetX = WildfireHelper.round(cfg.breastsOffsetX / 10f, 1);
         float breastOffsetY = -WildfireHelper.round(cfg.breastsOffsetY / 10f, 1);
         float breastOffsetZ = -WildfireHelper.round(cfg.breastsOffsetZ / 10f, 1);
@@ -113,7 +102,6 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         float zOffset = 0.0625f - (bSize * 0.0625f);
         if (bSize > 0.7f) breastSize += 0.5f * Math.abs(bSize - 0.7f) * 2f;
 
-        // Physics
         BreastPhysics[] phys = isFake ? null : getPhysicsForPlayer(player);
         float lPosX = 0f, lPosY = 0f, lBounce = 0f, rPosX = 0f, rPosY = 0f, rBounce = 0f;
         boolean isUniboob = cfg.breastsUniboob;
@@ -139,7 +127,6 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
             }
         }
 
-        // Breathing: Fabric checks isBreathing && (override || resistance<=0.5)
         boolean breathing = false;
         try {
             float resistance = 0f;
@@ -153,19 +140,17 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
 
         GlStateManager.pushMatrix();
         try {
-            // Anchor to torso like Fabric: root.translateAndRotate + body.translateAndRotate
+
             model.bipedBody.postRender(renderScale);
             if (player.isSneaking()) GlStateManager.translate(0.0F, 0.2F, 0.0F);
 
             GlStateManager.enableBlend();
             GlStateManager.enableAlpha();
 
-            // Render both sides using Fabric's setupTransformations logic
-            // Left
             renderBreastSide(player, entityCfg.getLeftBreastUVLayout(), entityCfg.getLeftBreastOverlayUVLayout(),
                     true, breastOffsetX, breastOffsetY, breastOffsetZ, zOffset, outwardAngle, breastSize,
                     lPosX, lPosY, lBounce, bounceEnabled, breathing, isUniboob, ageInTicks, renderScale);
-            // Right
+
             renderBreastSide(player, entityCfg.getRightBreastUVLayout(), entityCfg.getRightBreastOverlayUVLayout(),
                     false, breastOffsetX, breastOffsetY, breastOffsetZ, zOffset, outwardAngle, breastSize,
                     rPosX, rPosY, rBounce, bounceEnabled, breathing, isUniboob, ageInTicks, renderScale);
@@ -185,24 +170,15 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
                                   float zOffset, float outwardAngle, float breastSize,
                                   float physX, float physY, float bounceRot, boolean bounceEnabled, boolean breathing,
                                   boolean isUniboob, float ageInTicks, float renderScale) {
-        // Fabric setupTransformations:
-        // 1. translate(breastOffsetX*0.0625, 0.05625+breastOffsetY*0.0625, zOffset-0.125+breastOffsetZ*0.0425)
-        // 2. if !isUniboob translate(leftOrNegate(-0.125),0,0)
-        // 3. if bounceEnabled translate(physX/32, physY/32, 0) and rotateY(bounceRot)
-        // 4. translate(0, -0.035*breastSize, 0) then rotation -= physY/12
-        // 5. rotation = min(rotation, breastSize+0.2, 1)
-        // 6. if chestplate translate(0,0,0.01)
-        // 7. rotate Y outwardAngle, rotate X -35*rotation, breathing
 
         GlStateManager.pushMatrix();
         try {
-            // Step 1: base offset - Fabric exact (was amplified 2x causing gigantic breasts)
+
             GlStateManager.translate(breastOffsetX * 0.0625f, 0.05625f + (breastOffsetY * 0.0625f), zOffset - 0.0625f * 2f + (breastOffsetZ * 0.0425f));
-            // FIX: Don't reposition based on dual-physics - breasts should stay same position regardless of physics mode
-            // Fabric's isUniboob translation was causing visible jump when toggling dual-physics
+
             if (bounceEnabled) {
                 GlStateManager.translate(physX / 32f, physY / 32f, 0);
-                // Y rotation from bounce
+
                 GlStateManager.rotate(bounceRot, 0, 1, 0);
             }
             float rotation = breastSize;
@@ -213,7 +189,6 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
             rotation = Math.min(rotation, breastSize + 0.2f);
             rotation = Math.min(rotation, 1f);
 
-            // Check chestplate
             boolean isChestplate = false;
             try {
                 ItemStack chest = ((EntityPlayer) player).inventory.armorInventory[2];
@@ -221,19 +196,17 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
             } catch (Throwable ignored) {}
             if (isChestplate) GlStateManager.translate(0, 0, 0.01f);
 
-            // Outward + pitch - Fabric exact
             GlStateManager.rotate(isLeft ? outwardAngle : -outwardAngle, 0, 1, 0);
             GlStateManager.rotate(-35f * rotation, 1, 0, 0);
             if (breathing) {
                 float f5 = -MathHelper.cos(ageInTicks * 0.09F) * 0.45F + 0.45F;
                 GlStateManager.rotate(f5, 1, 0, 0);
             }
-            GlStateManager.scale(0.9995f, 1f, 1f); // z-fighting fix
+            GlStateManager.scale(0.9995f, 1f, 1f);
 
-            // Now render the box at origin (Fabric: -4,0,0 for left, 0,0,0 for right, 4x5x3)
             float boxX = isLeft ? -4f : 0f;
             renderBox(player, baseUV, boxX, 0f, 0f, 4, 5, 3, 0f, false, renderScale);
-            // Overlay (jacket layer) - slightly scaled
+
             GlStateManager.translate(0, 0, -0.015f);
             GlStateManager.scale(1.05f, 1.05f, 1.05f);
             renderBox(player, overlayUV, boxX, 0f, 0f, 4, 5, 3, 0f, true, renderScale);
@@ -245,17 +218,14 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
 
     private void renderBox(AbstractClientPlayer player, UVLayout layout, float x, float y, float z, int dx, int dy, int dz, float delta, boolean isOverlay, float renderScale) {
         if (layout == null) return;
-        // Check if all UVs are UNUSED (0,0,0,0) - skip rendering that face
+
         boolean hasAnyFace = false;
         for (UVDirection dir : UVDirection.values()) {
             UVQuad q = layout.get(dir);
             if (q != null && !(q.x1()==0 && q.y1()==0 && q.x2()==0 && q.y2()==0)) { hasAnyFace = true; break; }
         }
-        if (!hasAnyFace && !isOverlay) return; // Don't skip overlay if it's the jacket layer
+        if (!hasAnyFace && !isOverlay) return;
 
-        // Fabric uses WildfireModelRenderer.BreastModelBox with per-face UVs from UVLayout
-        // For 1.8.9 we render manually with Tessellator to get exact per-face UVs
-        // Fallback to ModelRenderer only if layout is null
         if (layout != null) {
             renderBoxWithUVs(player, layout, x, y, z, dx, dy, dz, delta, isOverlay, renderScale);
             return;
@@ -268,12 +238,11 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         box.addBox(x, y, z, dx, dy, dz, delta);
         box.setTextureSize(64, 64);
 
-        // Bind correct texture
         ResourceLocation tex;
         if (isOverlay) {
-            // Overlay uses jacket layer - check if player has jacket
+
             tex = player.getLocationSkin();
-            // For overlay, we still use skin but with overlay UVs
+
             ResourceLocation overlayTex = UVStorage.getBreastTexture(player.getUniqueID(), true);
             if (overlayTex != null) tex = overlayTex;
         } else {
@@ -281,7 +250,6 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
             if (tex == null) tex = player.getLocationSkin();
         }
 
-        // Armor overlay: if wearing armor and this is overlay pass, use armor texture
         if (isOverlay) {
             ResourceLocation armorTex = ArmorTextureHelper.getArmorTextureForPlayerUUID(player.getUniqueID(), true);
             if (armorTex != null) {
@@ -298,15 +266,13 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         float alpha = 1f;
         if (isOverlay) alpha *= 0.9f;
         GlStateManager.color(1f, 1f, 1f, alpha);
-        // Render with per-face UVs by using custom box rendering
-        // Since ModelRenderer doesn't support per-face UVs in 1.8.9, we render manually if needed
-        // For now use standard render - UVs are approximated via north face
+
         box.render(renderScale);
         GlStateManager.color(1f, 1f, 1f, 1f);
     }
 
     private void renderBoxWithUVs(AbstractClientPlayer player, UVLayout layout, float x, float y, float z, int dx, int dy, int dz, float delta, boolean isOverlay, float renderScale) {
-        // Bind texture
+
         ResourceLocation tex;
         boolean useArmorTex = false;
         if (isOverlay) {
@@ -322,7 +288,7 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
             tex = UVStorage.getBreastTexture(player.getUniqueID(), false);
             if (tex == null) tex = player.getLocationSkin();
         }
-        // Already checked isInvisible at top - this is unreachable but keep for safety
+
         float alpha = 1f;
         if (isOverlay) alpha *= 0.9f;
         GlStateManager.color(1f, 1f, 1f, alpha);
@@ -332,16 +298,14 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         float texW = useArmorTex ? 64f : 64f;
         float texH = useArmorTex ? 32f : 64f;
 
-        // Box corners with delta expansion
         float x1 = x - delta, y1 = y - delta, z1 = z - delta;
         float x2 = x + dx + delta, y2 = y + dy + delta, z2 = z + dz + delta;
 
         Tessellator tess = Tessellator.getInstance();
         WorldRenderer wr = tess.getWorldRenderer();
 
-        // Render each face with its UVQuad - skip UNUSED (0,0,0,0)
         for (UVDirection dir : UVDirection.values()) {
-            if (dir == UVDirection.SOUTH) continue; // Fabric doesn't use SOUTH for breasts
+            if (dir == UVDirection.SOUTH) continue;
             UVQuad quad = layout.get(dir);
             if (quad == null) continue;
             if (quad.x1()==0 && quad.y1()==0 && quad.x2()==0 && quad.y2()==0) continue;
@@ -351,37 +315,36 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
             float u2 = (quad.x2() + 1) / texW;
             float v2 = (quad.y2() + 1) / texH;
 
-            // Clamp UVs
             u1 = Math.max(0, Math.min(1, u1)); u2 = Math.max(0, Math.min(1, u2));
             v1 = Math.max(0, Math.min(1, v1)); v2 = Math.max(0, Math.min(1, v2));
 
             wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL);
             switch (dir) {
-                case EAST: // +X
+                case EAST:
                     wr.pos(x2, y1, z1).tex(u2, v1).normal(1,0,0).endVertex();
                     wr.pos(x2, y2, z1).tex(u2, v2).normal(1,0,0).endVertex();
                     wr.pos(x2, y2, z2).tex(u1, v2).normal(1,0,0).endVertex();
                     wr.pos(x2, y1, z2).tex(u1, v1).normal(1,0,0).endVertex();
                     break;
-                case WEST: // -X
+                case WEST:
                     wr.pos(x1, y1, z2).tex(u2, v1).normal(-1,0,0).endVertex();
                     wr.pos(x1, y2, z2).tex(u2, v2).normal(-1,0,0).endVertex();
                     wr.pos(x1, y2, z1).tex(u1, v2).normal(-1,0,0).endVertex();
                     wr.pos(x1, y1, z1).tex(u1, v1).normal(-1,0,0).endVertex();
                     break;
-                case DOWN: // -Y
+                case DOWN:
                     wr.pos(x1, y1, z1).tex(u1, v1).normal(0,-1,0).endVertex();
                     wr.pos(x2, y1, z1).tex(u2, v1).normal(0,-1,0).endVertex();
                     wr.pos(x2, y1, z2).tex(u2, v2).normal(0,-1,0).endVertex();
                     wr.pos(x1, y1, z2).tex(u1, v2).normal(0,-1,0).endVertex();
                     break;
-                case UP: // +Y
+                case UP:
                     wr.pos(x1, y2, z2).tex(u1, v1).normal(0,1,0).endVertex();
                     wr.pos(x2, y2, z2).tex(u2, v1).normal(0,1,0).endVertex();
                     wr.pos(x2, y2, z1).tex(u2, v2).normal(0,1,0).endVertex();
                     wr.pos(x1, y2, z1).tex(u1, v2).normal(0,1,0).endVertex();
                     break;
-                case NORTH: // -Z (front)
+                case NORTH:
                     wr.pos(x2, y1, z1).tex(u2, v1).normal(0,0,-1).endVertex();
                     wr.pos(x1, y1, z1).tex(u1, v1).normal(0,0,-1).endVertex();
                     wr.pos(x1, y2, z1).tex(u1, v2).normal(0,0,-1).endVertex();
@@ -415,7 +378,7 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         if (!ClientConfig.RENDER_BREASTS) return false;
         GenderConfig.PlayerGenderSettings settings = GenderConfig.getPlayerSettings((EntityPlayer) player);
         if (settings == null) return false;
-        // Fabric: if armor alwaysHidesBreasts or (!showBreastsInArmor && isChestplateOccupied) return false
+
         boolean isChestplateOccupied = false;
         com.wildfire.api.IGenderArmor armor = com.wildfire.render.armor.EmptyGenderArmor.INSTANCE;
         try {
@@ -428,9 +391,7 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         } catch (Throwable ignored) {}
         if (armor.alwaysHidesBreasts()) return false;
         if (!settings.hideInArmor && isChestplateOccupied) {
-            // showBreastsInArmor is !hideInArmor in 1.8.9
-            // Fabric: !showBreastsInArmor && isChestplateOccupied -> hide
-            // So if hideInArmor==false, showBreastsInArmor==true, don't hide
+
         } else if (settings.hideInArmor && isChestplateOccupied) {
             return false;
         }

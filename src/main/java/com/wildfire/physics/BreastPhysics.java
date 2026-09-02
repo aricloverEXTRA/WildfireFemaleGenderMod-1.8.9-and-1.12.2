@@ -13,21 +13,20 @@ public class BreastPhysics {
 
     public static final float TIGHTNESS_REDUCTION_FACTOR = 0.15F;
 
-    // X axis
     private float bounceVelX = 0f, targetBounceX = 0f, velocityX = 0f, positionX = 0f, prePositionX = 0f;
-    // Y axis
+
     private float bounceVel = 0f, targetBounceY = 0f, velocity = 0f, positionY = 0f, prePositionY = 0f;
-    // Rotation
+
     private float bounceRotVel = 0f, targetRotVel = 0f, rotVelocity = 0f,
                   bounceRotation = 0f, preBounceRotation = 0f;
-    // Visual size
+
     private float breastSize = 0f, preBreastSize = 0f;
 
     private Vec3 prePos = null;
     private int lastSwingDuration = 6, lastSwingTick = 0;
     private int randomB = 1;
     private double lastVerticalMoveVelocity = 0.0;
-    // For pose tracking in 1.8.9 (no Pose enum)
+
     private boolean lastSneaking = false;
     private boolean lastSleeping = false;
 
@@ -53,16 +52,15 @@ public class BreastPhysics {
     }
 
     private void simplifiedTick(IGenderArmor armor, boolean armorPhysicsOverride) {
-        // For armor stands or forced simplified physics: only update breastSize with tightness
+
         GenderConfig.PlayerGenderSettings s = null;
-        // Try to get settings if entity is player, otherwise use defaults
-        // In simplified mode we just set size based on current breastSize
+
         if (armorPhysicsOverride) {
             this.preBreastSize = this.breastSize;
             return;
         }
         float tightness = MathHelper.clamp_float(armor != null ? armor.tightness() : 0f, 0f, 1f);
-        // This will be set properly in update() before calling simplifiedTick, but keep safe
+
         this.preBreastSize = this.breastSize;
         this.breastSize *= 1 - TIGHTNESS_REDUCTION_FACTOR * tightness;
     }
@@ -72,7 +70,7 @@ public class BreastPhysics {
         try {
             boolean isArmorStand = entity instanceof net.minecraft.entity.item.EntityArmorStand;
             boolean forceSimplified = false;
-            // Check EntityConfig forceSimplifiedPhysics if available
+
             try {
                 com.wildfire.main.entitydata.EntityConfig cfg = com.wildfire.main.entitydata.EntityConfig.getEntity(entity);
                 if (cfg != null) forceSimplified = cfg.forceSimplifiedPhysics;
@@ -86,10 +84,10 @@ public class BreastPhysics {
             }
 
             if (isArmorStand || forceSimplified) {
-                // Simplified: just handle breastSize
+
                 if (entity instanceof EntityPlayer && settings != null) {
-                    float target = settings.breastSize / 100f; // normalize 0-1
-                    // Fabric uses bustSize 0-1, our slider 0-100
+                    float target = settings.breastSize / 100f;
+
                     if (!"Male".equals(settings.gender) && settings.breastsEnabled) {
                         this.breastSize = target;
                         if (!armorPhysicsOverride) {
@@ -112,7 +110,7 @@ public class BreastPhysics {
             if (this.prePos == null) {
                 this.prePos = new Vec3(entity.posX, entity.posY, entity.posZ);
                 if (entity instanceof EntityPlayer && settings != null) {
-                    // Initialize breastSize
+
                     if (!"Male".equals(settings.gender) && settings.breastsEnabled) {
                         this.breastSize = this.preBreastSize = settings.breastSize / 100f;
                     }
@@ -120,7 +118,6 @@ public class BreastPhysics {
                 return;
             }
 
-            // Get target breast size (0-1)
             float targetBreastSize = 0f;
             float bounceMultiplier = 0.333f;
             float floppiness = 0.75f;
@@ -131,16 +128,16 @@ public class BreastPhysics {
                 canHaveBreasts = !"Male".equals(settings.gender) && settings.breastsEnabled;
                 if (canHaveBreasts) {
                     targetBreastSize = settings.breastSize / 100f;
-                    // Map intensity 0-150 to bounceMultiplier 0-0.5 (Fabric default 0.333)
+
                     bounceMultiplier = MathHelper.clamp_float((settings.intensity / 100f) * 0.333f, 0f, 0.5f);
-                    // Map momentum 25-100 to floppiness 0.25-1.0
+
                     floppiness = MathHelper.clamp_float(settings.momentum / 100f, 0.25f, 1f);
                     uniboob = settings.breastsUniboob;
                 } else {
                     targetBreastSize = 0f;
                 }
             } else {
-                // Non-player: use defaults
+
                 targetBreastSize = 0.6f;
             }
 
@@ -152,7 +149,6 @@ public class BreastPhysics {
                 targetBreastSize *= 1 - TIGHTNESS_REDUCTION_FACTOR * tightness;
             }
 
-            // Smooth breastSize interpolation (Fabric: breastSize += diff/2)
             if (this.breastSize < targetBreastSize) {
                 this.breastSize += Math.abs(this.breastSize - targetBreastSize) / 2f;
             } else {
@@ -164,18 +160,17 @@ public class BreastPhysics {
             this.prePos = curPos;
 
             float breastWeight = targetBreastSize * 1.25f;
-            // Fabric: bounceIntensity = targetBreastSize *3 * round(bounceMultiplier*3*100)/100
+
             float bounceIntensity = targetBreastSize * 3f * Math.round(bounceMultiplier * 3 * 100) / 100f;
             float resistance = MathHelper.clamp_float(armor != null ? armor.physicsResistance() : 0f, 0f, 1f);
             if (armorPhysicsOverride) resistance = 0f;
             bounceIntensity *= 1 - resistance;
 
             if (!uniboob) {
-                // Fabric: random 0.5-2.5
+
                 bounceIntensity *= WildfireHelper.randFloat(0.5f, 2.5f);
             }
 
-            // Use entity's random
             java.util.Random rand = entity.worldObj != null ? entity.worldObj.rand : new java.util.Random();
 
             tickMovement(entity, rand, motion, bounceIntensity, breastWeight);
@@ -184,12 +179,11 @@ public class BreastPhysics {
             tickArmSwing(entity, rand, bounceIntensity);
             finishTick(floppiness);
 
-            // Clamp positionY to Fabric limits (-0.5 to 1.5)
             this.positionX = clamp(this.positionX, -0.8f, 0.8f);
             this.positionY = clamp(this.positionY, -0.5f, 1.5f);
 
         } catch (Throwable t) {
-            // Never crash the game due to physics
+
             System.err.println("[WFG] BreastPhysics.update error: " + t.getMessage());
         }
     }
@@ -199,7 +193,7 @@ public class BreastPhysics {
         double vertVelocity = entity.motionY;
         if ((lastVerticalMoveVelocity <= 0 && vertVelocity > 0) ||
             (lastVerticalMoveVelocity < 0 && vertVelocity == 0)) {
-            // Randomize side when jumping or landing
+
             boolean isUniboob = false;
             if (entity instanceof EntityPlayer) {
                 GenderConfig.PlayerGenderSettings s = GenderConfig.getPlayerSettings((EntityPlayer) entity);
@@ -218,9 +212,9 @@ public class BreastPhysics {
         this.targetBounceX = -calcRotation(entity, bounceIntensity) / 10f;
 
         float speedValue = (float) (entity.motionX * entity.motionX + entity.motionY * entity.motionY + entity.motionZ * entity.motionZ) / 0.2F;
-        speedValue = speedValue * speedValue * speedValue; // cube
+        speedValue = speedValue * speedValue * speedValue;
         if (speedValue < 1.0F) speedValue = 1.0F;
-        // Use limbSwing/limbSwingAmount for 1.8.9 (walkAnimation)
+
         this.targetBounceY += MathHelper.cos(entity.limbSwing * 0.6662F + (float) Math.PI) * 0.5F * entity.limbSwingAmount * 0.5F / speedValue;
     }
 
@@ -242,22 +236,19 @@ public class BreastPhysics {
         Entity vehicle = entity.ridingEntity;
         if (vehicle == null) return;
 
-        // Generic vehicle handling for 1.8.9 - simplified from Fabric's Boat/Minecart/Horse/Pig/Strider
         double vx = vehicle.motionX, vz = vehicle.motionZ;
         double speedSqr = vx * vx + vehicle.motionY * vehicle.motionY + vz * vz;
 
-        // Check if should suppress rotation (chicken, unsaddled horse etc) - simplified
         boolean suppressRotation = false;
         if (vehicle instanceof net.minecraft.entity.passive.EntityChicken) suppressRotation = true;
         if (vehicle instanceof net.minecraft.entity.passive.EntityHorse) {
             net.minecraft.entity.passive.EntityHorse horse = (net.minecraft.entity.passive.EntityHorse) vehicle;
-            // In 1.8.9 horse has isHorseSaddled()
+
             try {
                 if (!horse.isHorseSaddled()) suppressRotation = true;
             } catch (Throwable ignored) {}
         }
 
-        // Minecart-like bouncing
         if (vehicle instanceof net.minecraft.entity.item.EntityMinecart) {
             float speed = (float) speedSqr;
             if (speed > 0.2F && random.nextDouble() * speed < 0.5) {
@@ -267,7 +258,6 @@ public class BreastPhysics {
             return;
         }
 
-        // Horse-like
         if (vehicle instanceof net.minecraft.entity.passive.EntityHorse) {
             float movement = (float) speedSqr;
             if (vehicle.ticksExisted % clampMovement(movement) == 5 && movement > 0.05f) {
@@ -277,7 +267,6 @@ public class BreastPhysics {
             return;
         }
 
-        // Pig
         if (vehicle instanceof net.minecraft.entity.passive.EntityPig) {
             float movement = (float) speedSqr;
             if (vehicle.ticksExisted % clampMovement(movement) == 5 && movement > 0.002f) {
@@ -287,14 +276,12 @@ public class BreastPhysics {
             return;
         }
 
-        // Boat (1.8.9 has EntityBoat)
         if (vehicle instanceof net.minecraft.entity.item.EntityBoat) {
-            // Simple boat bobbing
+
             this.targetBounceY += bounceIntensity / 4.5f;
             return;
         }
 
-        // Generic fallback
         if (speedSqr > 0.2 && random.nextDouble() * speedSqr < 0.5) {
             this.targetBounceY = (random.nextBoolean() ? -bounceIntensity : bounceIntensity) / 6f;
             this.targetBounceY += breastWeight;
@@ -305,14 +292,14 @@ public class BreastPhysics {
 
     private void tickArmSwing(EntityLivingBase entity, java.util.Random random, float bounceIntensity) {
         int swingDuration = entity.swingProgressInt;
-        // Need lastSwingDuration check like Fabric
+
         if ((swingDuration > 1 || lastSwingDuration > 1) && !entity.isPlayerSleeping()) {
             float rawAmplifier = 0f;
             if (swingDuration < 6) rawAmplifier = 0.15f * (6 - swingDuration);
             else if (swingDuration > 6) rawAmplifier = -0.055f * (swingDuration - 6);
 
             float amplifier = MathHelper.clamp_float(1 + rawAmplifier, 0.6f, 1.3f);
-            // Determine swinging arm - in 1.8.9 always main hand, use entity id for side variation
+
             boolean isUniboob = false;
             if (entity instanceof EntityPlayer) {
                 GenderConfig.PlayerGenderSettings s = GenderConfig.getPlayerSettings((EntityPlayer) entity);
@@ -321,7 +308,7 @@ public class BreastPhysics {
 
             int swingTickDelta = entity.swingProgressInt - lastSwingTick;
             float swingProgress = distanceFromMedian(0, lastSwingDuration, MathHelper.clamp_float(lastSwingTick, 0, lastSwingDuration));
-            // In Fabric, swingingToward is based on arm, here simplified
+
             boolean towardRight = swingProgress > -0.2f;
 
             if (entity.isSwingInProgress && entity.ticksExisted % MathHelper.clamp_int(swingDuration - 1, 1, 5) == 0) {
@@ -381,7 +368,7 @@ public class BreastPhysics {
     private float calcRotation(EntityLivingBase entity, float bounceIntensity) {
         Entity vehicle = entity.ridingEntity;
         if (vehicle != null) {
-            // Check suppress
+
             if (vehicle instanceof net.minecraft.entity.passive.EntityChicken) return 0f;
             if (vehicle instanceof net.minecraft.entity.passive.EntityHorse) {
                 try {
@@ -389,7 +376,7 @@ public class BreastPhysics {
                     if (!h.isHorseSaddled()) return 0f;
                 } catch (Throwable ignored) {}
             }
-            // Use vehicle yaw if rider is passenger
+
             float prev = vehicle.prevRotationYaw;
             float cur = vehicle.rotationYaw;
             return -((cur - prev) / 15f) * bounceIntensity;

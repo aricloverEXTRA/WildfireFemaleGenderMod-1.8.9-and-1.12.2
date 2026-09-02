@@ -84,8 +84,6 @@ public class GuiBreastCustomization extends GuiScreen implements GuiSlider.ISlid
         int spacing = 25;
         int horizontalSpacing = 4;
 
-        // Fabric ranges: bustSize 0-0.8 (display 0-100%), offset -1..1, cleavage 0-0.1, bounce 0-0.5, floppy 0.25-1
-        // 1.8.9 maps: breastSize 0-100, offsets -10..10 (divided by 10), cleavage 0-10 (divided by 100)
         this.breastSlider = new GuiSlider(0, sliderX, sliderY, sliderWidth, sliderHeight,
                 prefixFromKey("wildfire_gender.wardrobe.slider.breast_size"), "%", 0.0D, 100.0D, this.settings.breastSize, false, true, this);
         this.separationSlider = new GuiSlider(1, sliderX, sliderY + spacing - 1, smallSliderWidth, sliderHeight,

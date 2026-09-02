@@ -41,10 +41,10 @@ public class ClientProxy extends CommonProxy {
         });
 
         MinecraftForge.EVENT_BUS.register(new WildfireEventHandler());
-        // Register sounds as instance for event bus
+
         MinecraftForge.EVENT_BUS.register(new WildfireSounds());
         MinecraftForge.EVENT_BUS.register(new ArmorTooltipHandler());
-        // Also register sound handler for PlaySoundAtEntityEvent to replace vanilla hurt sounds
+
         try {
             MinecraftForge.EVENT_BUS.register(new com.wildfire.main.handlers.SoundEventHandler());
         } catch (Throwable t) {

@@ -27,7 +27,6 @@ public final class Contributors {
         add("4c3e3225-aec0-499c-b563-2b17cdb017f8", Contributor.Role.TRANSLATOR, "Betawolfy", true);
 		add("07ee0495-90ae-4138-9343-9c270020196b", Contributor.Role.TRANSLATOR, "vyxiepie_", true);
 
-        // technically not an actual individual contributor, but still a notable enough account to add here
         add("372271ab-28f2-44bd-b585-95f43e010c22", Contributor.Role.MASCOT, "KeiraFGM", false);
     }
 

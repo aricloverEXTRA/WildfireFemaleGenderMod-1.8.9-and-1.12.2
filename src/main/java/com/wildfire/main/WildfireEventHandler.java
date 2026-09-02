@@ -29,10 +29,9 @@ public class WildfireEventHandler {
             if (player == null) return;
             Minecraft minecraft = Minecraft.getMinecraft();
             if (minecraft == null || minecraft.theWorld == null) return;
-            // Only tick for local player and other players in world (client-side)
+
             if (!player.worldObj.isRemote) return;
 
-            // Ensure we have settings - for remote players, use defaults
             GenderConfig.PlayerGenderSettings settings = null;
             boolean isLocal = player == minecraft.thePlayer;
             if (isLocal) {
@@ -40,9 +39,9 @@ public class WildfireEventHandler {
                 if (settings == null) return;
                 if (!(player instanceof AbstractClientPlayer)) return;
             } else {
-                // For remote players, check if they should have physics (always tick if possible)
+
                 if (!(player instanceof AbstractClientPlayer)) return;
-                // Use local settings as fallback for remote rendering - or skip if no data
+
                 settings = GenderConfig.getPlayerSettings(minecraft.thePlayer);
                 if (settings == null) return;
             }
@@ -72,7 +71,6 @@ public class WildfireEventHandler {
                 armor = SimpleGenderArmor.FALLBACK;
             }
 
-            // For remote players, always tick physics if they have breasts
             boolean physicsEnabled = isLocal ? settings.physicsEnabled : true;
             boolean uniboob = isLocal ? settings.breastsUniboob : false;
 
@@ -91,7 +89,7 @@ public class WildfireEventHandler {
                 phys[1].syncFrom(phys[0]);
             }
         } catch (Throwable t) {
-            // Never crash on tick
+
             System.err.println("[WFG] onPlayerTick error: " + t.getMessage());
         }
     }
@@ -115,7 +113,7 @@ public class WildfireEventHandler {
     public void onClientTick(TickEvent.ClientTickEvent evt) {
         if (evt.phase != TickEvent.Phase.END) return;
         try {
-            // Cleanup old physics entries periodically
+
             WildfireSounds.cleanupOldEntries();
         } catch (Throwable ignored) {}
     }

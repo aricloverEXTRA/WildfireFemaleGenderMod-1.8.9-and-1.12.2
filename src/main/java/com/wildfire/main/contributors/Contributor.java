@@ -1,20 +1,16 @@
 package com.wildfire.main.contributors;
 
-/**
- * Contributor POJO for 1.8.9 port.
- * Restores role ordering and color values so the credits GUI can sort and tint correctly.
- */
 public class Contributor {
     public enum Role {
-        MOD_CREATOR(0xFFCC66FF),          // light purple
-        FABRIC_MAINTAINER(0xFFA78FFF),    // purple-ish
-        NEOFORGE_MAINTAINER(0xFFA78FFF),  // purple-ish
-        CI_MAINTAINER(0xFF50C878),        // emerald green
-        DEVELOPER(0xFFFFD700),            // gold
-        TRANSLATOR(0xFF66CCFF),           // light blue
-        MASCOT(0xFFFFD700),               // gold
-        VOICE_ACTOR_FEMALE(0xFFFFD700),   // gold
-        GENERIC(0xFFFFD700);              // gold
+        MOD_CREATOR(0xFFCC66FF),
+        FABRIC_MAINTAINER(0xFFA78FFF),
+        NEOFORGE_MAINTAINER(0xFFA78FFF),
+        CI_MAINTAINER(0xFF50C878),
+        DEVELOPER(0xFFFFD700),
+        TRANSLATOR(0xFF66CCFF),
+        MASCOT(0xFFFFD700),
+        VOICE_ACTOR_FEMALE(0xFFFFD700),
+        GENERIC(0xFFFFD700);
 
         private final int color;
 

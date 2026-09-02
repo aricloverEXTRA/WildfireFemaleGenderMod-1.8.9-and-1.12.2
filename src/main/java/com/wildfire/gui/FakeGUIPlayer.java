@@ -17,10 +17,8 @@ public class FakeGUIPlayer {
     private final UUID uuid;
     private EntityOtherPlayerMP entity;
 
-    // Static preview size for credits
     public static float STATIC_FAKE_BREAST_SIZE = 100.0F;
 
-    // Fixed UVs for credits (no UVStorage)
     public static final int LEFT_X1 = 20, LEFT_Y1 = 20, LEFT_X2 = 23, LEFT_Y2 = 23;
     public static final int RIGHT_X1 = 24, RIGHT_Y1 = 20, RIGHT_X2 = 27, RIGHT_Y2 = 23;
 
@@ -49,16 +47,13 @@ public class FakeGUIPlayer {
             String dummyName = "uuid_" + uuid.toString().replace("-", "").substring(0, 12);
             GameProfile profile = new GameProfile(this.uuid, dummyName);
 
-            // Local skin path
             ResourceLocation localSkin = new ResourceLocation(
                     "wildfire_gender",
                     "textures/credit_skins/" + uuid.toString() + ".png"
             );
 
-            // Use our custom credits player class
             entity = new EntityCreditsPlayer(world, profile, localSkin);
 
-            // Mark as fake
             entity.getEntityData().setBoolean("WFG_FakeGUIPlayer", true);
 
             entity.rotationYawHead = 0.0F;

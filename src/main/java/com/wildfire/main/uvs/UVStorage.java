@@ -84,14 +84,12 @@ public class UVStorage {
             String key = uuid.toString() + "_base";
             textureCache.invalidate(key);
             textureCache.invalidate(uuid.toString() + "_overlay");
-            // Invalidate any cached DynamicTexture if present
-            // Textures are rebound on next render via getBreastTexture fallback to skin
+
         } catch (Throwable t) {
             System.err.println("[WFG] generateBreastTextures failed: " + t.getMessage());
         }
     }
 
-    // Thread-safe access
     public static synchronized Map<BreastTypes, UVLayout> getOrCreateBundle(UUID uuid) {
         Map<BreastTypes, UVLayout> bundle = userLayouts.get(uuid);
         if (bundle == null) {

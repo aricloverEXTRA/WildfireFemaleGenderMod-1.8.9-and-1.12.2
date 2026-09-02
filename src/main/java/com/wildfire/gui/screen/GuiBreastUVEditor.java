@@ -77,7 +77,6 @@ public class GuiBreastUVEditor extends GuiScreen {
         this.buttonList.add(new WildfireButton(3, leftColX, 66, btnW, 15, "Left Overlay"));
         this.buttonList.add(new WildfireButton(4, leftColX + btnW + 5, 66, btnW, 15, "Right Overlay"));
 
-        // Highlight selected type
         for (GuiButton b : this.buttonList) {
             if (b.id >= 1 && b.id <= 4) {
                 BreastTypes t = BreastTypes.values()[b.id - 1];
@@ -92,7 +91,7 @@ public class GuiBreastUVEditor extends GuiScreen {
             int yStart = 90;
             String[] labels = { "Move X", "Move Y", "Width", "Height" };
             for (int i = 0; i < 4; i++) {
-                // Label is drawn in drawScreen, buttons are +/- 
+
                 this.buttonList.add(new WildfireButton(100 + i * 2, xStart + 80, yStart + (i * 18), 14, 14, ""));
                 this.buttonList.add(new WildfireButton(101 + i * 2, xStart + 96, yStart + (i * 18), 14, 14, ""));
             }
@@ -104,7 +103,6 @@ public class GuiBreastUVEditor extends GuiScreen {
         this.drawDefaultBackground();
         drawRect(this.width - SIDEBAR_WIDTH, 0, this.width, this.height, COLOR_SIDEBAR_BG);
 
-        // Draw texture preview
         ResourceLocation texture = null;
         try {
             if (this.mc.thePlayer != null) texture = this.mc.thePlayer.getLocationSkin();
@@ -124,17 +122,15 @@ public class GuiBreastUVEditor extends GuiScreen {
             drawRect(this.uvWindowX, this.uvWindowY, this.uvWindowX + TEXTURE_DRAW_SIZE, this.uvWindowY + TEXTURE_DRAW_SIZE, 0xFF333333);
         }
 
-        // Draw face borders - include SOUTH if present
         if (this.selectedUVs != null) {
             for (Map.Entry<UVDirection, UVQuad> entry : this.selectedUVs.getAllSides().entrySet()) {
                 UVQuad q = entry.getValue();
                 if (q == null) continue;
-                // Skip SOUTH if it's null/empty in defaults but still draw if user set it
+
                 drawFaceBorderWithTooltip(entry.getKey(), q, mouseX, mouseY, this.selectedDirection != entry.getKey());
             }
         }
 
-        // Entity preview - with error handling
         try {
             GlStateManager.pushMatrix();
             GlStateManager.enableDepth();
@@ -154,19 +150,18 @@ public class GuiBreastUVEditor extends GuiScreen {
         super.drawScreen(mouseX, mouseY, partialTicks);
         renderButtonIcons();
 
-        // Tooltip for selected face info
         if (this.selectedDirection != null && this.selectedUVs != null) {
             UVQuad q = this.selectedUVs.get(this.selectedDirection);
             if (q != null) {
                 String info = String.format("%s: [%d,%d -> %d,%d] %s", this.selectedDirection.name(), q.x1(), q.y1(), q.x2(), q.y2(), this.selectedDirection.getDirectionText(this.selectedBreastIndex));
-                // Draw near sidebar
+
             }
         }
     }
 
     private void drawFaceBorderWithTooltip(UVDirection direction, UVQuad quad, int mouseX, int mouseY, boolean faded) {
         if (quad == null) return;
-        // Clamp quad to 0-63
+
         int qx1 = Math.max(0, Math.min(63, quad.x1()));
         int qy1 = Math.max(0, Math.min(63, quad.y1()));
         int qx2 = Math.max(0, Math.min(63, quad.x2()));
@@ -184,7 +179,6 @@ public class GuiBreastUVEditor extends GuiScreen {
         drawRect(x1, y1, x1 + 1, y2, color);
         drawRect(x2 - 1, y1, x2, y2, color);
 
-        // Fill with translucent
         int fill = (color & 0x00FFFFFF) | 0x22000000;
         drawRect(x1+1, y1+1, x2-1, y2-1, fill);
 
@@ -198,7 +192,7 @@ public class GuiBreastUVEditor extends GuiScreen {
 
     private void drawRightEditorPanel(int x) {
         this.fontRendererObj.drawString("Type: " + this.selectedBreastIndex.name(), x, 25, COLOR_WHITE);
-        // Show current UV info
+
         if (this.selectedUVs != null) {
             int y = 85;
             if (this.selectedDirection == null) {
@@ -231,7 +225,7 @@ public class GuiBreastUVEditor extends GuiScreen {
         } else if (button.id == 5) {
             this.mc.displayGuiScreen(this.parent);
         } else if (button.id >= 1 && button.id <= 4) {
-            // Save current before switching
+
             if (this.selectedUVs != null && this.playerUuid != null) {
                 try { UVStorage.saveLayout(this.playerUuid, this.selectedBreastIndex, this.selectedUVs); } catch (Throwable ignored) {}
             }
@@ -252,7 +246,7 @@ public class GuiBreastUVEditor extends GuiScreen {
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
         super.mouseClicked(mouseX, mouseY, mouseButton);
         if (this.selectedUVs == null) return;
-        // Check clicks on UV faces - iterate all sides
+
         for (Map.Entry<UVDirection, UVQuad> entry : this.selectedUVs.getAllSides().entrySet()) {
             UVQuad quad = entry.getValue();
             if (quad == null) continue;
@@ -270,18 +264,17 @@ public class GuiBreastUVEditor extends GuiScreen {
                 return;
             }
         }
-        // Click outside faces deselects
+
         if (mouseX >= this.uvWindowX && mouseX <= this.uvWindowX + TEXTURE_DRAW_SIZE &&
             mouseY >= this.uvWindowY && mouseY <= this.uvWindowY + TEXTURE_DRAW_SIZE) {
-            // Clicked texture but not on a face - deselect
-            // Keep selection for now
+
         }
     }
 
     @Override
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
-        if (keyCode == 1) { // ESC
-            // Save before exit
+        if (keyCode == 1) {
+
             if (this.selectedUVs != null && this.playerUuid != null) {
                 try { UVStorage.saveLayout(this.playerUuid, this.selectedBreastIndex, this.selectedUVs); } catch (Throwable ignored) {}
             }
@@ -302,22 +295,22 @@ public class GuiBreastUVEditor extends GuiScreen {
 
         try {
             switch (row) {
-                case 0: { // Move X
+                case 0: {
                     int moveX = clamp(delta, -quad.x1(), 63 - quad.x2());
                     quad = quad.addX1(moveX).addX2(moveX);
                     break;
                 }
-                case 1: { // Move Y
+                case 1: {
                     int moveY = clamp(delta, -quad.y1(), 63 - quad.y2());
                     quad = quad.addY1(moveY).addY2(moveY);
                     break;
                 }
-                case 2: { // Width (x2)
+                case 2: {
                     int newW = clamp(delta, -(quad.x2() - quad.x1()), 63 - quad.x2());
                     quad = quad.addX2(newW);
                     break;
                 }
-                case 3: { // Height (y2)
+                case 3: {
                     int newH = clamp(delta, -(quad.y2() - quad.y1()), 63 - quad.y2());
                     quad = quad.addY2(newH);
                     break;
@@ -326,7 +319,7 @@ public class GuiBreastUVEditor extends GuiScreen {
             }
             this.selectedUVs.put(this.selectedDirection, quad);
             UVStorage.saveLayout(uuid, this.selectedBreastIndex, this.selectedUVs);
-            // Regenerate textures
+
             try { UVStorage.generateBreastTextures(uuid); } catch (Throwable ignored) {}
         } catch (Throwable t) {
             System.err.println("[WFG] UV adjustment failed: " + t.getMessage());
@@ -361,7 +354,7 @@ public class GuiBreastUVEditor extends GuiScreen {
 
     @Override
     public void onGuiClosed() {
-        // Save on close
+
         if (this.selectedUVs != null && this.playerUuid != null) {
             try { UVStorage.saveLayout(this.playerUuid, this.selectedBreastIndex, this.selectedUVs); } catch (Throwable ignored) {}
         }

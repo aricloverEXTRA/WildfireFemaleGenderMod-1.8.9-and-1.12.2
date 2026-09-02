@@ -54,14 +54,12 @@ public class GuiWardrobe extends GuiScreen {
         customizeButton.enabled = !"Male".equals(this.selectedGender);
         this.buttonList.add(customizeButton);
 
-        // Light/Dark theme toggle
         this.buttonList.add(new WildfireButton(3, guiLeft + 100, guiTop + 99, 24, 18, ""));
 
-        // Mod Credits button: 14px to the right of the theme button, lowered further by 1px
         int themeBtnX = guiLeft + 100;
         int themeBtnWidth = 24;
         int creditsX = themeBtnX + themeBtnWidth + 14;
-        int creditsY = guiTop + 102; // lowered 1px further
+        int creditsY = guiTop + 102;
         this.buttonList.add(new WildfireButton(4, creditsX, creditsY, 78, 15, StatCollector.translateToLocal("wildfire_gender.credits.title")));
     }
 
@@ -132,7 +130,6 @@ public class GuiWardrobe extends GuiScreen {
 
         this.drawCenteredString(this.fontRendererObj, StatCollector.translateToLocal("wildfire_gender.wardrobe.title"), this.width / 2, guiTop - 15, 0xFFFFFF);
 
-        // Inventory-style model preview that follows the cursor, clipped to avoid overlap
         EntityLivingBase entity = this.mc.thePlayer;
         int posX = guiLeft + 50;
         int posY = guiTop + 120;
@@ -143,18 +140,17 @@ public class GuiWardrobe extends GuiScreen {
         GL11.glEnable(GL11.GL_SCISSOR_TEST);
         GL11.glScissor(scissorX, scissorY, scissorWidth, scissorHeight);
         GuiUtils.drawEntityOnScreenNoScissor(this, posX, posY, 60, mouseX - posX, mouseY - posY, entity);
-        // Note: GuiUtils now handles inversion internally
+
         GL11.glDisable(GL11.GL_SCISSOR_TEST);
 
         if (isBreastCancerAwarenessMonth) {
-            String text = "\u00A7l" + StatCollector.translateToLocal("wildfire_gender.cancer_awareness.title"); // bold
+            String text = "\u00A7l" + StatCollector.translateToLocal("wildfire_gender.cancer_awareness.title");
             int textWidth = this.fontRendererObj.getStringWidth(text);
             int textX = this.width / 2 - 10;
             this.drawCenteredString(this.fontRendererObj, text, textX, guiTop + guiHeight + 10, 0xFFFFFF);
 
-            // Draw ribbon to the right of the text
             mc.getTextureManager().bindTexture(RIBBON_TEXTURE);
-            int iconX = textX + (textWidth / 2) + 6; // right of centered text
+            int iconX = textX + (textWidth / 2) + 6;
             int iconY = guiTop + guiHeight + 8;
             GlStateManager.pushMatrix();
             GlStateManager.enableBlend();
@@ -164,7 +160,6 @@ public class GuiWardrobe extends GuiScreen {
             GlStateManager.popMatrix();
         }
 
-        // theme icon and credits tooltip handling
         for (GuiButton button : this.buttonList) {
             if (button.id == 3) {
                 ResourceLocation icon = isDarkMode ? MOON_ICON : SUN_ICON;

@@ -56,7 +56,6 @@ public class WildfireCreditsScreen extends GuiScreen {
         List<FakeGUIPlayer> generals = new ArrayList<>();
         List<FakeGUIPlayer> translators = new ArrayList<>();
 
-        // Hard-ordered GENERAL list
         List<UUID> orderedGeneral = Arrays.asList(
                 UUID.fromString("23b6feed-2dfe-4f2e-9429-863fd4adb946"),
                 UUID.fromString("70336328-0de7-430e-8cba-2779e2a05ab5"),
@@ -78,7 +77,6 @@ public class WildfireCreditsScreen extends GuiScreen {
             alreadyAdded.add(id);
         }
 
-        // Remaining GENERAL contributors
         for (Entry<UUID, Contributor> e : map.entrySet()) {
             UUID id = e.getKey();
             if (alreadyAdded.contains(id)) continue;
@@ -88,7 +86,6 @@ public class WildfireCreditsScreen extends GuiScreen {
             generals.add(new FakeGUIPlayer(c.name(), id));
         }
 
-        // Hard-ordered TRANSLATOR list
         List<UUID> orderedTranslators = Arrays.asList(
                 UUID.fromString("8fb5e95d-7f41-4b4c-b8c5-4f15ea3fa2c1"),
                 UUID.fromString("4c3e3225-aec0-499c-b563-2b17cdb017f8"),
@@ -106,7 +103,6 @@ public class WildfireCreditsScreen extends GuiScreen {
             transAlready.add(id);
         }
 
-        // Remaining translators
         for (Entry<UUID, Contributor> e : map.entrySet()) {
             UUID id = e.getKey();
             if (transAlready.contains(id)) continue;
@@ -213,11 +209,9 @@ public class WildfireCreditsScreen extends GuiScreen {
                 StatCollector.translateToLocal("wildfire_gender.credits.description"),
                 width / 2, height / 2 - 85, 0x888888);
 
-        // Buttons container
         mc.getTextureManager().bindTexture(btnContainer);
         drawModalRectWithCustomSizedTexture(width / 2 - 95, navigationY, 0, 0, 190, 25, 190, 25);
 
-        // Tabs container
         mc.getTextureManager().bindTexture(tabContainer);
         drawModalRectWithCustomSizedTexture(width / 2 - 95, navigationY + 28, 0, 0, 190, 25, 190, 25);
 
@@ -247,7 +241,6 @@ public class WildfireCreditsScreen extends GuiScreen {
             int cx = startX + col * (BOX_WIDTH + H_SPACING);
             int cy = startY + row * (BOX_HEIGHT + V_SPACING);
 
-            // Draw credit box
             mc.getTextureManager().bindTexture(creditContainer);
             drawModalRectWithCustomSizedTexture(cx, cy, 0, 0, BOX_WIDTH, BOX_HEIGHT, BOX_WIDTH, BOX_HEIGHT);
 
@@ -263,13 +256,11 @@ public class WildfireCreditsScreen extends GuiScreen {
             drawModalRectWithCustomSizedTexture(cx + 3, cy + 3, 0, 0, 46, 53, 46, 53);
             GL11.glColor4f(1, 1, 1, 1);
 
-            // Portrait bounds
             final int portraitX = cx + 3;
             final int portraitY = cy + 3;
             final int portraitW = 46;
             final int portraitH = 53;
 
-            // Convert GUI coords → framebuffer coords for scissor
             int sx = portraitX * this.mc.displayWidth / this.width;
             int sy = this.mc.displayHeight - (portraitY + portraitH) * this.mc.displayHeight / this.height;
             int sw = portraitW * this.mc.displayWidth / this.width;
@@ -285,10 +276,8 @@ public class WildfireCreditsScreen extends GuiScreen {
             int mouseOffsetX = mouseX - drawCenterX;
             int mouseOffsetY = mouseY - drawCenterY;
 
-            // Fake player entity
             AbstractClientPlayer entity = fp.getEntity();
 
-            // Render model
             GuiUtils.drawEntityOnScreenNoScissor(
                     this,
                     drawCenterX,
