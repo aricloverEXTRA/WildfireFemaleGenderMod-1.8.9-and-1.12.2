@@ -16,8 +16,12 @@ import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.WorldRenderer;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.client.renderer.entity.layers.LayerRenderer;
+import org.lwjgl.opengl.GL11;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemStack;
@@ -190,11 +194,10 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
 
         GlStateManager.pushMatrix();
         try {
-            // Step 1: base offset
-            GlStateManager.translate(breastOffsetX * 0.0625f, 0.05625f + (breastOffsetY * 0.0625f), zOffset - 0.0625f * 2f + (breastOffsetZ * 0.0425f));
-            if (!isUniboob) {
-                GlStateManager.translate(isLeft ? -0.125f : 0.125f, 0, 0);
-            }
+            // Step 1: base offset - amplified for 1.8.9 visibility (Fabric uses 0.0625, we use 0.125 for stronger slider effect)
+            GlStateManager.translate(breastOffsetX * 0.125f, 0.05625f + (breastOffsetY * 0.125f), zOffset - 0.0625f * 2f + (breastOffsetZ * 0.1f));
+            // FIX: Don't reposition based on dual-physics - breasts should stay same position regardless of physics mode
+            // Fabric's isUniboob translation was causing visible jump when toggling dual-physics
             if (bounceEnabled) {
                 GlStateManager.translate(physX / 32f, physY / 32f, 0);
                 // Y rotation from bounce
@@ -216,8 +219,8 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
             } catch (Throwable ignored) {}
             if (isChestplate) GlStateManager.translate(0, 0, 0.01f);
 
-            // Outward + pitch
-            GlStateManager.rotate(isLeft ? outwardAngle : -outwardAngle, 0, 1, 0);
+            // Outward + pitch - amplified cleavage for 1.8.9 (Fabric 0-10, we double for visibility)
+            GlStateManager.rotate(isLeft ? outwardAngle * 1.5f : -outwardAngle * 1.5f, 0, 1, 0);
             GlStateManager.rotate(-35f * rotation, 1, 0, 0);
             if (breathing) {
                 float f5 = -MathHelper.cos(ageInTicks * 0.09F) * 0.45F + 0.45F;
@@ -248,11 +251,14 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         }
         if (!hasAnyFace && !isOverlay) return; // Don't skip overlay if it's the jacket layer
 
-        // Use ModelRenderer with per-face UVs via custom rendering
-        // For 1.8.9, we use ModelRenderer but need to handle per-face UVs
-        // Fabric uses WildfireModelRenderer.BreastModelBox which sets UVs per face
-        // Here we create a ModelRenderer and manually set texture offsets per face via UVLayout
-        UVQuad north = layout.get(UVDirection.NORTH);
+        // Fabric uses WildfireModelRenderer.BreastModelBox with per-face UVs from UVLayout
+        // For 1.8.9 we render manually with Tessellator to get exact per-face UVs
+        // Fallback to ModelRenderer only if layout is null
+        if (layout != null) {
+            renderBoxWithUVs(player, layout, x, y, z, dx, dy, dz, delta, isOverlay, renderScale);
+            return;
+        }
+        UVQuad north = layout != null ? layout.get(UVDirection.NORTH) : null;
         int texX = north != null ? north.x1() : 0;
         int texY = north != null ? north.y1() : 0;
 
@@ -296,6 +302,97 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         // Since ModelRenderer doesn't support per-face UVs in 1.8.9, we render manually if needed
         // For now use standard render - UVs are approximated via north face
         box.render(renderScale);
+        GlStateManager.color(1f, 1f, 1f, 1f);
+    }
+
+    private void renderBoxWithUVs(AbstractClientPlayer player, UVLayout layout, float x, float y, float z, int dx, int dy, int dz, float delta, boolean isOverlay, float renderScale) {
+        // Bind texture
+        ResourceLocation tex;
+        boolean useArmorTex = false;
+        if (isOverlay) {
+            ResourceLocation armorTex = ArmorTextureHelper.getArmorTextureForPlayerUUID(player.getUniqueID(), true);
+            if (armorTex != null) {
+                tex = armorTex;
+                useArmorTex = true;
+            } else {
+                tex = UVStorage.getBreastTexture(player.getUniqueID(), true);
+                if (tex == null) tex = player.getLocationSkin();
+            }
+        } else {
+            tex = UVStorage.getBreastTexture(player.getUniqueID(), false);
+            if (tex == null) tex = player.getLocationSkin();
+        }
+        this.renderPlayer.bindTexture(tex);
+        float alpha = player.isInvisible() ? 0.35f : 1f;
+        if (isOverlay) alpha *= 0.9f;
+        if (useArmorTex && player.isInvisible()) alpha = 0.15f;
+        GlStateManager.color(1f, 1f, 1f, alpha);
+        GlStateManager.enableBlend();
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+
+        float texW = useArmorTex ? 64f : 64f;
+        float texH = useArmorTex ? 32f : 64f;
+
+        // Box corners with delta expansion
+        float x1 = x - delta, y1 = y - delta, z1 = z - delta;
+        float x2 = x + dx + delta, y2 = y + dy + delta, z2 = z + dz + delta;
+
+        Tessellator tess = Tessellator.getInstance();
+        WorldRenderer wr = tess.getWorldRenderer();
+
+        // Render each face with its UVQuad - skip UNUSED (0,0,0,0)
+        for (UVDirection dir : UVDirection.values()) {
+            if (dir == UVDirection.SOUTH) continue; // Fabric doesn't use SOUTH for breasts
+            UVQuad quad = layout.get(dir);
+            if (quad == null) continue;
+            if (quad.x1()==0 && quad.y1()==0 && quad.x2()==0 && quad.y2()==0) continue;
+
+            float u1 = quad.x1() / texW;
+            float v1 = quad.y1() / texH;
+            float u2 = (quad.x2() + 1) / texW;
+            float v2 = (quad.y2() + 1) / texH;
+
+            // Clamp UVs
+            u1 = Math.max(0, Math.min(1, u1)); u2 = Math.max(0, Math.min(1, u2));
+            v1 = Math.max(0, Math.min(1, v1)); v2 = Math.max(0, Math.min(1, v2));
+
+            wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL);
+            switch (dir) {
+                case EAST: // +X
+                    wr.pos(x2, y1, z1).tex(u2, v1).normal(1,0,0).endVertex();
+                    wr.pos(x2, y2, z1).tex(u2, v2).normal(1,0,0).endVertex();
+                    wr.pos(x2, y2, z2).tex(u1, v2).normal(1,0,0).endVertex();
+                    wr.pos(x2, y1, z2).tex(u1, v1).normal(1,0,0).endVertex();
+                    break;
+                case WEST: // -X
+                    wr.pos(x1, y1, z2).tex(u2, v1).normal(-1,0,0).endVertex();
+                    wr.pos(x1, y2, z2).tex(u2, v2).normal(-1,0,0).endVertex();
+                    wr.pos(x1, y2, z1).tex(u1, v2).normal(-1,0,0).endVertex();
+                    wr.pos(x1, y1, z1).tex(u1, v1).normal(-1,0,0).endVertex();
+                    break;
+                case DOWN: // -Y
+                    wr.pos(x1, y1, z1).tex(u1, v1).normal(0,-1,0).endVertex();
+                    wr.pos(x2, y1, z1).tex(u2, v1).normal(0,-1,0).endVertex();
+                    wr.pos(x2, y1, z2).tex(u2, v2).normal(0,-1,0).endVertex();
+                    wr.pos(x1, y1, z2).tex(u1, v2).normal(0,-1,0).endVertex();
+                    break;
+                case UP: // +Y
+                    wr.pos(x1, y2, z2).tex(u1, v1).normal(0,1,0).endVertex();
+                    wr.pos(x2, y2, z2).tex(u2, v1).normal(0,1,0).endVertex();
+                    wr.pos(x2, y2, z1).tex(u2, v2).normal(0,1,0).endVertex();
+                    wr.pos(x1, y2, z1).tex(u1, v2).normal(0,1,0).endVertex();
+                    break;
+                case NORTH: // -Z (front)
+                    wr.pos(x2, y1, z1).tex(u2, v1).normal(0,0,-1).endVertex();
+                    wr.pos(x1, y1, z1).tex(u1, v1).normal(0,0,-1).endVertex();
+                    wr.pos(x1, y2, z1).tex(u1, v2).normal(0,0,-1).endVertex();
+                    wr.pos(x2, y2, z1).tex(u2, v2).normal(0,0,-1).endVertex();
+                    break;
+                default: break;
+            }
+            tess.draw();
+        }
+        GlStateManager.disableBlend();
         GlStateManager.color(1f, 1f, 1f, 1f);
     }
 

@@ -143,6 +143,7 @@ public class GuiWardrobe extends GuiScreen {
         GL11.glEnable(GL11.GL_SCISSOR_TEST);
         GL11.glScissor(scissorX, scissorY, scissorWidth, scissorHeight);
         GuiUtils.drawEntityOnScreenNoScissor(this, posX, posY, 60, mouseX - posX, mouseY - posY, entity);
+        // Note: GuiUtils now handles inversion internally
         GL11.glDisable(GL11.GL_SCISSOR_TEST);
 
         if (isBreastCancerAwarenessMonth) {

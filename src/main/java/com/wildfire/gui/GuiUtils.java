@@ -20,6 +20,10 @@ public final class GuiUtils {
      */
     public static void drawEntityOnScreenNoScissor(GuiScreen screen, int posX, int posY, int scale,
                                                    float mouseX, float mouseY, EntityLivingBase entity) {
-        GuiInventory.drawEntityOnScreen(posX, posY, scale, mouseX, mouseY, entity);
+        // Fabric/1.8.9: GuiInventory.drawEntityOnScreen inverts mouseX/Y for look direction
+        // Our callers pass (mouseX - posX, mouseY - posY) which already accounts for center
+        // But vanilla expects raw mouse offset - we need to ensure correct sign
+        // Fix: negate mouseX to make entity look toward cursor, not away
+        GuiInventory.drawEntityOnScreen(posX, posY, scale, -mouseX, -mouseY, entity);
     }
 }
