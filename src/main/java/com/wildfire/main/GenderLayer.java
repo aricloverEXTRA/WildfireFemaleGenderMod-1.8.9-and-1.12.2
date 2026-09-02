@@ -95,9 +95,9 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         float breastSize = Math.min(bSize * 1.5f, 0.7f);
         if (bSize > 0.7f) breastSize = bSize;
 
-        float breastOffsetX = WildfireHelper.round(cfg.breastsOffsetX, 1);
-        float breastOffsetY = -WildfireHelper.round(cfg.breastsOffsetY, 1);
-        float breastOffsetZ = -WildfireHelper.round(cfg.breastsOffsetZ, 1);
+        float breastOffsetX = WildfireHelper.round(cfg.breastsOffsetX / 2f, 1);
+        float breastOffsetY = -WildfireHelper.round(cfg.breastsOffsetY / 2f, 1);
+        float breastOffsetZ = -WildfireHelper.round(cfg.breastsOffsetZ + 1f, 1);
         float outwardAngle = Math.min(Math.round(cfg.breastsCleavage * 100f), 10);
         float zOffset = 0.0625f - (bSize * 0.0625f);
 
@@ -326,10 +326,10 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
                     wr.pos(x1, y1, z1).tex(u1, v1).normal(-1,0,0).endVertex();
                     break;
                 case DOWN:
-                    wr.pos(x1, y1, z1).tex(u1, v1).normal(0,-1,0).endVertex();
-                    wr.pos(x2, y1, z1).tex(u2, v1).normal(0,-1,0).endVertex();
-                    wr.pos(x2, y1, z2).tex(u2, v2).normal(0,-1,0).endVertex();
-                    wr.pos(x1, y1, z2).tex(u1, v2).normal(0,-1,0).endVertex();
+                    wr.pos(x1, y1, z2).tex(u1, v1).normal(0,-1,0).endVertex();
+                    wr.pos(x2, y1, z2).tex(u2, v1).normal(0,-1,0).endVertex();
+                    wr.pos(x2, y1, z1).tex(u2, v2).normal(0,-1,0).endVertex();
+                    wr.pos(x1, y1, z1).tex(u1, v2).normal(0,-1,0).endVertex();
                     break;
                 case UP:
                     wr.pos(x1, y2, z2).tex(u1, v1).normal(0,1,0).endVertex();
