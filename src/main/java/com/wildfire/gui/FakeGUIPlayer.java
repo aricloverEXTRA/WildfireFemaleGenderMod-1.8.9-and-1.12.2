@@ -43,19 +43,15 @@ public class FakeGUIPlayer {
         if (entity == null) {
             Minecraft mc = Minecraft.getMinecraft();
             World world = mc.theWorld != null ? mc.theWorld : mc.thePlayer.worldObj;
-
-            String dummyName = "uuid_" + uuid.toString().replace("-", "").substring(0, 12);
-            GameProfile profile = new GameProfile(this.uuid, dummyName);
-
+            GameProfile profile = new GameProfile(this.uuid, this.name);
             ResourceLocation localSkin = new ResourceLocation(
                     "wildfire_gender",
                     "textures/credit_skins/" + uuid.toString() + ".png"
             );
-
             entity = new EntityCreditsPlayer(world, profile, localSkin);
-
             entity.getEntityData().setBoolean("WFG_FakeGUIPlayer", true);
-
+            entity.setCustomNameTag("");
+            entity.setAlwaysRenderNameTag(false);
             entity.rotationYawHead = 0.0F;
             entity.rotationYaw = 0.0F;
             entity.rotationPitch = 0.0F;

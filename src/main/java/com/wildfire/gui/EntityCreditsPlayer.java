@@ -24,4 +24,14 @@ public class EntityCreditsPlayer extends EntityOtherPlayerMP {
     public boolean isWearing(EnumPlayerModelParts part) {
         return true;
     }
+
+    @Override
+    public String getDisplayNameString() {
+        return "";
+    }
+
+    @Override
+    public boolean getAlwaysRenderNameTag() {
+        return false;
+    }
 }
