@@ -96,7 +96,7 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         if (bSize > 0.7f) breastSize = bSize;
 
         float breastOffsetX = WildfireHelper.round(cfg.breastsOffsetX / 5f, 1);
-        float breastOffsetY = ildfireHelper.round(cfg.breastsOffsetY / 5f, 1);
+        float breastOffsetY = WildfireHelper.round(cfg.breastsOffsetY / 5f, 1);
         float breastOffsetZ = -WildfireHelper.round(cfg.breastsOffsetZ + 1f, 1);
         float outwardAngle = Math.min(Math.round(cfg.breastsCleavage * 100f), 10);
         float zOffset = 0.0625f - (bSize * 0.0625f);
