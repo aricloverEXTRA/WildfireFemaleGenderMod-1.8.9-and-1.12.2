@@ -138,3 +138,12 @@ wildfire_gender.not_in_world=You need to be in a world to configure your gender 
 
 wildfire_gender.label.dark_mode=Theme: Dark
 wildfire_gender.label.light_mode=Theme: Light (default)
+wildfire_gender.gui.back=Go Back
+wildfire_gender.contributor.role.fabric_maintainer=Fabric Maintainer
+wildfire_gender.contributor.role.fabric_maintainer.short=Fabric Maintainer
+wildfire_gender.contributor.role.neoforge_maintainer=NeoForge Maintainer
+wildfire_gender.contributor.role.neoforge_maintainer.short=NeoForge Maintainer
+wildfire_gender.contributor.role.ci_maintainer=CI Maintainer
+wildfire_gender.contributor.role.ci_maintainer.short=CI Maintainer
+wildfire_gender.contributor.role.mascot=Mascot
+wildfire_gender.contributor.role.mascot.short=Mascot
