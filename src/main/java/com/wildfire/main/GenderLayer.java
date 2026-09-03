@@ -95,8 +95,8 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         float breastSize = Math.min(bSize * 1.5f, 0.7f);
         if (bSize > 0.7f) breastSize = bSize;
 
-        float breastOffsetX = WildfireHelper.round(cfg.breastsOffsetX / 2f, 1);
-        float breastOffsetY = -WildfireHelper.round(cfg.breastsOffsetY / 2f, 1);
+        float breastOffsetX = WildfireHelper.round(cfg.breastsOffsetX / 5f, 1);
+        float breastOffsetY = -WildfireHelper.round(cfg.breastsOffsetY / 5f, 1);
         float breastOffsetZ = -WildfireHelper.round(cfg.breastsOffsetZ + 1f, 1);
         float outwardAngle = Math.min(Math.round(cfg.breastsCleavage * 100f), 10);
         float zOffset = 0.0625f - (bSize * 0.0625f);
@@ -205,7 +205,6 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
 
             float boxX = isLeft ? -4f : 0f;
             renderBox(player, baseUV, boxX, 0f, 0f, 4, 5, 3, 0f, false, renderScale);
-
             GlStateManager.translate(0, 0, -0.015f);
             GlStateManager.scale(1.05f, 1.05f, 1.05f);
             renderBox(player, overlayUV, boxX, 0f, 0f, 4, 5, 3, 0f, true, renderScale);
@@ -267,16 +266,26 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
     }
 
     private void renderBoxWithUVs(AbstractClientPlayer player, UVLayout layout, float x, float y, float z, int dx, int dy, int dz, float delta, boolean isOverlay, float renderScale) {
-
+        boolean hasChestplate = false;
+        try {
+            ItemStack chest = ((EntityPlayer) player).inventory.armorInventory[2];
+            hasChestplate = chest != null && chest.getItem() instanceof ItemArmor;
+        } catch (Throwable ignored) {}
+        boolean hideInArmor = false;
+        try { hideInArmor = GenderConfig.getHideInArmor((EntityPlayer) player); } catch (Throwable ignored) {}
+        boolean isFake = false;
+        try { isFake = player.getEntityData().getBoolean("WFG_FakeGUIPlayer"); } catch (Throwable ignored) {}
+        if (!isFake && hasChestplate && hideInArmor) return;
+        ResourceLocation armorTexForOverlay = null;
+        if (isOverlay && hasChestplate) armorTexForOverlay = ArmorTextureHelper.getArmorTextureForPlayer(player, true);
         ResourceLocation tex;
-        if (isOverlay) {
-            ResourceLocation armorTex = ArmorTextureHelper.getArmorTextureForPlayerUUID(player.getUniqueID(), true);
-            if (armorTex != null) {
-                tex = armorTex;
-            } else {
-                tex = UVStorage.getBreastTexture(player.getUniqueID(), true);
-                if (tex == null) tex = player.getLocationSkin();
-            }
+        boolean useArmorTex = false;
+        if (isOverlay && armorTexForOverlay != null && hasChestplate) {
+            tex = armorTexForOverlay;
+            useArmorTex = true;
+        } else if (isOverlay) {
+            tex = UVStorage.getBreastTexture(player.getUniqueID(), true);
+            if (tex == null) tex = player.getLocationSkin();
         } else {
             tex = UVStorage.getBreastTexture(player.getUniqueID(), false);
             if (tex == null) tex = player.getLocationSkin();
@@ -287,7 +296,7 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         GlStateManager.color(1f, 1f, 1f, alpha);
 
         float texW = 64f;
-        float texH = 64f;
+        float texH = useArmorTex ? 32f : 64f;
 
         float x1 = x * 0.0625f, y1 = y * 0.0625f, z1 = z * 0.0625f;
         float x2 = (x + dx) * 0.0625f, y2 = (y + dy) * 0.0625f, z2 = (z + dz) * 0.0625f;
@@ -326,10 +335,10 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
                     wr.pos(x1, y1, z1).tex(u1, v1).normal(-1,0,0).endVertex();
                     break;
                 case DOWN:
-                    wr.pos(x1, y1, z2).tex(u1, v1).normal(0,-1,0).endVertex();
-                    wr.pos(x2, y1, z2).tex(u2, v1).normal(0,-1,0).endVertex();
-                    wr.pos(x2, y1, z1).tex(u2, v2).normal(0,-1,0).endVertex();
-                    wr.pos(x1, y1, z1).tex(u1, v2).normal(0,-1,0).endVertex();
+                    wr.pos(x1, y1, z2).tex(u2, v2).normal(0,-1,0).endVertex();
+                    wr.pos(x2, y1, z2).tex(u1, v2).normal(0,-1,0).endVertex();
+                    wr.pos(x2, y1, z1).tex(u1, v1).normal(0,-1,0).endVertex();
+                    wr.pos(x1, y1, z1).tex(u2, v1).normal(0,-1,0).endVertex();
                     break;
                 case UP:
                     wr.pos(x1, y2, z2).tex(u1, v1).normal(0,1,0).endVertex();
@@ -368,27 +377,40 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
 
     private boolean shouldRenderBreasts(AbstractClientPlayer player) {
         if (!ClientConfig.RENDER_BREASTS) return false;
+        boolean isFake = false;
+        try { isFake = player.getEntityData().getBoolean("WFG_FakeGUIPlayer"); } catch (Throwable ignored) {}
+        if (isFake) {
+            GenderConfig.PlayerGenderSettings fakeCfg = GenderConfig.getStaticFakeCreditsSettings();
+            if (fakeCfg != null && fakeCfg.breastsEnabled && !"Male".equals(fakeCfg.gender)) return true;
+            try {
+                com.wildfire.main.entitydata.EntityConfig ec = com.wildfire.main.entitydata.EntityConfig.getEntity(player);
+                if (ec != null) return ec.getBreasts() != null && !"Male".equals(ec.getGender());
+            } catch (Throwable ignored) {}
+            return true;
+        }
         GenderConfig.PlayerGenderSettings settings = GenderConfig.getPlayerSettings((EntityPlayer) player);
-        if (settings == null) return false;
-
-        boolean isChestplateOccupied = false;
+        if (settings == null) {
+            try {
+                com.wildfire.main.entitydata.EntityConfig ec = com.wildfire.main.entitydata.EntityConfig.getEntity(player);
+                if (ec != null) return ec.getBreasts() != null && !"Male".equals(ec.getGender());
+            } catch (Throwable ignored) {}
+            return false;
+        }
+        if (!settings.breastsEnabled || "Male".equals(settings.gender)) return false;
         com.wildfire.api.IGenderArmor armor = com.wildfire.render.armor.EmptyGenderArmor.INSTANCE;
+        boolean hasChestplate = false;
+        boolean coversBreasts = false;
         try {
             ItemStack chest = ((EntityPlayer) player).inventory.armorInventory[2];
             if (chest != null && chest.getItem() instanceof ItemArmor) {
+                hasChestplate = true;
                 armor = getArmorForStack(chest);
-                boolean override = GenderConfig.getOverrideArmorPhysics((EntityPlayer) player);
-                isChestplateOccupied = armor.coversBreasts() && !override;
+                coversBreasts = armor.coversBreasts();
             }
         } catch (Throwable ignored) {}
         if (armor.alwaysHidesBreasts()) return false;
-        if (!settings.hideInArmor && isChestplateOccupied) {
-
-        } else if (settings.hideInArmor && isChestplateOccupied) {
-            return false;
-        }
-        if (armor.alwaysHidesBreasts()) return false;
-        return settings.breastsEnabled && !"Male".equals(settings.gender);
+        if (settings.hideInArmor && hasChestplate && coversBreasts) return false;
+        return true;
     }
 
     private static float interp(float a, float b, float t) { return a + (b - a) * t; }
