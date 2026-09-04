@@ -96,8 +96,8 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         if (bSize > 0.7f) breastSize = bSize;
 
         float breastOffsetX = WildfireHelper.round(cfg.breastsOffsetX / 5f, 1);
-        float breastOffsetY = WildfireHelper.round(cfg.breastsOffsetY / 2.5f, 1);
-        float breastOffsetZ = --WildfireHelper.round(cfg.breastsOffsetZ + 1f, 1);
+        float breastOffsetY = -WildfireHelper.round(cfg.breastsOffsetY / 2f, 1);
+        float breastOffsetZ = -WildfireHelper.round(cfg.breastsOffsetZ + 1f, 1);
         float outwardAngle = Math.min(Math.round(cfg.breastsCleavage * 100f), 10);
         float zOffset = 0.0625f - (bSize * 0.0625f);
 
@@ -173,8 +173,8 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         GlStateManager.pushMatrix();
         try {
 
-            float sep = isLeft ? breastOffsetX * 0.0625f : -breastOffsetX * 0.0625f;
-            GlStateManager.translate(sep, 0.05625f + (breastOffsetY * 0.0625f), zOffset - 0.0625f * 2f + (breastOffsetZ * 0.0625f));
+            float sep = isLeft ? breastOffsetX * 0.04f : -breastOffsetX * 0.04f;
+            GlStateManager.translate(sep, 0.05625f + (breastOffsetY * 0.0625f), zOffset - 0.0625f * 2f + (breastOffsetZ * 0.10f));
 
             if (bounceEnabled) {
                 GlStateManager.translate(physX / 32f, physY / 32f, 0);
@@ -336,10 +336,10 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
                     wr.pos(x1, y1, z1).tex(u1, v1).normal(-1,0,0).endVertex();
                     break;
                 case DOWN:
-                    wr.pos(x1, y1, z2).tex(u2, v2).normal(0,-1,0).endVertex();
-                    wr.pos(x2, y1, z2).tex(u1, v2).normal(0,-1,0).endVertex();
-                    wr.pos(x2, y1, z1).tex(u1, v1).normal(0,-1,0).endVertex();
-                    wr.pos(x1, y1, z1).tex(u2, v1).normal(0,-1,0).endVertex();
+                    wr.pos(x1, y1, z1).tex(u1, v1).normal(0,-1,0).endVertex();
+                    wr.pos(x2, y1, z1).tex(u2, v1).normal(0,-1,0).endVertex();
+                    wr.pos(x2, y1, z2).tex(u2, v2).normal(0,-1,0).endVertex();
+                    wr.pos(x1, y1, z2).tex(u1, v2).normal(0,-1,0).endVertex();
                     break;
                 case UP:
                     wr.pos(x1, y2, z2).tex(u1, v1).normal(0,1,0).endVertex();
