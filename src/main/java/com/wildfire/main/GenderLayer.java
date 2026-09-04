@@ -96,8 +96,8 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         if (bSize > 0.7f) breastSize = bSize;
 
         float breastOffsetX = WildfireHelper.round(cfg.breastsOffsetX / 5f, 1);
-        float breastOffsetY = -WildfireHelper.round(cfg.breastsOffsetY / 2f, 1);
-        float breastOffsetZ = -WildfireHelper.round(cfg.breastsOffsetZ + 1f, 1);
+        float breastOffsetY = WildfireHelper.round(cfg.breastsOffsetY / 2f, 1);
+        float breastOffsetZ = WildfireHelper.round(cfg.breastsOffsetZ + 1f, 1);
         float outwardAngle = Math.min(Math.round(cfg.breastsCleavage * 100f), 10);
         float zOffset = 0.0625f - (bSize * 0.0625f);
 
@@ -173,8 +173,8 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         GlStateManager.pushMatrix();
         try {
 
-            float sep = isLeft ? breastOffsetX * 0.04f : -breastOffsetX * 0.04f;
-            GlStateManager.translate(sep, 0.05625f + (breastOffsetY * 0.0625f), zOffset - 0.0625f * 2f + (breastOffsetZ * 0.10f));
+            float sep = isLeft ? breastOffsetX * 0.08f : -breastOffsetX * 0.08f;
+            GlStateManager.translate(sep, 0.05625f + (breastOffsetY * 0.0625f), zOffset - 0.0625f * 2f + (breastOffsetZ * 0.09f));
 
             if (bounceEnabled) {
                 GlStateManager.translate(physX / 32f, physY / 32f, 0);
@@ -277,11 +277,16 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         boolean isFake = false;
         try { isFake = player.getEntityData().getBoolean("WFG_FakeGUIPlayer"); } catch (Throwable ignored) {}
         if (!isFake && hasChestplate && hideInArmor) return;
-        ResourceLocation armorTexForOverlay = null;
-        if (isOverlay && hasChestplate) armorTexForOverlay = ArmorTextureHelper.getArmorTextureForPlayer(player, true);
+        ResourceLocation armorTexBase = null;
+        ResourceLocation armorTexOverlay = null;
+        if (hasChestplate) {
+            armorTexBase = ArmorTextureHelper.getArmorTextureForPlayer(player, false);
+            armorTexOverlay = ArmorTextureHelper.getArmorTextureForPlayer(player, true);
+        }
+        ResourceLocation armorTexForOverlay = isOverlay ? (armorTexOverlay != null ? armorTexOverlay : armorTexBase) : armorTexBase;
         ResourceLocation tex;
         boolean useArmorTex = false;
-        if (isOverlay && armorTexForOverlay != null && hasChestplate) {
+        if (hasChestplate && armorTexForOverlay != null) {
             tex = armorTexForOverlay;
             useArmorTex = true;
         } else if (isOverlay) {
