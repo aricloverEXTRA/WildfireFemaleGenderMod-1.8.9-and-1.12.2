@@ -202,193 +202,16 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
             }
             GlStateManager.scale(0.9995f, 1f, 1f);
             float boxX = isLeft ? -4f : 0f;
-            renderBox(player, baseUV, boxX, 0f, 0f, 4, 5, 3, 0f, false, renderScale);
-            if (isChestplate && armor != null && armor.coversBreasts()) {
-                renderArmorLayer(player, chest, boxX, 0f, 0f, 4, 5, 3, 0f, renderScale, isLeft);
-            } else {
-                GlStateManager.translate(0, 0, -0.015f);
-                GlStateManager.scale(1.05f, 1.05f, 1.05f);
-                renderBox(player, overlayUV, boxX, 0f, 0f, 4, 5, 3, 0f, true, renderScale);
-            }
-        } finally {
-            GlStateManager.popMatrix();
-        }
-    }
-
-    private void renderArmorLayer(AbstractClientPlayer player, ItemStack chest, float x, float y, float z, int dx, int dy, int dz, float delta, float renderScale, boolean isLeft) {
-        ResourceLocation armorTex = ArmorTextureHelper.getArmorTextureForPlayer(player, false);
-        ResourceLocation armorOverlayTex = ArmorTextureHelper.getArmorTextureForPlayer(player, true);
-        if (armorTex == null) return;
-        boolean isLeather = chest.getItem() == net.minecraft.init.Items.leather_chestplate;
-        int leatherColor = isLeather ? ((net.minecraft.item.ItemArmor) chest.getItem()).getColor(chest) : 0xFFFFFF;
-        GlStateManager.pushMatrix();
-        try {
+            renderBox(player, baseUV, boxX, 0f, 0f, 4, 5, 3, 0f, false, renderScale, isChestplate && armor != null && armor.coversBreasts(), chest, isLeft);
             GlStateManager.translate(0, 0, -0.015f);
             GlStateManager.scale(1.05f, 1.05f, 1.05f);
-            float texW = 32f;
-            float texH = 32f;
-            float x1 = x * 0.0625f, y1 = y * 0.0625f, z1 = z * 0.0625f;
-            float x2 = (x + dx) * 0.0625f, y2 = (y + dy) * 0.0625f, z2 = (z + dz) * 0.0625f;
-            float d = delta * 0.0625f;
-            x1 -= d; y1 -= d; z1 -= d;
-            x2 += d; y2 += d; z2 += d;
-            this.renderPlayer.bindTexture(armorTex);
-            if (isLeather) {
-                float r = (leatherColor >> 16 & 255) / 255f;
-                float g = (leatherColor >> 8 & 255) / 255f;
-                float b = (leatherColor & 255) / 255f;
-                GlStateManager.color(r, g, b, 1f);
-            } else {
-                GlStateManager.color(1f, 1f, 1f, 1f);
-            }
-            Tessellator tess = Tessellator.getInstance();
-            WorldRenderer wr = tess.getWorldRenderer();
-            wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL);
-            wr.pos(x1, y1, z1).tex(0, 0).normal(0,-1,0).endVertex();
-            wr.pos(x2, y1, z1).tex(1, 0).normal(0,-1,0).endVertex();
-            wr.pos(x2, y1, z2).tex(1, 1).normal(0,-1,0).endVertex();
-            wr.pos(x1, y1, z2).tex(0, 1).normal(0,-1,0).endVertex();
-            tess.draw();
-            wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL);
-            wr.pos(x2, y1, z1).tex(0, 0).normal(0,0,-1).endVertex();
-            wr.pos(x1, y1, z1).tex(1, 0).normal(0,0,-1).endVertex();
-            wr.pos(x1, y2, z1).tex(1, 1).normal(0,0,-1).endVertex();
-            wr.pos(x2, y2, z1).tex(0, 1).normal(0,0,-1).endVertex();
-            tess.draw();
-            wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL);
-            wr.pos(x1, y1, z2).tex(0, 0).normal(0,0,1).endVertex();
-            wr.pos(x2, y1, z2).tex(1, 0).normal(0,0,1).endVertex();
-            wr.pos(x2, y2, z2).tex(1, 1).normal(0,0,1).endVertex();
-            wr.pos(x1, y2, z2).tex(0, 1).normal(0,0,1).endVertex();
-            tess.draw();
-            wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL);
-            wr.pos(x2, y1, z1).tex(0, 0).normal(1,0,0).endVertex();
-            wr.pos(x2, y2, z1).tex(1, 0).normal(1,0,0).endVertex();
-            wr.pos(x2, y2, z2).tex(1, 1).normal(1,0,0).endVertex();
-            wr.pos(x2, y1, z2).tex(0, 1).normal(1,0,0).endVertex();
-            tess.draw();
-            wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL);
-            wr.pos(x1, y1, z2).tex(0, 0).normal(-1,0,0).endVertex();
-            wr.pos(x1, y2, z2).tex(1, 0).normal(-1,0,0).endVertex();
-            wr.pos(x1, y2, z1).tex(1, 1).normal(-1,0,0).endVertex();
-            wr.pos(x1, y1, z1).tex(0, 1).normal(-1,0,0).endVertex();
-            tess.draw();
-            wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL);
-            wr.pos(x1, y2, z2).tex(0, 0).normal(0,1,0).endVertex();
-            wr.pos(x2, y2, z2).tex(1, 0).normal(0,1,0).endVertex();
-            wr.pos(x2, y2, z1).tex(1, 1).normal(0,1,0).endVertex();
-            wr.pos(x1, y2, z1).tex(0, 1).normal(0,1,0).endVertex();
-            tess.draw();
-            if (armorOverlayTex != null) {
-                this.renderPlayer.bindTexture(armorOverlayTex);
-                GlStateManager.enableBlend();
-                GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-                GlStateManager.color(1f, 1f, 1f, 0.5f);
-                wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL);
-                wr.pos(x1, y1, z1).tex(0, 0).normal(0,-1,0).endVertex();
-                wr.pos(x2, y1, z1).tex(1, 0).normal(0,-1,0).endVertex();
-                wr.pos(x2, y1, z2).tex(1, 1).normal(0,-1,0).endVertex();
-                wr.pos(x1, y1, z2).tex(0, 1).normal(0,-1,0).endVertex();
-                tess.draw();
-                wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL);
-                wr.pos(x2, y1, z1).tex(0, 0).normal(0,0,-1).endVertex();
-                wr.pos(x1, y1, z1).tex(1, 0).normal(0,0,-1).endVertex();
-                wr.pos(x1, y2, z1).tex(1, 1).normal(0,0,-1).endVertex();
-                wr.pos(x2, y2, z1).tex(0, 1).normal(0,0,-1).endVertex();
-                tess.draw();
-                wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL);
-                wr.pos(x1, y1, z2).tex(0, 0).normal(0,0,1).endVertex();
-                wr.pos(x2, y1, z2).tex(1, 0).normal(0,0,1).endVertex();
-                wr.pos(x2, y2, z2).tex(1, 1).normal(0,0,1).endVertex();
-                wr.pos(x1, y2, z2).tex(0, 1).normal(0,0,1).endVertex();
-                tess.draw();
-                wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL);
-                wr.pos(x2, y1, z1).tex(0, 0).normal(1,0,0).endVertex();
-                wr.pos(x2, y2, z1).tex(1, 0).normal(1,0,0).endVertex();
-                wr.pos(x2, y2, z2).tex(1, 1).normal(1,0,0).endVertex();
-                wr.pos(x2, y1, z2).tex(0, 1).normal(1,0,0).endVertex();
-                tess.draw();
-                wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL);
-                wr.pos(x1, y1, z2).tex(0, 0).normal(-1,0,0).endVertex();
-                wr.pos(x1, y2, z2).tex(1, 0).normal(-1,0,0).endVertex();
-                wr.pos(x1, y2, z1).tex(1, 1).normal(-1,0,0).endVertex();
-                wr.pos(x1, y1, z1).tex(0, 1).normal(-1,0,0).endVertex();
-                tess.draw();
-                wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL);
-                wr.pos(x1, y2, z2).tex(0, 0).normal(0,1,0).endVertex();
-                wr.pos(x2, y2, z2).tex(1, 0).normal(0,1,0).endVertex();
-                wr.pos(x2, y2, z1).tex(1, 1).normal(0,1,0).endVertex();
-                wr.pos(x1, y2, z1).tex(0, 1).normal(0,1,0).endVertex();
-                tess.draw();
-                GlStateManager.disableBlend();
-            }
-            if (chest.isItemEnchanted()) {
-                GlStateManager.pushMatrix();
-                GlStateManager.enableBlend();
-                GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
-                GlStateManager.depthFunc(GL11.GL_EQUAL);
-                GlStateManager.disableLighting();
-                float f = (float) (System.currentTimeMillis() % 3000L) / 3000f * 256f;
-                this.renderPlayer.bindTexture(net.minecraft.client.renderer.texture.TextureMap.locationBlocksTexture);
-                for (int i = 0; i < 2; i++) {
-                    GlStateManager.matrixMode(GL11.GL_TEXTURE);
-                    GlStateManager.loadIdentity();
-                    float scale = 0.33333334f;
-                    GlStateManager.scale(scale, scale, scale);
-                    GlStateManager.rotate(30f - i * 60f, 0, 0, 1);
-                    GlStateManager.translate(0, f * (i == 0 ? 1 : -1) * 0.01f, 0);
-                    GlStateManager.matrixMode(GL11.GL_MODELVIEW);
-                    wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL);
-                    wr.pos(x1, y1, z1).tex(0, 0).normal(0,-1,0).endVertex();
-                    wr.pos(x2, y1, z1).tex(1, 0).normal(0,-1,0).endVertex();
-                    wr.pos(x2, y1, z2).tex(1, 1).normal(0,-1,0).endVertex();
-                    wr.pos(x1, y1, z2).tex(0, 1).normal(0,-1,0).endVertex();
-                    tess.draw();
-                    wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL);
-                    wr.pos(x2, y1, z1).tex(0, 0).normal(0,0,-1).endVertex();
-                    wr.pos(x1, y1, z1).tex(1, 0).normal(0,0,-1).endVertex();
-                    wr.pos(x1, y2, z1).tex(1, 1).normal(0,0,-1).endVertex();
-                    wr.pos(x2, y2, z1).tex(0, 1).normal(0,0,-1).endVertex();
-                    tess.draw();
-                    wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL);
-                    wr.pos(x1, y1, z2).tex(0, 0).normal(0,0,1).endVertex();
-                    wr.pos(x2, y1, z2).tex(1, 0).normal(0,0,1).endVertex();
-                    wr.pos(x2, y2, z2).tex(1, 1).normal(0,0,1).endVertex();
-                    wr.pos(x1, y2, z2).tex(0, 1).normal(0,0,1).endVertex();
-                    tess.draw();
-                    wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL);
-                    wr.pos(x2, y1, z1).tex(0, 0).normal(1,0,0).endVertex();
-                    wr.pos(x2, y2, z1).tex(1, 0).normal(1,0,0).endVertex();
-                    wr.pos(x2, y2, z2).tex(1, 1).normal(1,0,0).endVertex();
-                    wr.pos(x2, y1, z2).tex(0, 1).normal(1,0,0).endVertex();
-                    tess.draw();
-                    wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL);
-                    wr.pos(x1, y1, z2).tex(0, 0).normal(-1,0,0).endVertex();
-                    wr.pos(x1, y2, z2).tex(1, 0).normal(-1,0,0).endVertex();
-                    wr.pos(x1, y2, z1).tex(1, 1).normal(-1,0,0).endVertex();
-                    wr.pos(x1, y1, z1).tex(0, 1).normal(-1,0,0).endVertex();
-                    tess.draw();
-                    wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL);
-                    wr.pos(x1, y2, z2).tex(0, 0).normal(0,1,0).endVertex();
-                    wr.pos(x2, y2, z2).tex(1, 0).normal(0,1,0).endVertex();
-                    wr.pos(x2, y2, z1).tex(1, 1).normal(0,1,0).endVertex();
-                    wr.pos(x1, y2, z1).tex(0, 1).normal(0,1,0).endVertex();
-                    tess.draw();
-                }
-                GlStateManager.matrixMode(GL11.GL_TEXTURE);
-                GlStateManager.loadIdentity();
-                GlStateManager.matrixMode(GL11.GL_MODELVIEW);
-                GlStateManager.enableLighting();
-                GlStateManager.depthFunc(GL11.GL_LEQUAL);
-                GlStateManager.disableBlend();
-                GlStateManager.popMatrix();
-            }
+            renderBox(player, overlayUV, boxX, 0f, 0f, 4, 5, 3, 0f, true, renderScale, false, null, isLeft);
         } finally {
             GlStateManager.popMatrix();
         }
     }
 
-    private void renderBox(AbstractClientPlayer player, UVLayout layout, float x, float y, float z, int dx, int dy, int dz, float delta, boolean isOverlay, float renderScale) {
+    private void renderBox(AbstractClientPlayer player, UVLayout layout, float x, float y, float z, int dx, int dy, int dz, float delta, boolean isOverlay, float renderScale, boolean useArmor, ItemStack chest, boolean isLeft) {
         if (layout == null) return;
         boolean hasAnyFace = false;
         for (UVDirection dir : UVDirection.values()) {
@@ -397,7 +220,7 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         }
         if (!hasAnyFace && !isOverlay) return;
         if (layout != null) {
-            renderBoxWithUVs(player, layout, x, y, z, dx, dy, dz, delta, isOverlay, renderScale);
+            renderBoxWithUVs(player, layout, x, y, z, dx, dy, dz, delta, isOverlay, renderScale, useArmor, chest, isLeft);
             return;
         }
         UVQuad north = layout != null ? layout.get(UVDirection.NORTH) : null;
@@ -407,30 +230,20 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         box.addBox(x, y, z, dx, dy, dz, delta);
         box.setTextureSize(64, 64);
         ResourceLocation tex;
-        boolean hasChestplate = false;
-        try {
-            ItemStack chest = ((EntityPlayer) player).inventory.armorInventory[2];
-            hasChestplate = chest != null && chest.getItem() instanceof ItemArmor;
-        } catch (Throwable ignored) {}
+        if (useArmor && chest != null) {
+            tex = ArmorTextureHelper.getArmorTextureForPlayer(player, isOverlay);
+            if (tex != null) {
+                renderBoxWithUVs(player, layout, x, y, z, dx, dy, dz, delta, isOverlay, renderScale, true, chest, isLeft);
+                return;
+            }
+        }
         if (isOverlay) {
             tex = player.getLocationSkin();
             ResourceLocation overlayTex = UVStorage.getBreastTexture(player.getUniqueID(), true);
             if (overlayTex != null) tex = overlayTex;
-            ResourceLocation armorTex = ArmorTextureHelper.getArmorTextureForPlayerUUID(player.getUniqueID(), true);
-            if (armorTex != null) {
-                renderBoxWithUVs(player, layout, x, y, z, dx, dy, dz, delta, true, renderScale);
-                return;
-            }
         } else {
             tex = UVStorage.getBreastTexture(player.getUniqueID(), false);
             if (tex == null) tex = player.getLocationSkin();
-            if (hasChestplate) {
-                ResourceLocation armorTex = ArmorTextureHelper.getArmorTextureForPlayerUUID(player.getUniqueID(), false);
-                if (armorTex != null) {
-                    renderBoxWithUVs(player, layout, x, y, z, dx, dy, dz, delta, false, renderScale);
-                    return;
-                }
-            }
         }
         this.renderPlayer.bindTexture(tex);
         float alpha = 1f;
@@ -440,11 +253,11 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         GlStateManager.color(1f, 1f, 1f, 1f);
     }
 
-    private void renderBoxWithUVs(AbstractClientPlayer player, UVLayout layout, float x, float y, float z, int dx, int dy, int dz, float delta, boolean isOverlay, float renderScale) {
+    private void renderBoxWithUVs(AbstractClientPlayer player, UVLayout layout, float x, float y, float z, int dx, int dy, int dz, float delta, boolean isOverlay, float renderScale, boolean useArmor, ItemStack chest, boolean isLeft) {
         boolean hasChestplate = false;
         try {
-            ItemStack chest = ((EntityPlayer) player).inventory.armorInventory[2];
-            hasChestplate = chest != null && chest.getItem() instanceof ItemArmor;
+            ItemStack chestCheck = ((EntityPlayer) player).inventory.armorInventory[2];
+            hasChestplate = chestCheck != null && chestCheck.getItem() instanceof ItemArmor;
         } catch (Throwable ignored) {}
         boolean hideInArmor = false;
         try { hideInArmor = GenderConfig.getHideInArmor((EntityPlayer) player); } catch (Throwable ignored) {}
@@ -458,7 +271,10 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         }
         ResourceLocation tex;
         boolean useArmorTex = false;
-        if (hasChestplate && armorTex != null) {
+        if (useArmor && armorTex != null) {
+            tex = armorTex;
+            useArmorTex = true;
+        } else if (hasChestplate && armorTex != null) {
             tex = armorTex;
             useArmorTex = true;
         } else if (isOverlay) {
@@ -471,7 +287,7 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         float alpha = 1f;
         if (isOverlay) alpha *= 0.9f;
         GlStateManager.color(1f, 1f, 1f, alpha);
-        float texW = 64f;
+        float texW = useArmorTex ? 64f : 64f;
         float texH = useArmorTex ? 32f : 64f;
         float x1 = x * 0.0625f, y1 = y * 0.0625f, z1 = z * 0.0625f;
         float x2 = (x + dx) * 0.0625f, y2 = (y + dy) * 0.0625f, z2 = (z + dz) * 0.0625f;
@@ -479,6 +295,16 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         x1 -= d; y1 -= d; z1 -= d;
         x2 += d; y2 += d; z2 += d;
         this.renderPlayer.bindTexture(tex);
+        if (useArmorTex && chest != null) {
+            boolean isLeather = chest.getItem() == net.minecraft.init.Items.leather_chestplate;
+            int leatherColor = isLeather ? ((net.minecraft.item.ItemArmor) chest.getItem()).getColor(chest) : 0xFFFFFF;
+            if (isLeather) {
+                float r = (leatherColor >> 16 & 255) / 255f;
+                float g = (leatherColor >> 8 & 255) / 255f;
+                float b = (leatherColor & 255) / 255f;
+                GlStateManager.color(r, g, b, alpha);
+            }
+        }
         Tessellator tess = Tessellator.getInstance();
         WorldRenderer wr = tess.getWorldRenderer();
         for (UVDirection dir : UVDirection.values()) {
@@ -486,10 +312,18 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
             UVQuad quad = layout.get(dir);
             if (quad == null) continue;
             if (quad.x1()==0 && quad.y1()==0 && quad.x2()==0 && quad.y2()==0) continue;
-            float u1 = quad.x1() / texW;
-            float v1 = quad.y1() / texH;
-            float u2 = (quad.x2() + 1) / texW;
-            float v2 = (quad.y2() + 1) / texH;
+            float u1, v1, u2, v2;
+            if (useArmorTex) {
+                u1 = getArmorU(dir, isLeft, true) / texW;
+                v1 = getArmorV(dir, true) / texH;
+                u2 = (getArmorU(dir, isLeft, false) + 1) / texW;
+                v2 = (getArmorV(dir, false) + 1) / texH;
+            } else {
+                u1 = quad.x1() / texW;
+                v1 = quad.y1() / texH;
+                u2 = (quad.x2() + 1) / texW;
+                v2 = (quad.y2() + 1) / texH;
+            }
             wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL);
             switch (dir) {
                 case EAST:
@@ -526,7 +360,93 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
             }
             tess.draw();
         }
+        if (useArmorTex && chest != null && chest.isItemEnchanted()) {
+            renderEnchantGlint(wr, tess, x1, y1, z1, x2, y2, z2);
+        }
         GlStateManager.color(1f, 1f, 1f, 1f);
+    }
+
+    private static int getArmorU(UVDirection dir, boolean isLeft, boolean isMin) {
+        switch (dir) {
+            case NORTH: return isLeft ? (isMin ? 16 : 23) : (isMin ? 24 : 31);
+            case SOUTH: return isLeft ? (isMin ? 32 : 39) : (isMin ? 40 : 47);
+            case EAST: return isLeft ? (isMin ? 48 : 55) : (isMin ? 48 : 55);
+            case WEST: return isLeft ? (isMin ? 56 : 63) : (isMin ? 56 : 63);
+            case UP: return isLeft ? (isMin ? 16 : 23) : (isMin ? 24 : 31);
+            case DOWN: return isLeft ? (isMin ? 16 : 23) : (isMin ? 24 : 31);
+        }
+        return 0;
+    }
+
+    private static int getArmorV(UVDirection dir, boolean isMin) {
+        switch (dir) {
+            case NORTH: case SOUTH: case EAST: case WEST: return isMin ? 16 : 22;
+            case UP: return isMin ? 16 : 22;
+            case DOWN: return isMin ? 16 : 22;
+        }
+        return 0;
+    }
+
+    private void renderEnchantGlint(WorldRenderer wr, Tessellator tess, float x1, float y1, float z1, float x2, float y2, float z2) {
+        GlStateManager.pushMatrix();
+        GlStateManager.enableBlend();
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
+        GlStateManager.depthFunc(GL11.GL_EQUAL);
+        GlStateManager.disableLighting();
+        float f = (float) (System.currentTimeMillis() % 3000L) / 3000f * 256f;
+        this.renderPlayer.bindTexture(net.minecraft.client.renderer.texture.TextureMap.locationBlocksTexture);
+        for (int i = 0; i < 2; i++) {
+            GlStateManager.matrixMode(GL11.GL_TEXTURE);
+            GlStateManager.loadIdentity();
+            float scale = 0.33333334f;
+            GlStateManager.scale(scale, scale, scale);
+            GlStateManager.rotate(30f - i * 60f, 0, 0, 1);
+            GlStateManager.translate(0, f * (i == 0 ? 1 : -1) * 0.01f, 0);
+            GlStateManager.matrixMode(GL11.GL_MODELVIEW);
+            wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL);
+            wr.pos(x1, y1, z1).tex(0, 0).normal(0,-1,0).endVertex();
+            wr.pos(x2, y1, z1).tex(1, 0).normal(0,-1,0).endVertex();
+            wr.pos(x2, y1, z2).tex(1, 1).normal(0,-1,0).endVertex();
+            wr.pos(x1, y1, z2).tex(0, 1).normal(0,-1,0).endVertex();
+            tess.draw();
+            wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL);
+            wr.pos(x2, y1, z1).tex(0, 0).normal(0,0,-1).endVertex();
+            wr.pos(x1, y1, z1).tex(1, 0).normal(0,0,-1).endVertex();
+            wr.pos(x1, y2, z1).tex(1, 1).normal(0,0,-1).endVertex();
+            wr.pos(x2, y2, z1).tex(0, 1).normal(0,0,-1).endVertex();
+            tess.draw();
+            wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL);
+            wr.pos(x1, y1, z2).tex(0, 0).normal(0,0,1).endVertex();
+            wr.pos(x2, y1, z2).tex(1, 0).normal(0,0,1).endVertex();
+            wr.pos(x2, y2, z2).tex(1, 1).normal(0,0,1).endVertex();
+            wr.pos(x1, y2, z2).tex(0, 1).normal(0,0,1).endVertex();
+            tess.draw();
+            wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL);
+            wr.pos(x2, y1, z1).tex(0, 0).normal(1,0,0).endVertex();
+            wr.pos(x2, y2, z1).tex(1, 0).normal(1,0,0).endVertex();
+            wr.pos(x2, y2, z2).tex(1, 1).normal(1,0,0).endVertex();
+            wr.pos(x2, y1, z2).tex(0, 1).normal(1,0,0).endVertex();
+            tess.draw();
+            wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL);
+            wr.pos(x1, y1, z2).tex(0, 0).normal(-1,0,0).endVertex();
+            wr.pos(x1, y2, z2).tex(1, 0).normal(-1,0,0).endVertex();
+            wr.pos(x1, y2, z1).tex(1, 1).normal(-1,0,0).endVertex();
+            wr.pos(x1, y1, z1).tex(0, 1).normal(-1,0,0).endVertex();
+            tess.draw();
+            wr.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL);
+            wr.pos(x1, y2, z2).tex(0, 0).normal(0,1,0).endVertex();
+            wr.pos(x2, y2, z2).tex(1, 0).normal(0,1,0).endVertex();
+            wr.pos(x2, y2, z1).tex(1, 1).normal(0,1,0).endVertex();
+            wr.pos(x1, y2, z1).tex(0, 1).normal(0,1,0).endVertex();
+            tess.draw();
+        }
+        GlStateManager.matrixMode(GL11.GL_TEXTURE);
+        GlStateManager.loadIdentity();
+        GlStateManager.matrixMode(GL11.GL_MODELVIEW);
+        GlStateManager.enableLighting();
+        GlStateManager.depthFunc(GL11.GL_LEQUAL);
+        GlStateManager.disableBlend();
+        GlStateManager.popMatrix();
     }
 
     private com.wildfire.api.IGenderArmor getArmorForStack(ItemStack stack) {
