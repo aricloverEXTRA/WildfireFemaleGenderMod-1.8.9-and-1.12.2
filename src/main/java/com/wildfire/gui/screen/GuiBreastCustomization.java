@@ -89,9 +89,9 @@ public class GuiBreastCustomization extends GuiScreen implements GuiSlider.ISlid
         this.separationSlider = new GuiSlider(1, sliderX, sliderY + spacing - 1, smallSliderWidth, sliderHeight,
                 prefixFromKey("wildfire_gender.wardrobe.slider.separation"), "", -10.0D, 10.0D, this.settings.breastsOffsetX, false, true, this);
         this.heightSlider = new GuiSlider(3, sliderX + smallSliderWidth + 3 + 1, sliderY + spacing - 1, smallSliderWidth, sliderHeight,
-                prefixFromKey("wildfire_gender.wardrobe.slider.height"), "", -10.0D, 10.0D, -this.settings.breastsOffsetY, false, true, this);
+                prefixFromKey("wildfire_gender.wardrobe.slider.height"), "", -10.0D, 10.0D, this.settings.breastsOffsetY, false, true, this);
         this.depthSlider = new GuiSlider(2, sliderX, sliderY + spacing * 2 - 2, smallSliderWidth, sliderHeight,
-                prefixFromKey("wildfire_gender.wardrobe.slider.depth"), "", -10.0D, 0.0D, this.settings.breastsOffsetZ, false, true, this);
+                prefixFromKey("wildfire_gender.wardrobe.slider.depth"), "", -10.0D, 0.0D, this.settings.breastsOffsetZ * 10f, false, true, this);
         this.rotationSlider = new GuiSlider(4, sliderX + smallSliderWidth + 3 + 1, sliderY + spacing * 2 - 2, smallSliderWidth, sliderHeight,
                 prefixFromKey("wildfire_gender.wardrobe.slider.rotation"), "°", 0.0D, 10.0D, this.settings.breastsCleavage * 100f, false, true, this);
         this.intensitySlider = new GuiSlider(7, sliderX, sliderY + spacing * 2 - 2, smallSliderWidth, sliderHeight,
@@ -233,10 +233,10 @@ public class GuiBreastCustomization extends GuiScreen implements GuiSlider.ISlid
                 this.settings.breastsOffsetX = (float) slider.getValue();
                 break;
             case 2:
-                this.settings.breastsOffsetZ = (float) slider.getValue();
+                this.settings.breastsOffsetZ = (float) slider.getValue() / 10f;
                 break;
             case 3:
-                this.settings.breastsOffsetY = -(float) slider.getValue();
+                this.settings.breastsOffsetY = (float) slider.getValue();
                 break;
             case 4:
                 this.settings.breastsCleavage = (float) slider.getValue() / 100f;
@@ -392,7 +392,7 @@ public class GuiBreastCustomization extends GuiScreen implements GuiSlider.ISlid
         }
 
         int posX = guiLeft + 50;
-        int posY = guiTop + 125;
+        int posY = guiTop + 135;
         int scissorX = (posX - 38) * this.mc.displayWidth / this.width;
         int scissorY = this.mc.displayHeight - (posY + 24 - 48) * this.mc.displayHeight / this.height;
         int scissorWidth = 76 * this.mc.displayWidth / this.width;

@@ -166,7 +166,7 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
                                   boolean isUniboob, float ageInTicks, float renderScale) {
         GlStateManager.pushMatrix();
         try {
-            float sep = isLeft ? breastOffsetX * 0.25f : -breastOffsetX * 0.25f;
+            float sep = isLeft ? breastOffsetX * 0.5f : -breastOffsetX * 0.5f;
             GlStateManager.translate(sep, 0.05625f + (breastOffsetY * 0.0625f), zOffset - 0.0625f * 2f + (breastOffsetZ * 0.0425f));
             if (!isUniboob) GlStateManager.translate(isLeft ? -0.125f : 0.125f, 0, 0);
             if (bounceEnabled) {
@@ -223,19 +223,29 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
         box.addBox(x, y, z, dx, dy, dz, delta);
         box.setTextureSize(64, 64);
         ResourceLocation tex;
+        boolean hasChestplate = false;
+        try {
+            ItemStack chest = ((EntityPlayer) player).inventory.armorInventory[2];
+            hasChestplate = chest != null && chest.getItem() instanceof ItemArmor;
+        } catch (Throwable ignored) {}
         if (isOverlay) {
             tex = player.getLocationSkin();
             ResourceLocation overlayTex = UVStorage.getBreastTexture(player.getUniqueID(), true);
             if (overlayTex != null) tex = overlayTex;
-        } else {
-            tex = UVStorage.getBreastTexture(player.getUniqueID(), false);
-            if (tex == null) tex = player.getLocationSkin();
-        }
-        if (isOverlay) {
             ResourceLocation armorTex = ArmorTextureHelper.getArmorTextureForPlayerUUID(player.getUniqueID(), true);
             if (armorTex != null) {
                 renderBoxWithUVs(player, layout, x, y, z, dx, dy, dz, delta, true, renderScale);
                 return;
+            }
+        } else {
+            tex = UVStorage.getBreastTexture(player.getUniqueID(), false);
+            if (tex == null) tex = player.getLocationSkin();
+            if (hasChestplate) {
+                ResourceLocation armorTex = ArmorTextureHelper.getArmorTextureForPlayerUUID(player.getUniqueID(), false);
+                if (armorTex != null) {
+                    renderBoxWithUVs(player, layout, x, y, z, dx, dy, dz, delta, false, renderScale);
+                    return;
+                }
             }
         }
         this.renderPlayer.bindTexture(tex);
