@@ -166,7 +166,7 @@ public class GenderLayer implements LayerRenderer<AbstractClientPlayer> {
                                   boolean isUniboob, float ageInTicks, float renderScale) {
         GlStateManager.pushMatrix();
         try {
-            float sep = isLeft ? breastOffsetX * 0.25f : -breastOffsetX * 0.25f;
+            float sep = isLeft ? breastOffsetX * 0.125f : -breastOffsetX * 0.125f;
             GlStateManager.translate(sep, 0.05625f + (breastOffsetY * 0.0625f), zOffset - 0.0625f * 2f + (breastOffsetZ * 0.0425f));
             if (!isUniboob) GlStateManager.translate(isLeft ? -0.125f : 0.125f, 0, 0);
             if (bounceEnabled) {
